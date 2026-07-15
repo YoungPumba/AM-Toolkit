@@ -38,6 +38,16 @@ final class CartIndicator
             $this->assetVersion('assets/js/cart.js'),
             true
         );
+
+        wp_localize_script(
+            self::SCRIPT_HANDLE,
+            'AMToolkitCart',
+            [
+                'addToCartUrl' => class_exists('WC_AJAX')
+                    ? \WC_AJAX::get_endpoint('add_to_cart')
+                    : '',
+            ]
+        );
     }
 
     public function renderShortcode(): string

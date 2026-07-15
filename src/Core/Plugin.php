@@ -4,6 +4,7 @@ namespace AMToolkit\Core;
 
 use AMToolkit\Core\Assets;
 use AMToolkit\Admin\NotificationSettings;
+use AMToolkit\Integrations\LiteSpeed;
 use AMToolkit\Modules\WooCommerce\CartIndicator;
 use AMToolkit\Modules\WooCommerce\ToastIntegration;
 
@@ -16,7 +17,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.4.0';
+    public const VERSION = '0.4.1';
 
     /**
      * Uruchamia wtyczkę.
@@ -25,6 +26,7 @@ final class Plugin
     {
         (new Assets())->boot();
         (new NotificationSettings())->boot();
+        (new LiteSpeed())->boot();
 
         add_action('plugins_loaded', [$this, 'bootIntegrations'], 20);
         add_action('init', [$this, 'init']);

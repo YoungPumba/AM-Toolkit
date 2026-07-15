@@ -196,6 +196,7 @@ final class ToastIntegration
 
         $notifications = WC()->session->get(self::SESSION_KEY, []);
         $notifications = is_array($notifications) ? $notifications : [];
+        $notification['_createdAt'] = time();
         $notifications[] = $notification;
 
         WC()->session->set(self::SESSION_KEY, $notifications);
@@ -210,7 +211,30 @@ final class ToastIntegration
         $notifications = WC()->session->get(self::SESSION_KEY, []);
         WC()->session->__unset(self::SESSION_KEY);
 
-        return is_array($notifications) ? $notifications : [];
+        if (!is_array($notifications)) {
+            return [];
+        }
+
+        $unique = [];
+        $now = time();
+
+        foreach ($notifications as $notification) {
+            if (!is_array($notification)) {
+                continue;
+            }
+
+            $createdAt = (int) ($notification['_createdAt'] ?? $now);
+
+            if (($now - $createdAt) > 30) {
+                continue;
+            }
+
+            unset($notification['_createdAt']);
+            $fingerprint = md5(wp_json_encode($notification));
+            $unique[$fingerprint] = $notification;
+        }
+
+        return array_values($unique);
     }
 
     private function isAsyncRequest(): bool
