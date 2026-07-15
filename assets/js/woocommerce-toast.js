@@ -32,22 +32,27 @@
         return String(title || '').trim();
     }
 
+    function formatMessage(template, productName) {
+        return String(template || '').replaceAll(
+            '{product_name}',
+            productName || 'Produkt'
+        );
+    }
+
     function addedMessage(productName, count = 1) {
-        if (!productName) {
-            return labels.addedFallback || 'Produkt został dodany do koszyka.';
-        }
+        const message = formatMessage(
+            labels.addedMessage || 'Produkt „{product_name}” został dodany do koszyka.',
+            productName
+        );
 
-        if (count > 1) {
-            return `Produkt „${productName}” został dodany do koszyka ${count} razy.`;
-        }
-
-        return `Produkt „${productName}” został dodany do koszyka.`;
+        return count > 1 ? `${message} ×${count}` : message;
     }
 
     function removedMessage(productName) {
-        return productName
-            ? `Produkt „${productName}” został usunięty z koszyka.`
-            : (labels.removedFallback || 'Produkt został usunięty z koszyka.');
+        return formatMessage(
+            labels.removedMessage || 'Produkt „{product_name}” został usunięty z koszyka.',
+            productName
+        );
     }
 
     function showPendingNotifications() {
@@ -67,6 +72,10 @@
         let addedCount = 0;
 
         $(document.body).on('added_to_cart', (event, fragments, cartHash, button) => {
+            if (Number(config.addedEnabled) !== 1) {
+                return;
+            }
+
             const productName = productNameFromButton(button);
             const sameVisibleProduct = productName
                 && productName === lastAddedProduct
@@ -88,16 +97,20 @@
                 message: addedMessage(productName, addedCount),
                 actionText: labels.cartAction || 'Przejdź do koszyka →',
                 actionUrl: config.cartUrl || '/koszyk/',
-                duration: 4000
+                duration: Number(config.duration) || 4000
             });
         });
 
         $(document.body).on('removed_from_cart', (event, fragments, cartHash, button) => {
+            if (Number(config.removedEnabled) !== 1) {
+                return;
+            }
+
             show({
                 type: 'info',
                 title: labels.removedTitle || 'Usunięto z koszyka',
                 message: removedMessage(productNameFromButton(button)),
-                duration: 4000
+                duration: Number(config.duration) || 4000
             });
         });
     }

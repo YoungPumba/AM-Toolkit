@@ -3,6 +3,7 @@
 namespace AMToolkit\Core;
 
 use AMToolkit\Core\Assets;
+use AMToolkit\Admin\NotificationSettings;
 use AMToolkit\Modules\WooCommerce\ToastIntegration;
 
 if (!defined('ABSPATH')) {
@@ -14,7 +15,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.2.0';
+    public const VERSION = '0.3.0';
 
     /**
      * Uruchamia wtyczkę.
@@ -22,6 +23,7 @@ final class Plugin
     public function boot(): void
     {
         (new Assets())->boot();
+        (new NotificationSettings())->boot();
 
         add_action('plugins_loaded', [$this, 'bootIntegrations'], 20);
         add_action('init', [$this, 'init']);

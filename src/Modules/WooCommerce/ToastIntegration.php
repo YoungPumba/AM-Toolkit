@@ -2,6 +2,8 @@
 
 namespace AMToolkit\Modules\WooCommerce;
 
+use AMToolkit\Settings\Notifications;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -45,18 +47,23 @@ final class ToastIntegration
             true
         );
 
+        $settings = Notifications::get();
+
         wp_localize_script(
             self::SCRIPT_HANDLE,
             'AMToolkitWooCommerce',
             [
-                'cartUrl' => wc_get_cart_url(),
-                'pending' => $this->pullNotifications(),
-                'labels'  => [
-                    'addedTitle'    => __('Dodano do koszyka', 'am-toolkit'),
-                    'addedFallback' => __('Produkt został dodany do koszyka.', 'am-toolkit'),
-                    'removedTitle'  => __('Usunięto z koszyka', 'am-toolkit'),
-                    'removedFallback' => __('Produkt został usunięty z koszyka.', 'am-toolkit'),
-                    'cartAction'    => __('Przejdź do koszyka →', 'am-toolkit'),
+                'cartUrl'        => wc_get_cart_url(),
+                'pending'        => $this->pullNotifications(),
+                'addedEnabled'   => (int) $settings['added_enabled'],
+                'removedEnabled' => (int) $settings['removed_enabled'],
+                'duration'       => (int) $settings['duration'],
+                'labels'         => [
+                    'addedTitle'     => $settings['added_title'],
+                    'addedMessage'   => $settings['added_message'],
+                    'removedTitle'   => $settings['removed_title'],
+                    'removedMessage' => $settings['removed_message'],
+                    'cartAction'     => $settings['cart_action'],
                 ],
             ]
         );
@@ -77,6 +84,12 @@ final class ToastIntegration
             return;
         }
 
+        $settings = Notifications::get();
+
+        if (empty($settings['added_enabled'])) {
+            return;
+        }
+
         $product = wc_get_product($variationId ?: $productId);
 
         if (!$product) {
@@ -85,15 +98,11 @@ final class ToastIntegration
 
         $this->pushNotification([
             'type'       => 'success',
-            'title'      => __('Dodano do koszyka', 'am-toolkit'),
-            'message'    => sprintf(
-                /* translators: %s: product name. */
-                __('Produkt „%s” został dodany do koszyka.', 'am-toolkit'),
-                $product->get_name()
-            ),
-            'actionText' => __('Przejdź do koszyka →', 'am-toolkit'),
+            'title'      => $settings['added_title'],
+            'message'    => Notifications::formatMessage($settings['added_message'], $product->get_name()),
+            'actionText' => $settings['cart_action'],
             'actionUrl'  => wc_get_cart_url(),
-            'duration'   => 4000,
+            'duration'   => (int) $settings['duration'],
         ]);
     }
 
@@ -105,6 +114,12 @@ final class ToastIntegration
         $this->suppressRemovedNotice = true;
 
         if ($this->isAsyncRequest()) {
+            return;
+        }
+
+        $settings = Notifications::get();
+
+        if (empty($settings['removed_enabled'])) {
             return;
         }
 
@@ -130,13 +145,9 @@ final class ToastIntegration
 
         $this->pushNotification([
             'type'     => 'info',
-            'title'    => __('Usunięto z koszyka', 'am-toolkit'),
-            'message'  => sprintf(
-                /* translators: %s: product name. */
-                __('Produkt „%s” został usunięty z koszyka.', 'am-toolkit'),
-                $productName
-            ),
-            'duration' => 4000,
+            'title'    => $settings['removed_title'],
+            'message'  => Notifications::formatMessage($settings['removed_message'], $productName),
+            'duration' => (int) $settings['duration'],
         ]);
     }
 
