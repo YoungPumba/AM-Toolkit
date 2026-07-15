@@ -1,0 +1,36 @@
+# AM Toolkit
+
+AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
+
+## Dostępne moduły
+
+- nowoczesne powiadomienia Toast dla WooCommerce,
+- panel konfiguracji powiadomień w WordPressie,
+- shortcode `[custom_cart]` z wartością i licznikiem koszyka,
+- aktualizacja koszyka przez AJAX,
+- integracja z optymalizacją LiteSpeed Cache.
+
+## Wymagania
+
+- WordPress,
+- PHP 8.0 lub nowszy,
+- WooCommerce dla funkcji sklepowych.
+
+## Instalacja
+
+1. Pobierz najnowszą paczkę ZIP z sekcji **Releases**.
+2. W WordPressie przejdź do **Wtyczki → Dodaj wtyczkę → Wyślij wtyczkę na serwer**.
+3. Wgraj ZIP i aktywuj AM Toolkit.
+4. Po aktualizacji wyczyść pamięć podręczną strony, zwłaszcza jeśli używasz LiteSpeed Cache.
+
+## Konfiguracja
+
+Ustawienia komunikatów są dostępne w kokpicie WordPressa w sekcji **AM Toolkit → Powiadomienia**.
+
+## Historia zmian
+
+Pełna lista zmian znajduje się w pliku [CHANGELOG.md](CHANGELOG.md).
+
+## Licencja
+
+GPL-2.0-or-later.

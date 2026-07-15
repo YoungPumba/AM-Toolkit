@@ -2,6 +2,14 @@
  * AM Toolkit Cart Indicator
  */
 
+/*
+ * WooCommerce dopisuje ten link po zdarzeniu AJAX `added_to_cart`.
+ * AM Toolkit zastępuje go przyciskiem akcji we własnym powiadomieniu.
+ */
+a.added_to_cart.wc-forward {
+    display: none !important;
+}
+
 .my-header-cart {
     --amt-cart-color: #2b2b2b;
     --amt-cart-hover: #ef5c96;

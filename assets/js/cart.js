@@ -18,6 +18,12 @@
             return badge.length ? badge.text().trim() : '';
         }
 
+        function removeViewCartLinks() {
+            document.querySelectorAll('a.added_to_cart.wc-forward').forEach((link) => {
+                link.remove();
+            });
+        }
+
         function animateChangedCount() {
             const badges = $('.my-cart-count');
 
@@ -136,6 +142,8 @@
                     data.cart_hash,
                     button
                 ]);
+
+                window.requestAnimationFrame(removeViewCartLinks);
             } catch (error) {
                 window.location.assign(url.href);
             } finally {
@@ -199,8 +207,11 @@
 
                 if (event.type === 'added_to_cart') {
                     unlockButton(button);
+                    window.requestAnimationFrame(removeViewCartLinks);
                 }
             }
         );
+
+        removeViewCartLinks();
     });
 })();
