@@ -4,6 +4,7 @@ namespace AMToolkit\Core;
 
 use AMToolkit\Core\Assets;
 use AMToolkit\Admin\NotificationSettings;
+use AMToolkit\Modules\WooCommerce\CartIndicator;
 use AMToolkit\Modules\WooCommerce\ToastIntegration;
 
 if (!defined('ABSPATH')) {
@@ -15,7 +16,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.3.0';
+    public const VERSION = '0.4.0';
 
     /**
      * Uruchamia wtyczkę.
@@ -36,6 +37,7 @@ final class Plugin
     {
         if (class_exists('WooCommerce')) {
             (new ToastIntegration())->boot();
+            (new CartIndicator())->boot();
         }
     }
 

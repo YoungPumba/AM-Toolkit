@@ -1,0 +1,111 @@
+/**
+ * AM Toolkit Cart Indicator
+ */
+
+.my-header-cart {
+    --amt-cart-color: #2b2b2b;
+    --amt-cart-hover: #ef5c96;
+    --amt-cart-badge: #ef5c96;
+    --amt-cart-badge-color: #fff;
+    --amt-cart-transition: 250ms;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--amt-cart-color);
+    text-decoration: none;
+    transition: color var(--amt-cart-transition) ease;
+}
+
+.my-cart-total {
+    font-size: 15px;
+    font-weight: 600;
+    transition: color var(--amt-cart-transition) ease;
+}
+
+.my-cart-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.my-cart-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    transition: transform 300ms var(--amt-ease-enter, ease);
+}
+
+.my-cart-count {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--amt-cart-badge);
+    color: var(--amt-cart-badge-color);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    transform: scale(1);
+    transition: transform var(--amt-cart-transition) ease;
+}
+
+.my-header-cart:hover,
+.my-header-cart:focus-visible {
+    color: var(--amt-cart-hover);
+}
+
+.my-header-cart:hover svg,
+.my-header-cart:focus-visible svg {
+    transform: scale(1.08);
+}
+
+.my-header-cart:focus-visible {
+    border-radius: 6px;
+    outline: 2px solid var(--amt-cart-hover);
+    outline-offset: 4px;
+}
+
+.my-cart-count.bump {
+    animation: amt-cart-bump 350ms var(--amt-ease-spring, ease);
+}
+
+@keyframes amt-cart-bump {
+    0% {
+        transform: scale(1);
+    }
+
+    35% {
+        transform: scale(1.35);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 767px) {
+    .my-cart-total {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .my-cart-count.bump {
+        animation-duration: 1ms;
+    }
+
+    .my-cart-icon svg {
+        transition-duration: 1ms;
+    }
+}
