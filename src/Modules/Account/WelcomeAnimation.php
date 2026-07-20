@@ -85,6 +85,13 @@ final class WelcomeAnimation
             return false;
         }
 
+        if (
+            isset($_GET['amt-onboarding']) || // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            isset($_GET['password-reset']) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        ) {
+            return false;
+        }
+
         return true;
     }
 

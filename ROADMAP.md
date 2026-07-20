@@ -29,11 +29,12 @@
 
 ## Odzyskiwanie i ustawianie hasła
 
-- [ ] uzupełnić pusty widok otwierany z odnośnika „Ustaw nowe hasło” w wiadomości rejestracyjnej,
-- [ ] wyświetlić formularz nowego hasła dla poprawnego klucza WooCommerce,
-- [ ] obsłużyć nieprawidłowy, wykorzystany lub wygasły odnośnik,
-- [ ] dodać komunikat po poprawnym zapisaniu hasła i przejście do logowania,
-- [ ] dopasować wygląd formularza oraz komunikatów do panelu konta,
+- [x] uzupełnić pusty widok otwierany z odnośnika „Ustaw nowe hasło” w wiadomości rejestracyjnej,
+- [x] wyświetlić formularz nowego hasła dla poprawnego klucza WooCommerce,
+- [x] obsłużyć nieprawidłowy, wykorzystany lub wygasły odnośnik,
+- [x] dodać komunikat po poprawnym zapisaniu hasła i przejście do konfiguracji konta,
+- [x] formularz imienia, nazwiska, nazwy wyświetlanej i opcjonalnego telefonu,
+- [x] dopasować wygląd formularza oraz komunikatów do panelu konta,
 - [ ] przetestować cały proces w trybie niezalogowanym na komputerze i telefonie.
 
 ## Późniejsze moduły konta

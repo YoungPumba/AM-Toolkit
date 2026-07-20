@@ -1,5 +1,16 @@
 # Historia zmian AM Toolkit
 
+## 0.7.0
+
+- kompletny widok ustawiania hasła otwierany z wiadomości rejestracyjnej WooCommerce,
+- bezpieczne wykorzystanie klucza resetowania, nonce i mechanizmu logowania WooCommerce,
+- obsługa nieprawidłowego, wykorzystanego i wygasłego odnośnika,
+- formularz ponownego wysłania wiadomości z odnośnikiem do hasła,
+- drugi krok aktywacji z imieniem, nazwiskiem i nazwą wyświetlaną,
+- opcjonalny numer telefonu zapisywany w danych rozliczeniowych,
+- wskaźnik siły hasła i możliwość pokazania wpisywanej wartości,
+- automatyczne przejście do panelu oraz potwierdzenie przez Toast.
+
 ## 0.6.0
 
 - powitalna animacja na głównym widoku panelu konta,
