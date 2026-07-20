@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Wersja 0.7.1 dodaje codzienną animację powitalną, pełny proces ustawienia hasła i konfiguracji konta oraz poprawki stylistyczne formularzy.
+Wersja 0.7.2 dodaje codzienną animację powitalną, pełny proces ustawienia hasła i konfiguracji konta oraz poprawki stylistyczne formularzy i animacji mobilnej.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 

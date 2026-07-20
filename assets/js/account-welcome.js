@@ -1,6 +1,12 @@
 (() => {
     'use strict';
 
+    if (window.AMTAccountWelcomeRunning) {
+        return;
+    }
+
+    window.AMTAccountWelcomeRunning = true;
+
     const config = window.AMTAccountWelcome || {};
     const overlay = document.querySelector('[data-am-account-welcome]');
     const animationContainer = overlay?.querySelector('[data-am-account-welcome-animation]');
@@ -56,10 +62,12 @@
 
     let closed = false;
     let pathAnimation = null;
+    let hideAnimationTimer = null;
 
     const close = () => {
         if (closed) return;
         closed = true;
+        window.clearTimeout(hideAnimationTimer);
         overlay.classList.add('is-leaving');
         window.setTimeout(() => {
             pathAnimation?.cancel();
@@ -139,26 +147,51 @@
         animationContainer.classList.add('has-vector');
 
         const length = path.getTotalLength();
-        path.style.strokeDasharray = `${length}`;
-        path.style.strokeDashoffset = `${length}`;
+        const visibleOffset = '0px';
+        const hiddenBefore = `${length}px`;
+        const hiddenAfter = `${-length}px`;
+
+        path.style.strokeDasharray = `${length}px ${length}px`;
+        path.style.strokeDashoffset = hiddenBefore;
         pathAnimation = path.animate(
             [
-                {strokeDashoffset: length, offset: 0},
-                {strokeDashoffset: 0, offset: 0.48},
-                {strokeDashoffset: 0, offset: 0.66},
-                {strokeDashoffset: -length, offset: 1},
+                {strokeDashoffset: hiddenBefore},
+                {strokeDashoffset: visibleOffset},
             ],
             {
-                duration: 4200,
+                duration: 2000,
                 delay: 700,
                 easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
                 fill: 'forwards',
             }
         );
 
-        pathAnimation.finished
-            .then(() => window.setTimeout(close, 250))
-            .catch(() => {});
+        /*
+         * Wejście i wyjście są rozdzielone celowo. Mobilny Safari potrafi
+         * ponownie narysować ścieżkę, gdy jedna animacja przechodzi z
+         * dodatniego do ujemnego stroke-dashoffset.
+         */
+        hideAnimationTimer = window.setTimeout(() => {
+            if (closed) return;
+
+            path.style.strokeDashoffset = visibleOffset;
+            pathAnimation?.cancel();
+            pathAnimation = path.animate(
+                [
+                    {strokeDashoffset: visibleOffset},
+                    {strokeDashoffset: hiddenAfter},
+                ],
+                {
+                    duration: 1400,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    fill: 'forwards',
+                }
+            );
+
+            pathAnimation.finished
+                .then(() => window.setTimeout(close, 250))
+                .catch(() => {});
+        }, 3450);
     };
 
     const start = async () => {

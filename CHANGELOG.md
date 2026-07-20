@@ -1,5 +1,11 @@
 # Historia zmian AM Toolkit
 
+## 0.7.2
+
+- poprawione dwukrotne odtwarzanie napisu `Welcome` w mobilnym Safari,
+- rozdzielone rysowanie i wymazywanie ścieżki SVG na dwa niezależne etapy,
+- globalna blokada ponownego uruchomienia animacji powitalnej na tej samej stronie.
+
 ## 0.7.1
 
 - usunięta ikona WooCommerce nachodząca na treść komunikatu formularza,
