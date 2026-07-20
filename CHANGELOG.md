@@ -1,5 +1,11 @@
 # Historia zmian AM Toolkit
 
+## 0.4.3
+
+- styl podsumowania błędów walidacji nad formularzem zamówienia,
+- białe tło, jasnoszara ramka i zaokrąglenie 25 px,
+- typografia Poppins 18 px oraz wyróżnione odnośniki w kolorze marki.
+
 ## 0.4.2
 
 - ukrycie standardowego linku WooCommerce „Zobacz koszyk” po dodaniu produktu przez AJAX,

@@ -8,7 +8,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - panel konfiguracji powiadomień w WordPressie,
 - shortcode `[custom_cart]` z wartością i licznikiem koszyka,
 - aktualizacja koszyka przez AJAX,
-- integracja z optymalizacją LiteSpeed Cache.
+- integracja z optymalizacją LiteSpeed Cache,
+- spójny wygląd podsumowania błędów walidacji podczas składania zamówienia.
 
 ## Wymagania
 

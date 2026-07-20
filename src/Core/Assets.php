@@ -29,6 +29,13 @@ final class Assets
             $this->assetVersion('assets/css/toast.css')
         );
 
+        wp_enqueue_style(
+            'am-toolkit-checkout',
+            AM_TOOLKIT_URL . 'assets/css/checkout.css',
+            ['am-toolkit-core'],
+            $this->assetVersion('assets/css/checkout.css')
+        );
+
         wp_enqueue_script(
             'am-toolkit-core',
             AM_TOOLKIT_URL . 'assets/js/core.js',
