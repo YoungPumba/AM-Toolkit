@@ -8,7 +8,7 @@
 - [ ] podsumowanie „Wszystkie moje produkty”,
 - [x] podgląd ostatnio nabytych produktów,
 - [ ] pełny widok wszystkich nabytych produktów,
-- [ ] dynamiczna sekcja „Wymaga Twojej uwagi”,
+- [x] dynamiczna sekcja „Wymaga Twojej uwagi”,
 - [x] dynamiczna sekcja „Ostatnie zamówienie”,
 - [ ] odnośniki i liczniki szybkiego dostępu.
 

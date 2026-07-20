@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.5.5
+
+- shortcode `[am_account_attention]`,
+- dynamiczne zadania dotyczące brakujących danych profilu i adresu rozliczeniowego,
+- odnośnik do płatności za najnowsze nieopłacone zamówienie,
+- klikalne elementy prowadzące bezpośrednio do właściwych sekcji konta,
+- pozytywny komunikat, gdy konto nie wymaga działania.
+
 ## 0.5.4
 
 - nieco większa typografia listy ostatnio kupionych produktów,

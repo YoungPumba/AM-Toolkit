@@ -14,6 +14,7 @@ final class AccountDashboard
         add_shortcode('am_account_profile', [$this, 'renderProfile']);
         add_shortcode('am_account_recent_products', [$this, 'renderRecentProducts']);
         add_shortcode('am_account_last_order', [$this, 'renderLastOrder']);
+        add_shortcode('am_account_attention', [$this, 'renderAttention']);
     }
 
     /**
@@ -242,6 +243,111 @@ final class AccountDashboard
                 </a>
             </div>
         </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Renders actionable account tasks or a reassuring all-clear state.
+     */
+    public function renderAttention(): string
+    {
+        $user = $this->currentUser();
+
+        if (!$user || !function_exists('wc_get_page_permalink')) {
+            return '';
+        }
+
+        $accountUrl = wc_get_page_permalink('myaccount');
+        $tasks = [];
+
+        if (
+            trim((string) $user->first_name) === '' ||
+            trim((string) $user->last_name) === ''
+        ) {
+            $tasks[] = [
+                'label' => __('Uzupełnij imię i nazwisko', 'am-toolkit'),
+                'url'   => wc_get_endpoint_url('edit-account', '', $accountUrl),
+                'type'  => 'profile',
+            ];
+        }
+
+        $billingFields = [
+            'billing_first_name',
+            'billing_last_name',
+            'billing_address_1',
+            'billing_city',
+            'billing_postcode',
+            'billing_country',
+        ];
+
+        $hasMissingBillingData = false;
+
+        foreach ($billingFields as $field) {
+            if (trim((string) get_user_meta($user->ID, $field, true)) === '') {
+                $hasMissingBillingData = true;
+                break;
+            }
+        }
+
+        if ($hasMissingBillingData) {
+            $tasks[] = [
+                'label' => __('Uzupełnij dane rozliczeniowe', 'am-toolkit'),
+                'url'   => wc_get_endpoint_url('edit-address', 'billing', $accountUrl),
+                'type'  => 'billing',
+            ];
+        }
+
+        if (function_exists('wc_get_orders')) {
+            $unpaidOrders = wc_get_orders([
+                'customer_id' => $user->ID,
+                'status'      => ['wc-pending', 'wc-failed'],
+                'limit'       => 5,
+                'orderby'     => 'date',
+                'order'       => 'DESC',
+                'return'      => 'objects',
+            ]);
+
+            foreach ($unpaidOrders as $order) {
+                if (!$order->needs_payment()) {
+                    continue;
+                }
+
+                $tasks[] = [
+                    'label' => sprintf(
+                        /* translators: %s: WooCommerce order number. */
+                        __('Dokończ płatność za zamówienie #%s', 'am-toolkit'),
+                        $order->get_order_number()
+                    ),
+                    'url'   => $order->get_checkout_payment_url(),
+                    'type'  => 'payment',
+                ];
+
+                break;
+            }
+        }
+
+        if ($tasks === []) {
+            return sprintf(
+                '<p class="am-account-attention__empty"><span aria-hidden="true">✓</span>%s</p>',
+                esc_html__('Wszystko jest w porządku — Twoje konto nie wymaga teraz żadnych działań.', 'am-toolkit')
+            );
+        }
+
+        ob_start();
+        ?>
+        <ul class="am-account-attention" aria-label="<?php echo esc_attr__('Elementy wymagające uwagi', 'am-toolkit'); ?>">
+            <?php foreach ($tasks as $task) : ?>
+                <li class="am-account-attention__item am-account-attention__item--<?php echo esc_attr($task['type']); ?>">
+                    <a class="am-account-attention__link" href="<?php echo esc_url($task['url']); ?>">
+                        <span class="am-account-attention__icon" aria-hidden="true">!</span>
+                        <span><?php echo esc_html($task['label']); ?></span>
+                        <span class="am-account-attention__arrow" aria-hidden="true">→</span>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
         <?php
 
         return (string) ob_get_clean();
