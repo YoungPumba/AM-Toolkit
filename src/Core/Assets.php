@@ -2,6 +2,8 @@
 
 namespace AMToolkit\Core;
 
+use AMToolkit\Settings\CheckoutNotice;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -35,6 +37,8 @@ final class Assets
             ['am-toolkit-core'],
             $this->assetVersion('assets/css/checkout.css')
         );
+
+        wp_add_inline_style('am-toolkit-checkout', CheckoutNotice::inlineCss());
 
         wp_enqueue_script(
             'am-toolkit-core',

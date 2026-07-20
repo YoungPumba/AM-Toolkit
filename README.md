@@ -9,7 +9,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - shortcode `[custom_cart]` z wartością i licznikiem koszyka,
 - aktualizacja koszyka przez AJAX,
 - integracja z optymalizacją LiteSpeed Cache,
-- spójny wygląd podsumowania błędów walidacji podczas składania zamówienia.
+- spójny wygląd podsumowania błędów walidacji podczas składania zamówienia,
+- panel konfiguracji komunikatu checkoutu z podglądem zmian.
 
 ## Wymagania
 

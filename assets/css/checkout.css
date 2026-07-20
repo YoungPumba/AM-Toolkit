@@ -12,15 +12,15 @@
     margin: 0 0 var(--amt-space-5, 20px) !important;
     padding: var(--amt-space-5, 20px) var(--amt-space-6, 24px) var(--amt-space-5, 20px) 56px !important;
 
-    border: 1px solid #dedede !important;
-    border-radius: 25px !important;
-    background: #ffffff !important;
+    border: var(--amt-checkout-border-width, 1px) solid var(--amt-checkout-border-color, #dedede) !important;
+    border-radius: var(--amt-checkout-radius, 25px) !important;
+    background: var(--amt-checkout-background, #ffffff) !important;
     box-shadow: none !important;
 
-    color: var(--amt-color-text, #171717) !important;
-    font-family: "Poppins", sans-serif !important;
-    font-size: 18px !important;
-    font-weight: 400 !important;
+    color: var(--amt-checkout-text-color, #171717) !important;
+    font-family: var(--amt-checkout-font-family, "Poppins", sans-serif) !important;
+    font-size: var(--amt-checkout-font-size, 14px) !important;
+    font-weight: var(--amt-checkout-font-weight, 400) !important;
     line-height: 1.55 !important;
     list-style: none !important;
 }
@@ -30,7 +30,7 @@
 .woocommerce-error::before {
     top: var(--amt-space-5, 20px) !important;
     left: var(--amt-space-6, 24px) !important;
-    color: #f176a4 !important;
+    color: var(--amt-checkout-icon-color, #f176a4) !important;
 }
 
 .woocommerce-checkout
@@ -50,9 +50,9 @@
 .woocommerce-checkout
 .woocommerce-NoticeGroup-checkout
 .woocommerce-error a {
-    color: #f176a4 !important;
+    color: var(--amt-checkout-link-color, #f176a4) !important;
     font: inherit !important;
-    font-weight: 700 !important;
+    font-weight: var(--amt-checkout-link-weight, 500) !important;
     text-decoration: none !important;
 }
 
@@ -62,7 +62,7 @@
 .woocommerce-checkout
 .woocommerce-NoticeGroup-checkout
 .woocommerce-error a:focus-visible {
-    color: #f176a4 !important;
+    color: var(--amt-checkout-link-color, #f176a4) !important;
     text-decoration: underline !important;
     text-underline-offset: 3px;
 }

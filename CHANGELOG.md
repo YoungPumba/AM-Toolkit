@@ -1,5 +1,12 @@
 # Historia zmian AM Toolkit
 
+## 0.4.4
+
+- domyślna typografia komunikatu checkoutu Poppins 14 px / 400,
+- domyślna grubość odnośników 500,
+- panel **AM Toolkit → Checkout** do konfiguracji wyglądu komunikatu,
+- podgląd zmian kolorów, typografii, ramki i zaokrąglenia w kokpicie.
+
 ## 0.4.3
 
 - styl podsumowania błędów walidacji nad formularzem zamówienia,
