@@ -5,7 +5,7 @@
 - [x] responsywne kafelki szybkiego dostępu,
 - [x] poziome przewijanie kafelków na telefonach,
 - [x] dynamiczne powitanie i dane profilu,
-- [ ] podsumowanie „Wszystkie moje produkty”,
+- [x] podsumowanie „Wszystkie moje produkty”,
 - [x] podgląd ostatnio nabytych produktów,
 - [ ] pełny widok wszystkich nabytych produktów,
 - [ ] endpoint `/moje-konto/moje-produkty/` z kursami, konsultacjami i plikami klienta,

@@ -8,6 +8,11 @@ defined('ABSPATH') || exit;
 
 final class AccountDashboard
 {
+    /** @var array<int, int> */
+    private array $purchasedProductIds = [];
+
+    private bool $purchasedProductIdsLoaded = false;
+
     public function boot(): void
     {
         add_shortcode('am_account_greeting', [$this, 'renderGreeting']);
@@ -16,6 +21,7 @@ final class AccountDashboard
         add_shortcode('am_account_last_order', [$this, 'renderLastOrder']);
         add_shortcode('am_account_attention', [$this, 'renderAttention']);
         add_shortcode('am_account_shortcut', [$this, 'renderShortcut']);
+        add_shortcode('am_account_products_summary', [$this, 'renderProductsSummary']);
     }
 
     /**
@@ -413,7 +419,11 @@ final class AccountDashboard
             </span>
 
             <?php if ($configuration['url'] !== '') : ?>
-                <span class="am-account-shortcut-content__arrow" aria-hidden="true">→</span>
+                <span class="am-account-shortcut-content__arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M5 12h14m-5-5 5 5-5 5" />
+                    </svg>
+                </span>
             <?php endif; ?>
         </<?php echo esc_attr($tag); ?>>
         <?php
@@ -478,8 +488,92 @@ final class AccountDashboard
 
     private function purchasedProductCount(int $userId): int
     {
+        return count($this->purchasedProductIds($userId));
+    }
+
+    /**
+     * Renders purchased-product counts for the three dashboard categories.
+     *
+     * @param array<string, mixed> $attributes Shortcode attributes.
+     */
+    public function renderProductsSummary(array $attributes = []): string
+    {
+        $user = $this->currentUser();
+
+        if (!$user || !taxonomy_exists('product_cat')) {
+            return '';
+        }
+
+        $attributes = shortcode_atts(
+            [
+                'consultations' => 'consultacje-i-mentoring',
+                'courses'       => 'kursy-online',
+                'downloads'     => 'workbooki-e-booki-szablony',
+            ],
+            $attributes,
+            'am_account_products_summary'
+        );
+
+        $productIds = $this->purchasedProductIds($user->ID);
+        $categories = [
+            [
+                'label' => __('Konsultacje', 'am-toolkit'),
+                'slug'  => sanitize_title((string) $attributes['consultations']),
+            ],
+            [
+                'label' => __('Kursy', 'am-toolkit'),
+                'slug'  => sanitize_title((string) $attributes['courses']),
+            ],
+            [
+                'label' => __('Pliki do pobrania', 'am-toolkit'),
+                'slug'  => sanitize_title((string) $attributes['downloads']),
+            ],
+        ];
+
+        foreach ($categories as &$category) {
+            $category['count'] = 0;
+
+            foreach ($productIds as $productId) {
+                if (has_term($category['slug'], 'product_cat', $productId)) {
+                    $category['count']++;
+                }
+            }
+        }
+        unset($category);
+
+        ob_start();
+        ?>
+        <ul class="am-account-products-summary" aria-label="<?php echo esc_attr__('Podsumowanie zakupionych produktów', 'am-toolkit'); ?>">
+            <?php foreach ($categories as $category) : ?>
+                <li class="am-account-products-summary__item">
+                    <span class="am-account-products-summary__icon" aria-hidden="true">✓</span>
+                    <span class="am-account-products-summary__label">
+                        <?php echo esc_html($category['label']); ?>
+                    </span>
+                    <span class="am-account-products-summary__count" aria-label="<?php echo esc_attr(sprintf(__('Liczba: %d', 'am-toolkit'), $category['count'])); ?>">
+                        <?php echo esc_html((string) $category['count']); ?>
+                    </span>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function purchasedProductIds(int $userId): array
+    {
+        if ($this->purchasedProductIdsLoaded) {
+            return $this->purchasedProductIds;
+        }
+
+        $this->purchasedProductIdsLoaded = true;
+
         if (!function_exists('wc_get_orders')) {
-            return 0;
+            return [];
         }
 
         $orderIds = wc_get_orders([
@@ -488,8 +582,6 @@ final class AccountDashboard
             'limit'       => -1,
             'return'      => 'ids',
         ]);
-        $productIds = [];
-
         foreach ($orderIds as $orderId) {
             $order = wc_get_order($orderId);
 
@@ -501,12 +593,13 @@ final class AccountDashboard
                 $productId = $item->get_variation_id() ?: $item->get_product_id();
 
                 if ($productId) {
-                    $productIds[$productId] = true;
+                    $parentProductId = $item->get_product_id();
+                    $this->purchasedProductIds[$parentProductId ?: $productId] = $parentProductId ?: $productId;
                 }
             }
         }
 
-        return count($productIds);
+        return array_values($this->purchasedProductIds);
     }
 
     private function shortcutIcon(string $type): string

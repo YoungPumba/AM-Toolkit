@@ -460,13 +460,22 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: #f176a4;
-    color: #fff;
-    font-size: 19px;
-    font-weight: 700;
+    border: 1px solid rgba(241, 118, 164, 0.2);
+    background: #fff;
+    color: #f176a4;
     line-height: 1;
-    box-shadow: 0 5px 14px rgba(241, 118, 164, 0.28);
+    box-shadow: 0 5px 14px rgba(66, 39, 49, 0.12);
     transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.am-account-shortcut-content__arrow svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.35;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .am-account-shortcut-content:not(.is-disabled):hover {
@@ -474,8 +483,9 @@
 }
 
 .am-account-shortcut-content:not(.is-disabled):hover .am-account-shortcut-content__arrow {
-    background: #d85f8d;
-    box-shadow: 0 7px 18px rgba(216, 95, 141, 0.36);
+    background: #fff;
+    color: #d85f8d;
+    box-shadow: 0 7px 18px rgba(216, 95, 141, 0.22);
     transform: translateX(3px) scale(1.04);
 }
 
@@ -487,6 +497,54 @@
 
 .am-account-shortcut-content.is-disabled {
     opacity: 0.72;
+}
+
+.am-account-products-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: Poppins, sans-serif;
+}
+
+.am-account-products-summary__item {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.am-account-products-summary__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    color: #f176a4;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.am-account-products-summary__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #7a483e;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 @media (max-width: 767px) {

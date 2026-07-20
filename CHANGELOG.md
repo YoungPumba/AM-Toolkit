@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.5.8
+
+- shortcode `[am_account_products_summary]`,
+- dynamiczne liczniki zakupionych konsultacji, kursów i plików,
+- klasyfikacja według istniejących kategorii WooCommerce,
+- współdzielona lista produktów ograniczająca powtarzanie zapytań na dashboardzie,
+- wygładzona strzałka SVG w kolorze różowym na białym kółku.
+
 ## 0.5.7
 
 - bardziej widoczne strzałki szybkich kafelków,
