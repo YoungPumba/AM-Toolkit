@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.5.0
+
+- pierwszy etap modułu panelu konta,
+- responsywna lista kafelków szybkiego dostępu,
+- poziome przewijanie dotykiem na telefonach,
+- zatrzymywanie przewijania na kolejnych kafelkach (`scroll-snap`),
+- czytelna szerokość kafelków bez ściskania ich zawartości,
+- oznaczenie funkcji planowanych etykietą „W budowie”.
+
 ## 0.4.4
 
 - domyślna typografia komunikatu checkoutu Poppins 14 px / 400,

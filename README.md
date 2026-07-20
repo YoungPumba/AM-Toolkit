@@ -12,6 +12,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - spójny wygląd podsumowania błędów walidacji podczas składania zamówienia,
 - panel konfiguracji komunikatu checkoutu z podglądem zmian.
 
+- responsywne kafelki szybkiego dostępu w panelu konta.
+
 ## Wymagania
 
 - WordPress,

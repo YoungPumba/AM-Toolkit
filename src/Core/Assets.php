@@ -40,6 +40,13 @@ final class Assets
 
         wp_add_inline_style('am-toolkit-checkout', CheckoutNotice::inlineCss());
 
+        wp_enqueue_style(
+            'am-toolkit-account',
+            AM_TOOLKIT_URL . 'assets/css/account.css',
+            ['am-toolkit-core'],
+            $this->assetVersion('assets/css/account.css')
+        );
+
         wp_enqueue_script(
             'am-toolkit-core',
             AM_TOOLKIT_URL . 'assets/js/core.js',

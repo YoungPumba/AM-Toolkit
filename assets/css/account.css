@@ -1,0 +1,82 @@
+/**
+ * AM Toolkit — Account dashboard
+ *
+ * Layout helpers for the Elementor account dashboard. The visual appearance
+ * of the cards remains editable in Elementor; this file controls responsive
+ * behaviour that should be consistent across breakpoints.
+ */
+
+.am-account-shortcuts__track {
+    display: flex;
+    flex-wrap: nowrap !important;
+    gap: 20px;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-padding-inline: 20px;
+    scroll-snap-type: inline mandatory;
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+    scrollbar-width: thin;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+}
+
+.am-account-shortcuts__track::-webkit-scrollbar {
+    height: 5px;
+}
+
+.am-account-shortcuts__track::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.am-account-shortcuts__track::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 999px;
+}
+
+.am-account-shortcut {
+    flex: 1 0 240px !important;
+    min-width: 240px !important;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+.am-account-shortcut.is-coming-soon {
+    position: relative;
+}
+
+.am-account-shortcut.is-coming-soon::after {
+    content: "W budowie";
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 2;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #7a483e;
+    font: 600 11px/1.2 Poppins, sans-serif;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+}
+
+@media (max-width: 767px) {
+    .am-account-shortcuts__track {
+        gap: 14px;
+        scroll-padding-inline: 14px;
+    }
+
+    .am-account-shortcut {
+        flex-basis: min(78vw, 290px) !important;
+        min-width: min(78vw, 290px) !important;
+        max-width: 290px !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .am-account-shortcuts__track {
+        scroll-behavior: auto;
+    }
+}
