@@ -7,9 +7,6 @@
         return;
     }
 
-    const title = flow.querySelector('h1[tabindex="-1"]');
-    window.requestAnimationFrame(() => title?.focus({preventScroll: true}));
-
     flow.querySelectorAll('[data-amt-password-toggle]').forEach((button) => {
         button.addEventListener('click', () => {
             const input = button.closest('.amt-account-flow__password-wrap')?.querySelector('input');

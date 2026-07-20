@@ -142,18 +142,38 @@ body:has(.amt-account-flow) {
     padding-right: 78px;
 }
 
-.amt-account-flow__reveal {
+button.amt-account-flow__reveal {
     position: absolute;
     top: 50%;
     right: 12px;
-    min-height: 34px;
-    padding: 4px 7px;
-    border: 0;
-    background: transparent;
-    color: #f176a4;
-    font: 600 12px/1 Poppins, sans-serif;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 4px 6px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 5px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #f176a4 !important;
+    font: 600 11px/1 Poppins, sans-serif !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    box-shadow: none !important;
     cursor: pointer;
     transform: translateY(-50%);
+}
+
+button.amt-account-flow__reveal:hover,
+button.amt-account-flow__reveal:active {
+    border: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #d85f8d !important;
+    box-shadow: none !important;
+    transform: translateY(-50%) !important;
 }
 
 .amt-account-flow__reveal:focus-visible {
@@ -259,12 +279,22 @@ body:has(.amt-account-flow) {
 .amt-account-flow .woocommerce-error,
 .amt-account-flow .woocommerce-message,
 .amt-account-flow .woocommerce-info {
-    padding: 14px 16px;
+    padding: 14px 16px !important;
     border: 1px solid #e4e4e4;
     border-radius: 14px;
     background: #fafafa;
     font: 400 13px/1.55 Poppins, sans-serif;
     list-style: none;
+}
+
+.amt-account-flow .woocommerce-error::before,
+.amt-account-flow .woocommerce-message::before,
+.amt-account-flow .woocommerce-info::before,
+.amt-account-flow .woocommerce-error li::before,
+.amt-account-flow .woocommerce-message li::before,
+.amt-account-flow .woocommerce-info li::before {
+    content: none !important;
+    display: none !important;
 }
 
 .amt-account-flow .woocommerce-error {

@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.7.1
+
+- usunięta ikona WooCommerce nachodząca na treść komunikatu formularza,
+- usunięte automatyczne zaznaczenie i obramowanie nagłówka,
+- mniejsze, tekstowe przyciski pokazywania hasła bez tła i zbędnej wysokości,
+- zabezpieczenie komunikatu kończącego konfigurację przed podwójnym wyświetleniem,
+- globalne pomijanie identycznego Toastu, jeśli jego poprzednia kopia jest nadal widoczna,
+- usuwanie parametru potwierdzenia z adresu po pokazaniu Toastu.
+
 ## 0.7.0
 
 - kompletny widok ustawiania hasła otwierany z wiadomości rejestracyjnej WooCommerce,

@@ -108,7 +108,7 @@ final class AccountOnboarding
                     <span class="amt-account-flow__eyebrow">
                         <?php echo esc_html($isNewAccount ? __('Aktywacja konta', 'am-toolkit') : __('Bezpieczeństwo konta', 'am-toolkit')); ?>
                     </span>
-                    <h1 id="amt-password-title" class="amt-account-flow__title" tabindex="-1">
+                    <h1 id="amt-password-title" class="amt-account-flow__title">
                         <?php echo esc_html__('Ustaw swoje hasło', 'am-toolkit'); ?>
                     </h1>
                     <p class="amt-account-flow__intro">
@@ -153,7 +153,7 @@ final class AccountOnboarding
 
                 <?php elseif ($state['type'] === 'sent') : ?>
                     <span class="amt-account-flow__eyebrow"><?php echo esc_html__('Sprawdź skrzynkę', 'am-toolkit'); ?></span>
-                    <h1 id="amt-password-title" class="amt-account-flow__title" tabindex="-1">
+                    <h1 id="amt-password-title" class="amt-account-flow__title">
                         <?php echo esc_html__('Wiadomość została wysłana', 'am-toolkit'); ?>
                     </h1>
                     <p class="amt-account-flow__intro">
@@ -165,7 +165,7 @@ final class AccountOnboarding
 
                 <?php else : ?>
                     <span class="amt-account-flow__eyebrow"><?php echo esc_html__('Pomoc z logowaniem', 'am-toolkit'); ?></span>
-                    <h1 id="amt-password-title" class="amt-account-flow__title" tabindex="-1">
+                    <h1 id="amt-password-title" class="amt-account-flow__title">
                         <?php echo esc_html($state['type'] === 'invalid' ? __('Odnośnik wygasł lub został wykorzystany', 'am-toolkit') : __('Ustaw nowe hasło', 'am-toolkit')); ?>
                     </h1>
                     <p class="amt-account-flow__intro">
@@ -202,7 +202,7 @@ final class AccountOnboarding
                 <?php $this->renderNotices(); ?>
 
                 <span class="amt-account-flow__eyebrow"><?php echo esc_html__('Ostatni krok', 'am-toolkit'); ?></span>
-                <h1 id="amt-onboarding-title" class="amt-account-flow__title" tabindex="-1">
+                <h1 id="amt-onboarding-title" class="amt-account-flow__title">
                     <?php echo esc_html__('Uzupełnij swoje konto', 'am-toolkit'); ?>
                 </h1>
                 <p class="amt-account-flow__intro">
@@ -393,7 +393,7 @@ final class AccountOnboarding
 
         wp_add_inline_script(
             'am-toolkit-toast',
-            "window.addEventListener('DOMContentLoaded',function(){var show=function(){if(window.AMToolkit&&typeof window.AMToolkit.toast==='function'){window.AMToolkit.toast({$payload});}};if(document.querySelector('[data-am-account-welcome]')){window.setTimeout(show,6500);}else{show();}});",
+            "(function(){if(window.AMTAccountCompletionToastBound){return;}window.AMTAccountCompletionToastBound=true;window.addEventListener('DOMContentLoaded',function(){var show=function(){if(window.AMTAccountCompletionToastShown){return;}window.AMTAccountCompletionToastShown=true;if(window.history&&window.history.replaceState){var url=new URL(window.location.href);url.searchParams.delete('amt-onboarding-complete');window.history.replaceState({},'',url.pathname+url.search+url.hash);}if(window.AMToolkit&&typeof window.AMToolkit.toast==='function'){window.AMToolkit.toast({$payload});}};if(document.querySelector('[data-am-account-welcome]')){window.setTimeout(show,6500);}else{show();}});}());",
             'after'
         );
     }
