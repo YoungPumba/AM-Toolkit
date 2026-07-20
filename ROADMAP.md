@@ -4,7 +4,7 @@
 
 - [x] responsywne kafelki szybkiego dostępu,
 - [x] poziome przewijanie kafelków na telefonach,
-- [ ] dynamiczne powitanie i dane profilu,
+- [x] dynamiczne powitanie i dane profilu,
 - [ ] podsumowanie „Wszystkie moje produkty”,
 - [ ] lista nabytych produktów,
 - [ ] dynamiczna sekcja „Wymaga Twojej uwagi”,

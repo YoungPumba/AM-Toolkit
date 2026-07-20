@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.5.2
+
+- dynamiczne powitanie zalogowanego użytkownika,
+- shortcode `[am_account_greeting]`,
+- dynamiczne imię, login i avatar użytkownika,
+- shortcode `[am_account_profile]` z odnośnikiem do edycji konta,
+- responsywny układ profilu zgodny z panelem konta.
+
 ## 0.5.1
 
 - poprawione ograniczenie szerokości toru szybkich kafelków w kontenerach Elementora,
