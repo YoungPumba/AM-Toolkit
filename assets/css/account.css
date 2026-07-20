@@ -6,13 +6,35 @@
  * behaviour that should be consistent across breakpoints.
  */
 
+.am-account-shortcuts {
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.am-account-shortcuts,
+.am-account-shortcuts > .e-con-inner,
+.am-account-shortcuts__track {
+    box-sizing: border-box;
+}
+
+.am-account-shortcuts > .e-con-inner {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
 .am-account-shortcuts__track {
     display: flex;
     flex-wrap: nowrap !important;
+    flex: 0 1 auto !important;
     gap: 20px;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     overscroll-behavior-inline: contain;
     scroll-behavior: smooth;
     scroll-padding-inline: 20px;
@@ -21,6 +43,7 @@
     scrollbar-width: thin;
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
+    contain: inline-size;
 }
 
 .am-account-shortcuts__track::-webkit-scrollbar {
@@ -38,7 +61,9 @@
 
 .am-account-shortcut {
     flex: 1 0 240px !important;
+    width: auto !important;
     min-width: 240px !important;
+    max-width: none;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
@@ -70,6 +95,7 @@
 
     .am-account-shortcut {
         flex-basis: min(78vw, 290px) !important;
+        width: min(78vw, 290px) !important;
         min-width: min(78vw, 290px) !important;
         max-width: 290px !important;
     }

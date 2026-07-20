@@ -1,5 +1,11 @@
 # Historia zmian AM Toolkit
 
+## 0.5.1
+
+- poprawione ograniczenie szerokości toru szybkich kafelków w kontenerach Elementora,
+- przepełnienie poziome pozostaje wewnątrz karuzeli zamiast rozszerzać całą stronę,
+- wzmocnione reguły szerokości kafelków na telefonach.
+
 ## 0.5.0
 
 - pierwszy etap modułu panelu konta,

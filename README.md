@@ -35,6 +35,8 @@ Ustawienia komunikatów są dostępne w kokpicie WordPressa w sekcji **AM Toolki
 
 Pełna lista zmian znajduje się w pliku [CHANGELOG.md](CHANGELOG.md).
 
+Plan kolejnych etapów znajduje się w pliku [ROADMAP.md](ROADMAP.md).
+
 ## Licencja
 
 GPL-2.0-or-later.
