@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.6.0
+
+- powitalna animacja na głównym widoku panelu konta,
+- poziomy pas w kolorze `#E9D7CA` i przyciemnienie rozchodzące się od środka ekranu,
+- lekki, samodzielny renderer wektorowy korzystający z dostarczonego pliku `Welcome.json`,
+- wyświetlanie raz dziennie dla danego użytkownika i przeglądarki,
+- tryb podglądu dla administratora oraz awaryjny napis przy problemie z plikiem animacji,
+- obsługa ustawienia systemowego ograniczającego animacje.
+
 ## 0.5.8
 
 - shortcode `[am_account_products_summary]`,

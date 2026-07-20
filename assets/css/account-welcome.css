@@ -1,0 +1,146 @@
+/**
+ * AM Toolkit — daily account welcome.
+ */
+
+.am-account-welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 360ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.am-account-welcome[hidden] {
+    display: none !important;
+}
+
+.am-account-welcome.is-active {
+    opacity: 1;
+}
+
+.am-account-welcome.is-leaving {
+    opacity: 0;
+}
+
+.am-account-welcome__shade,
+.am-account-welcome__band,
+.am-account-welcome__animation {
+    position: absolute;
+    left: 0;
+    width: 100%;
+}
+
+.am-account-welcome__shade {
+    z-index: 1;
+    height: 50%;
+    background: rgba(34, 27, 24, 0.68);
+    transform: scaleY(0);
+}
+
+.am-account-welcome__shade--top {
+    top: 0;
+    transform-origin: 50% 100%;
+}
+
+.am-account-welcome__shade--bottom {
+    bottom: 0;
+    transform-origin: 50% 0;
+}
+
+.am-account-welcome__band {
+    top: 50%;
+    z-index: 2;
+    height: clamp(124px, 17vh, 180px);
+    background: #e9d7ca;
+    box-shadow: 0 12px 34px rgba(35, 24, 20, 0.16);
+    transform: translateY(-50%) scaleX(0);
+    transform-origin: 50% 50%;
+}
+
+.am-account-welcome__animation {
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(428px, calc(100vw - 48px));
+    height: min(123px, 14vh);
+    color: #3d2917;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+}
+
+.am-account-welcome__animation svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.am-account-welcome__animation path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.am-account-welcome__fallback {
+    display: none;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(42px, 8vw, 76px);
+    font-style: italic;
+    line-height: 1;
+}
+
+.am-account-welcome__animation.is-fallback .am-account-welcome__fallback {
+    display: block;
+}
+
+.am-account-welcome.is-active .am-account-welcome__band {
+    animation: am-account-welcome-band 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.am-account-welcome.is-active .am-account-welcome__shade {
+    animation: am-account-welcome-shade 560ms 300ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.am-account-welcome.is-active .am-account-welcome__animation {
+    animation: am-account-welcome-content 420ms 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes am-account-welcome-band {
+    from { transform: translateY(-50%) scaleX(0); }
+    to { transform: translateY(-50%) scaleX(1); }
+}
+
+@keyframes am-account-welcome-shade {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+}
+
+@keyframes am-account-welcome-content {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@media (max-width: 767px) {
+    .am-account-welcome__band { height: 132px; }
+    .am-account-welcome__animation {
+        width: calc(100vw - 38px);
+        height: 104px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .am-account-welcome { display: none !important; }
+}

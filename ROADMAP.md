@@ -1,5 +1,12 @@
 # Roadmap AM Toolkit
 
+## Powitanie panelu konta
+
+- [x] animacja wyświetlana raz dziennie na głównym widoku konta,
+- [x] pełnoekranowe przyciemnienie i pas w kolorze marki,
+- [x] obsługa ograniczenia animacji ustawionego w systemie użytkownika,
+- [ ] ustawienia wyglądu i częstotliwości w panelu AM Toolkit.
+
 ## Aktualny etap — Panel konta
 
 - [x] responsywne kafelki szybkiego dostępu,
