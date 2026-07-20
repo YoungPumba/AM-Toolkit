@@ -1,5 +1,12 @@
 # Historia zmian AM Toolkit
 
+## 0.5.7
+
+- bardziej widoczne strzałki szybkich kafelków,
+- okrągłe różowe tło, biały symbol i subtelny cień,
+- mocniejsza reakcja odnośnika po najechaniu,
+- zabezpieczenie opisu kafelka przed nachodzeniem na przycisk.
+
 ## 0.5.6
 
 - shortcode `[am_account_shortcut]` dla szybkich kafelków panelu,
