@@ -9,7 +9,7 @@
 - [x] podgląd ostatnio nabytych produktów,
 - [ ] pełny widok wszystkich nabytych produktów,
 - [ ] dynamiczna sekcja „Wymaga Twojej uwagi”,
-- [ ] dynamiczna sekcja „Ostatnie zamówienie”,
+- [x] dynamiczna sekcja „Ostatnie zamówienie”,
 - [ ] odnośniki i liczniki szybkiego dostępu.
 
 ## Nawigacja konta

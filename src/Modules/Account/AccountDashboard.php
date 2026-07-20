@@ -13,6 +13,7 @@ final class AccountDashboard
         add_shortcode('am_account_greeting', [$this, 'renderGreeting']);
         add_shortcode('am_account_profile', [$this, 'renderProfile']);
         add_shortcode('am_account_recent_products', [$this, 'renderRecentProducts']);
+        add_shortcode('am_account_last_order', [$this, 'renderLastOrder']);
     }
 
     /**
@@ -166,6 +167,81 @@ final class AccountDashboard
                 </li>
             <?php endforeach; ?>
         </ul>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Renders the customer's newest WooCommerce order.
+     */
+    public function renderLastOrder(): string
+    {
+        $user = $this->currentUser();
+
+        if (!$user || !function_exists('wc_get_orders')) {
+            return '';
+        }
+
+        $orders = wc_get_orders([
+            'customer_id' => $user->ID,
+            'status'      => array_keys(wc_get_order_statuses()),
+            'limit'       => 1,
+            'orderby'     => 'date',
+            'order'       => 'DESC',
+            'return'      => 'objects',
+        ]);
+
+        if ($orders === []) {
+            return sprintf(
+                '<p class="am-account-last-order__empty">%s</p>',
+                esc_html__('Nie masz jeszcze żadnych zamówień.', 'am-toolkit')
+            );
+        }
+
+        $order = $orders[0];
+        $createdAt = $order->get_date_created();
+        $accountUrl = wc_get_page_permalink('myaccount');
+        $detailsUrl = wc_get_endpoint_url('view-order', (string) $order->get_id(), $accountUrl);
+        $ordersUrl = wc_get_endpoint_url('orders', '', $accountUrl);
+
+        ob_start();
+        ?>
+        <div class="am-account-last-order">
+            <dl class="am-account-last-order__details">
+                <div class="am-account-last-order__row">
+                    <dt><?php echo esc_html__('Zamówienie', 'am-toolkit'); ?></dt>
+                    <dd>#<?php echo esc_html($order->get_order_number()); ?></dd>
+                </div>
+
+                <?php if ($createdAt) : ?>
+                    <div class="am-account-last-order__row">
+                        <dt><?php echo esc_html__('Data', 'am-toolkit'); ?></dt>
+                        <dd><?php echo esc_html(wc_format_datetime($createdAt)); ?></dd>
+                    </div>
+                <?php endif; ?>
+
+                <div class="am-account-last-order__row">
+                    <dt><?php echo esc_html__('Status', 'am-toolkit'); ?></dt>
+                    <dd><?php echo esc_html(wc_get_order_status_name($order->get_status())); ?></dd>
+                </div>
+
+                <div class="am-account-last-order__row">
+                    <dt><?php echo esc_html__('Wartość', 'am-toolkit'); ?></dt>
+                    <dd><?php echo wp_kses_post($order->get_formatted_order_total()); ?></dd>
+                </div>
+            </dl>
+
+            <div class="am-account-last-order__actions">
+                <a class="am-account-last-order__button" href="<?php echo esc_url($detailsUrl); ?>">
+                    <?php echo esc_html__('Zobacz szczegóły', 'am-toolkit'); ?>
+                </a>
+
+                <a class="am-account-last-order__all" href="<?php echo esc_url($ordersUrl); ?>">
+                    <?php echo esc_html__('Wszystkie zamówienia', 'am-toolkit'); ?>
+                </a>
+            </div>
+        </div>
         <?php
 
         return (string) ob_get_clean();

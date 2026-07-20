@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.5.4
+
+- nieco większa typografia listy ostatnio kupionych produktów,
+- shortcode `[am_account_last_order]`,
+- dynamiczny numer, data, status i wartość ostatniego zamówienia,
+- odnośniki do szczegółów zamówienia i pełnej historii,
+- czytelny stan pusty dla konta bez zamówień.
+
 ## 0.5.3
 
 - typografia Poppins dla powitania i profilu użytkownika,
