@@ -15,6 +15,7 @@ final class AccountDashboard
         add_shortcode('am_account_recent_products', [$this, 'renderRecentProducts']);
         add_shortcode('am_account_last_order', [$this, 'renderLastOrder']);
         add_shortcode('am_account_attention', [$this, 'renderAttention']);
+        add_shortcode('am_account_shortcut', [$this, 'renderShortcut']);
     }
 
     /**
@@ -351,6 +352,173 @@ final class AccountDashboard
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    /**
+     * Renders one dashboard shortcut.
+     *
+     * Supported types: products, orders, details and consultations.
+     *
+     * @param array<string, mixed> $attributes Shortcode attributes.
+     */
+    public function renderShortcut(array $attributes = []): string
+    {
+        $user = $this->currentUser();
+
+        if (!$user || !function_exists('wc_get_page_permalink')) {
+            return '';
+        }
+
+        $attributes = shortcode_atts(
+            ['type' => 'products'],
+            $attributes,
+            'am_account_shortcut'
+        );
+
+        $type = sanitize_key((string) $attributes['type']);
+        $accountUrl = wc_get_page_permalink('myaccount');
+        $configuration = $this->shortcutConfiguration($type, $user, $accountUrl);
+
+        if ($configuration === null) {
+            return '';
+        }
+
+        $tag = $configuration['url'] !== '' ? 'a' : 'div';
+        $className = 'am-account-shortcut-content am-account-shortcut-content--' . $type;
+
+        if ($configuration['url'] === '') {
+            $className .= ' is-disabled';
+        }
+
+        ob_start();
+        ?>
+        <<?php echo esc_attr($tag); ?>
+            class="<?php echo esc_attr($className); ?>"
+            <?php if ($configuration['url'] !== '') : ?>
+                href="<?php echo esc_url($configuration['url']); ?>"
+            <?php else : ?>
+                aria-disabled="true"
+            <?php endif; ?>
+        >
+            <span class="am-account-shortcut-content__icon" aria-hidden="true">
+                <?php echo $this->shortcutIcon($type); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </span>
+
+            <strong class="am-account-shortcut-content__title">
+                <?php echo esc_html($configuration['title']); ?>
+            </strong>
+
+            <span class="am-account-shortcut-content__description">
+                <?php echo esc_html($configuration['description']); ?>
+            </span>
+
+            <?php if ($configuration['url'] !== '') : ?>
+                <span class="am-account-shortcut-content__arrow" aria-hidden="true">→</span>
+            <?php endif; ?>
+        </<?php echo esc_attr($tag); ?>>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * @return array{title: string, description: string, url: string}|null
+     */
+    private function shortcutConfiguration(string $type, WP_User $user, string $accountUrl): ?array
+    {
+        if ($type === 'products') {
+            return [
+                'title'       => __('Moje produkty', 'am-toolkit'),
+                'description' => sprintf(
+                    __('Zakupione produkty: %d', 'am-toolkit'),
+                    $this->purchasedProductCount($user->ID)
+                ),
+                'url'         => '#am-account-products',
+            ];
+        }
+
+        if ($type === 'orders') {
+            $orderCount = function_exists('wc_get_customer_order_count')
+                ? wc_get_customer_order_count($user->ID)
+                : 0;
+
+            return [
+                'title'       => __('Zamówienia', 'am-toolkit'),
+                'description' => sprintf(
+                    __('Liczba zamówień: %d', 'am-toolkit'),
+                    $orderCount
+                ),
+                'url'         => wc_get_endpoint_url('orders', '', $accountUrl),
+            ];
+        }
+
+        if ($type === 'details') {
+            $isComplete = trim((string) $user->first_name) !== '' &&
+                trim((string) $user->last_name) !== '';
+
+            return [
+                'title'       => __('Dane konta', 'am-toolkit'),
+                'description' => $isComplete
+                    ? __('Dane są uzupełnione', 'am-toolkit')
+                    : __('Uzupełnij swoje dane', 'am-toolkit'),
+                'url'         => wc_get_endpoint_url('edit-account', '', $accountUrl),
+            ];
+        }
+
+        if ($type === 'consultations') {
+            return [
+                'title'       => __('Konsultacje', 'am-toolkit'),
+                'description' => __('Funkcja pojawi się wkrótce', 'am-toolkit'),
+                'url'         => '',
+            ];
+        }
+
+        return null;
+    }
+
+    private function purchasedProductCount(int $userId): int
+    {
+        if (!function_exists('wc_get_orders')) {
+            return 0;
+        }
+
+        $orderIds = wc_get_orders([
+            'customer_id' => $userId,
+            'status'      => ['wc-processing', 'wc-completed'],
+            'limit'       => -1,
+            'return'      => 'ids',
+        ]);
+        $productIds = [];
+
+        foreach ($orderIds as $orderId) {
+            $order = wc_get_order($orderId);
+
+            if (!$order) {
+                continue;
+            }
+
+            foreach ($order->get_items('line_item') as $item) {
+                $productId = $item->get_variation_id() ?: $item->get_product_id();
+
+                if ($productId) {
+                    $productIds[$productId] = true;
+                }
+            }
+        }
+
+        return count($productIds);
+    }
+
+    private function shortcutIcon(string $type): string
+    {
+        $icons = [
+            'products' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 8h14l-1 12H6L5 8Zm3 0a4 4 0 0 1 8 0"/></svg>',
+            'orders' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M7 3h10v18l-2-1.5L12 21l-3-1.5L7 21V3Zm3 5h4m-4 4h4"/></svg>',
+            'details' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 9a7 7 0 0 0-14 0"/></svg>',
+            'consultations' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 5h14v11H9l-4 4V5Zm4 5h6"/></svg>',
+        ];
+
+        return $icons[$type] ?? '';
     }
 
     private function currentUser(): ?WP_User

@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.5.6
+
+- shortcode `[am_account_shortcut]` dla szybkich kafelków panelu,
+- dynamiczna liczba zakupionych produktów i zamówień,
+- informacja o kompletności podstawowych danych konta,
+- bezpośrednie odnośniki do produktów, zamówień i edycji danych,
+- osobny, nieaktywny stan „W budowie” dla konsultacji,
+- dedykowane ikony SVG i obsługa klawiatury.
+
 ## 0.5.5
 
 - shortcode `[am_account_attention]`,
