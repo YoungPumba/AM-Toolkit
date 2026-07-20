@@ -12,6 +12,7 @@ final class AccountDashboard
     {
         add_shortcode('am_account_greeting', [$this, 'renderGreeting']);
         add_shortcode('am_account_profile', [$this, 'renderProfile']);
+        add_shortcode('am_account_recent_products', [$this, 'renderRecentProducts']);
     }
 
     /**
@@ -83,6 +84,88 @@ final class AccountDashboard
                 <?php echo $avatar; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             </div>
         </div>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Renders unique products from the customer's newest paid orders.
+     *
+     * @param array<string, mixed> $attributes Shortcode attributes.
+     */
+    public function renderRecentProducts(array $attributes = []): string
+    {
+        $user = $this->currentUser();
+
+        if (!$user || !function_exists('wc_get_orders')) {
+            return '';
+        }
+
+        $attributes = shortcode_atts(
+            ['limit' => 3],
+            $attributes,
+            'am_account_recent_products'
+        );
+
+        $limit = max(1, min(12, absint($attributes['limit'])));
+        $orders = wc_get_orders([
+            'customer_id' => $user->ID,
+            'status'      => ['wc-processing', 'wc-completed'],
+            'limit'       => 20,
+            'orderby'     => 'date',
+            'order'       => 'DESC',
+            'return'      => 'objects',
+        ]);
+
+        $products = [];
+
+        foreach ($orders as $order) {
+            foreach ($order->get_items('line_item') as $item) {
+                $product = $item->get_product();
+                $productId = $product ? $product->get_id() : $item->get_product_id();
+
+                if (!$productId || isset($products[$productId])) {
+                    continue;
+                }
+
+                $products[$productId] = [
+                    'name' => $item->get_name(),
+                    'url'  => $product && $product->is_visible()
+                        ? $product->get_permalink()
+                        : '',
+                ];
+
+                if (count($products) >= $limit) {
+                    break 2;
+                }
+            }
+        }
+
+        if ($products === []) {
+            return sprintf(
+                '<p class="am-account-recent-products__empty">%s</p>',
+                esc_html__('Nie masz jeszcze zakupionych produktów.', 'am-toolkit')
+            );
+        }
+
+        ob_start();
+        ?>
+        <ul class="am-account-recent-products" aria-label="<?php echo esc_attr__('Ostatnio kupione produkty', 'am-toolkit'); ?>">
+            <?php foreach ($products as $product) : ?>
+                <li class="am-account-recent-products__item">
+                    <?php if ($product['url'] !== '') : ?>
+                        <a class="am-account-recent-products__link" href="<?php echo esc_url($product['url']); ?>">
+                            <?php echo esc_html($product['name']); ?>
+                        </a>
+                    <?php else : ?>
+                        <span class="am-account-recent-products__name">
+                            <?php echo esc_html($product['name']); ?>
+                        </span>
+                    <?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
         <?php
 
         return (string) ob_get_clean();

@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.5.3
+
+- typografia Poppins dla powitania i profilu użytkownika,
+- nieco większy tekst dynamicznego powitania,
+- shortcode `[am_account_recent_products]`,
+- lista maksymalnie trzech ostatnio kupionych, unikalnych produktów,
+- obsługa pustego konta oraz produktów, które nie są już publicznie widoczne.
+
 ## 0.5.2
 
 - dynamiczne powitanie zalogowanego użytkownika,

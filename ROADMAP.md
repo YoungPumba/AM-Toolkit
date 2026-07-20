@@ -6,7 +6,8 @@
 - [x] poziome przewijanie kafelków na telefonach,
 - [x] dynamiczne powitanie i dane profilu,
 - [ ] podsumowanie „Wszystkie moje produkty”,
-- [ ] lista nabytych produktów,
+- [x] podgląd ostatnio nabytych produktów,
+- [ ] pełny widok wszystkich nabytych produktów,
 - [ ] dynamiczna sekcja „Wymaga Twojej uwagi”,
 - [ ] dynamiczna sekcja „Ostatnie zamówienie”,
 - [ ] odnośniki i liczniki szybkiego dostępu.
