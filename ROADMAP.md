@@ -14,8 +14,8 @@
 - [x] dynamiczne powitanie i dane profilu,
 - [x] podsumowanie „Wszystkie moje produkty”,
 - [x] podgląd ostatnio nabytych produktów,
-- [ ] pełny widok wszystkich nabytych produktów,
-- [ ] endpoint `/moje-konto/moje-produkty/` z kursami, konsultacjami i plikami klienta,
+- [x] pełny widok wszystkich nabytych produktów,
+- [x] endpoint `/moje-konto/moje-produkty/` z kursami, konsultacjami i plikami klienta,
 - [x] dynamiczna sekcja „Wymaga Twojej uwagi”,
 - [x] dynamiczna sekcja „Ostatnie zamówienie”,
 - [x] odnośniki i liczniki szybkiego dostępu.

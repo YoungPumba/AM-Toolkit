@@ -443,7 +443,7 @@ final class AccountDashboard
                     __('Zakupione produkty: %d', 'am-toolkit'),
                     $this->purchasedProductCount($user->ID)
                 ),
-                'url'         => '#am-account-products',
+                'url'         => wc_get_endpoint_url('moje-produkty', '', $accountUrl),
             ];
         }
 
@@ -543,19 +543,25 @@ final class AccountDashboard
 
         ob_start();
         ?>
-        <ul class="am-account-products-summary" aria-label="<?php echo esc_attr__('Podsumowanie zakupionych produktów', 'am-toolkit'); ?>">
-            <?php foreach ($categories as $category) : ?>
-                <li class="am-account-products-summary__item">
-                    <span class="am-account-products-summary__icon" aria-hidden="true">✓</span>
-                    <span class="am-account-products-summary__label">
-                        <?php echo esc_html($category['label']); ?>
-                    </span>
-                    <span class="am-account-products-summary__count" aria-label="<?php echo esc_attr(sprintf(__('Liczba: %d', 'am-toolkit'), $category['count'])); ?>">
-                        <?php echo esc_html((string) $category['count']); ?>
-                    </span>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+        <a
+            class="am-account-products-summary__link"
+            href="<?php echo esc_url(wc_get_account_endpoint_url('moje-produkty')); ?>"
+            aria-label="<?php echo esc_attr__('Przejdź do wszystkich kupionych produktów', 'am-toolkit'); ?>"
+        >
+            <ul class="am-account-products-summary" aria-label="<?php echo esc_attr__('Podsumowanie zakupionych produktów', 'am-toolkit'); ?>">
+                <?php foreach ($categories as $category) : ?>
+                    <li class="am-account-products-summary__item">
+                        <span class="am-account-products-summary__icon" aria-hidden="true">✓</span>
+                        <span class="am-account-products-summary__label">
+                            <?php echo esc_html($category['label']); ?>
+                        </span>
+                        <span class="am-account-products-summary__count" aria-label="<?php echo esc_attr(sprintf(__('Liczba: %d', 'am-toolkit'), $category['count'])); ?>">
+                            <?php echo esc_html((string) $category['count']); ?>
+                        </span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </a>
         <?php
 
         return (string) ob_get_clean();

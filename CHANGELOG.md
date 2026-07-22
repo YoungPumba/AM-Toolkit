@@ -1,5 +1,15 @@
 # Historia zmian AM Toolkit
 
+## 0.8.0
+
+- własny endpoint `/moje-konto/moje-produkty/`,
+- wszystkie kupione produkty podzielone na konsultacje, kursy i pliki do pobrania,
+- usuwanie duplikatów produktów kupionych w kilku zamówieniach,
+- responsywne karty produktów oraz czytelne stany pustych kategorii,
+- pozycja „Moje produkty” w menu WooCommerce,
+- wspólny adres dla podsumowania „Wszystkie moje produkty” i kafelka szybkiego dostępu,
+- automatycznie klikalny cały kafel podsumowania zbudowany w Elementorze.
+
 ## 0.7.2
 
 - poprawione dwukrotne odtwarzanie napisu `Welcome` w mobilnym Safari,
