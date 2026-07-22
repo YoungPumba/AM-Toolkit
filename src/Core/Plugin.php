@@ -8,6 +8,7 @@ use AMToolkit\Admin\CheckoutSettings;
 use AMToolkit\Integrations\LiteSpeed;
 use AMToolkit\Modules\Account\AccountDashboard;
 use AMToolkit\Modules\Account\AccountOnboarding;
+use AMToolkit\Modules\Account\ManualProductAssignments;
 use AMToolkit\Modules\Account\PurchasedProducts;
 use AMToolkit\Modules\Account\WelcomeAnimation;
 use AMToolkit\Modules\WooCommerce\CartIndicator;
@@ -22,7 +23,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.8.1';
+    public const VERSION = '0.9.0';
 
     /**
      * Uruchamia wtyczkę.
@@ -49,6 +50,7 @@ final class Plugin
             (new ToastIntegration())->boot();
             (new CartIndicator())->boot();
             (new AccountOnboarding())->boot();
+            (new ManualProductAssignments())->boot();
             (new PurchasedProducts())->boot();
         }
     }

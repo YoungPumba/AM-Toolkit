@@ -16,6 +16,7 @@
 - [x] podgląd ostatnio nabytych produktów,
 - [x] pełny widok wszystkich nabytych produktów,
 - [x] endpoint `/moje-konto/moje-produkty/` z kursami, konsultacjami i plikami klienta,
+- [x] ręczne przyznawanie i odbieranie produktów klientom przez administratora,
 - [x] dynamiczna sekcja „Wymaga Twojej uwagi”,
 - [x] dynamiczna sekcja „Ostatnie zamówienie”,
 - [x] odnośniki i liczniki szybkiego dostępu.

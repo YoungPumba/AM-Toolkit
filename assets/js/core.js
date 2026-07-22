@@ -2,7 +2,7 @@
     'use strict';
 
     window.AMToolkit = {
-        version: '0.8.1',
+        version: '0.9.0',
 
         log(message) {
             console.log(`[AM Toolkit] ${message}`);

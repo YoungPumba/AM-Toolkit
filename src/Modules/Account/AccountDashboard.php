@@ -129,7 +129,28 @@ final class AccountDashboard
 
         $products = [];
 
+        foreach (ManualProductAssignments::assignments($user->ID) as $productId => $assignedAt) {
+            $product = wc_get_product($productId);
+
+            if (!$product) {
+                continue;
+            }
+
+            $products[$productId] = [
+                'name' => $product->get_name(),
+                'url'  => $product->is_visible() ? $product->get_permalink() : '',
+            ];
+
+            if (count($products) >= $limit) {
+                break;
+            }
+        }
+
         foreach ($orders as $order) {
+            if (count($products) >= $limit) {
+                break;
+            }
+
             foreach ($order->get_items('line_item') as $item) {
                 $product = $item->get_product();
                 $productId = $product ? $product->get_id() : $item->get_product_id();
@@ -603,6 +624,10 @@ final class AccountDashboard
                     $this->purchasedProductIds[$parentProductId ?: $productId] = $parentProductId ?: $productId;
                 }
             }
+        }
+
+        foreach (array_keys(ManualProductAssignments::assignments($userId)) as $productId) {
+            $this->purchasedProductIds[$productId] = $productId;
         }
 
         return array_values($this->purchasedProductIds);

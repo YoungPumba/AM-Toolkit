@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.9.0
+
+- wyszukiwarka produktów WooCommerce w profilu użytkownika w panelu WordPress,
+- ręczne przyznawanie i odbieranie produktów przez administratora lub kierownika sklepu,
+- ręcznie przyznane produkty uwzględniane w endpointcie, licznikach i ostatnich produktach,
+- zachowanie daty pierwszego ręcznego przypisania,
+- rozróżnienie daty zakupu i daty przyznania produktu,
+- tytuł „Moje produkty” zapisany krojem `buffalo-regular` w rozmiarze 46 px.
+
 ## 0.8.1
 
 - dedykowany szablon endpointu „Moje produkty” zgodny z headerem i footerem motywu,

@@ -159,7 +159,14 @@ final class PurchasedProducts
                                     </div>
                                     <div class="am-purchased-product__content">
                                         <span class="am-purchased-product__date">
-                                            <?php echo esc_html(sprintf(__('Kupiono: %s', 'am-toolkit'), $product['date'])); ?>
+                                            <?php
+                                            echo esc_html(sprintf(
+                                                $product['source'] === 'manual'
+                                                    ? __('Przyznano: %s', 'am-toolkit')
+                                                    : __('Kupiono: %s', 'am-toolkit'),
+                                                $product['date']
+                                            ));
+                                            ?>
                                         </span>
                                         <h4><?php echo esc_html($product['name']); ?></h4>
 
@@ -194,7 +201,7 @@ final class PurchasedProducts
         update_option('amt_purchased_products_rewrite_version', self::REWRITE_VERSION, false);
     }
 
-    /** @return array<int, array{id: int, name: string, url: string, image: string, date: string}> */
+    /** @return array<int, array{id: int, name: string, url: string, image: string, date: string, source: string}> */
     private function purchasedProducts(int $userId): array
     {
         $orders = wc_get_orders([
@@ -227,8 +234,30 @@ final class PurchasedProducts
                         ? $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy'])
                         : wc_placeholder_img('woocommerce_thumbnail'),
                     'date'  => $date,
+                    'source' => 'order',
                 ];
             }
+        }
+
+        foreach (ManualProductAssignments::assignments($userId) as $productId => $assignedAt) {
+            if (isset($products[$productId])) {
+                continue;
+            }
+
+            $product = wc_get_product($productId);
+
+            if (!$product) {
+                continue;
+            }
+
+            $products[$productId] = [
+                'id'    => $productId,
+                'name'  => $product->get_name(),
+                'url'   => $product->is_visible() ? $product->get_permalink() : '',
+                'image' => $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']),
+                'date'  => wp_date(get_option('date_format'), $assignedAt),
+                'source' => 'manual',
+            ];
         }
 
         return array_values($products);

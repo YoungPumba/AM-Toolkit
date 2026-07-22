@@ -628,8 +628,9 @@
 .am-purchased-products__title {
     margin: 0;
     color: var(--am-products-ink);
-    font-size: clamp(29px, 4vw, 42px);
-    font-weight: 600;
+    font-family: "buffalo-regular", "Buffalo", cursive;
+    font-size: 46px;
+    font-weight: 400;
     line-height: 1.15;
 }
 
@@ -837,6 +838,10 @@
     .am-purchased-products__header {
         flex-direction: column;
         padding-bottom: 22px;
+    }
+
+    .am-purchased-products__title {
+        font-size: 40px;
     }
 
     .am-purchased-products__grid {
