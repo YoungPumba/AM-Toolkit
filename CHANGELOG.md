@@ -1,5 +1,11 @@
 # Historia zmian AM Toolkit
 
+## 0.8.1
+
+- dedykowany szablon endpointu „Moje produkty” zgodny z headerem i footerem motywu,
+- obejście pustego widoku powodowanego przez nierozpoznawanie własnego endpointu przez ShopEngine,
+- spójne tło, szerokość i odstępy widoku na komputerze oraz telefonie.
+
 ## 0.8.0
 
 - własny endpoint `/moje-konto/moje-produkty/`,

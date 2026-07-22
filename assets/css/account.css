@@ -577,6 +577,17 @@
 }
 
 /* Full purchased-products endpoint. */
+.am-products-page {
+    min-height: calc(100vh - 180px);
+    padding: clamp(54px, 7vw, 100px) 20px clamp(70px, 9vw, 130px);
+    background: #f8f4f2;
+}
+
+.am-products-page__inner {
+    width: min(1360px, 100%);
+    margin: 0 auto;
+}
+
 .am-purchased-products {
     --am-products-pink: #f176a4;
     --am-products-pink-dark: #d85f8d;
@@ -816,6 +827,11 @@
     .am-purchased-products {
         gap: 28px;
         padding: 22px 16px;
+    }
+
+    .am-products-page {
+        min-height: calc(100vh - 120px);
+        padding: 42px 10px 70px;
     }
 
     .am-purchased-products__header {

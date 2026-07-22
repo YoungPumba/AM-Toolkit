@@ -17,6 +17,23 @@ final class PurchasedProducts
         add_filter('woocommerce_account_menu_items', [$this, 'addMenuItem']);
         add_action('woocommerce_account_' . self::ENDPOINT . '_endpoint', [$this, 'output']);
         add_shortcode('am_account_purchased_products', [$this, 'render']);
+        add_filter('template_include', [$this, 'accountTemplate'], 99);
+    }
+
+    public function accountTemplate(string $template): string
+    {
+        if (
+            is_admin() ||
+            !is_user_logged_in() ||
+            !function_exists('is_wc_endpoint_url') ||
+            !is_wc_endpoint_url(self::ENDPOINT)
+        ) {
+            return $template;
+        }
+
+        $pluginTemplate = AM_TOOLKIT_PATH . 'templates/account/purchased-products.php';
+
+        return file_exists($pluginTemplate) ? $pluginTemplate : $template;
     }
 
     public function registerEndpoint(): void

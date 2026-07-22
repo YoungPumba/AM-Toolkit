@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Wersja 0.8.0 dodaje pełny widok wszystkich zakupionych produktów z podziałem na kategorie w panelu klienta.
+Wersja 0.8.1 dodaje pełny widok wszystkich zakupionych produktów z podziałem na kategorie oraz zgodność własnego endpointu z ShopEngine.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 
