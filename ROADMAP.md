@@ -64,6 +64,18 @@
 - [ ] przetestować linki produktu i chronione pobieranie plików,
 - [ ] wykonać test wizualny przy szerokościach `360px`, `768px`, `1024px` i co najmniej `1440px`.
 
+## v0.9.3 — dedykowane obrazy i kosmetyka panelu
+
+- [x] dodać w edycji produktu WooCommerce pole „Obraz w panelu «Moje produkty»” z wyborem z Biblioteki mediów,
+- [x] pod polem wyświetlić informację o zalecanym formacie: proporcje około `1.9:1`, rekomendowane `1200 × 630 px` lub `1600 × 840 px`, najlepiej WebP,
+- [x] zastosować kolejność awaryjną: dedykowany obraz panelu → główna miniatura produktu → obraz zastępczy WooCommerce,
+- [x] używać dedykowanego obrazu wyłącznie w panelu konta, bez zmiany strony produktu i katalogu sklepu,
+- [x] usunąć różowy fragment separatora kategorii i pozostawić delikatną jasnoszarą linię,
+- [x] usunąć koła, obramowania i cienie ze strzałek kafelków szybkiego dostępu,
+- [x] pozostawić samą różową strzałkę z czytelnym stanem `hover` i `focus-visible`,
+- [ ] przetestować obrazy ustawione, brak obrazu dodatkowego oraz całkowity brak miniatury,
+- [ ] sprawdzić szybki dostęp na komputerze i telefonie.
+
 ## v0.10.0 — podstawowe endpointy konta
 
 - [ ] wyświetlić listę zamówień na `/moje-konto/orders/`,

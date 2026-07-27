@@ -254,7 +254,7 @@ final class PurchasedProducts
                     'name'  => $product ? $product->get_name() : $item->get_name(),
                     'url'   => $product && $product->is_visible() ? $product->get_permalink() : '',
                     'image' => $product
-                        ? $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy'])
+                        ? $this->productImage($product)
                         : wc_placeholder_img('woocommerce_thumbnail'),
                     'date'  => $date,
                     'source' => 'order',
@@ -277,13 +277,31 @@ final class PurchasedProducts
                 'id'    => $productId,
                 'name'  => $product->get_name(),
                 'url'   => $product->is_visible() ? $product->get_permalink() : '',
-                'image' => $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']),
+                'image' => $this->productImage($product),
                 'date'  => wp_date(get_option('date_format'), $assignedAt),
                 'source' => 'manual',
             ];
         }
 
         return array_values($products);
+    }
+
+    private function productImage(\WC_Product $product): string
+    {
+        $accountImage = AccountProductImage::imageHtml(
+            $product->get_id(),
+            'large'
+        );
+
+        if ($accountImage !== '') {
+            return $accountImage;
+        }
+
+        $image = $product->get_image('woocommerce_thumbnail', ['loading' => 'lazy']);
+
+        return $image !== ''
+            ? $image
+            : wc_placeholder_img('woocommerce_thumbnail');
     }
 
     private function productCountLabel(int $count): string

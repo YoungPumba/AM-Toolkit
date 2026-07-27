@@ -1,5 +1,15 @@
 # Historia zmian AM Toolkit
 
+## 0.9.3
+
+- dodatkowe pole „Obraz w panelu «Moje produkty»” w edycji produktu WooCommerce,
+- wybór dedykowanej grafiki z Biblioteki mediów wraz z podglądem i możliwością usunięcia,
+- opis zalecanych proporcji, rozdzielczości, formatu oraz bezpiecznych marginesów grafiki,
+- kolejność awaryjna obrazu: dedykowana grafika panelu, główna miniatura produktu, obraz zastępczy WooCommerce,
+- dedykowany obraz używany wyłącznie w bibliotece klienta bez zmiany katalogu i strony produktu,
+- uproszczone separatory kategorii bez różowego fragmentu,
+- same różowe strzałki szybkiego dostępu bez koła, obramowania i cienia.
+
 ## 0.9.2
 
 - mocniejsze oddzielenie kategorii w bibliotece produktów za pomocą różowo-szarych separatorów,
