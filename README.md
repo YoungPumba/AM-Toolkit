@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Wersja 0.9.0 dodaje pełny widok produktów klienta oraz możliwość ręcznego przyznawania produktów przez administratora sklepu.
+Wersja 0.9.1 poprawia mobilny widok biblioteki, polską odmianę licznika oraz dodaje bezpieczne pobieranie plików zakupionych i ręcznie przyznanych produktów.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 

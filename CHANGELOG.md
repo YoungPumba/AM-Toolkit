@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.9.1
+
+- poprawna polska odmiana licznika: „1 produkt”, „2–4 produkty” i „5+ produktów”,
+- zdjęcia kart na telefonach wyświetlane nad treścią i dopasowane do szerokości ekranu,
+- przyciski pobierania wszystkich plików udostępnionych klientowi przez WooCommerce,
+- bezpieczne pobieranie plików z produktów ręcznie przyznanych przez AM Toolkit,
+- kontrola zalogowanego użytkownika, przypisania produktu i ważności odnośnika przed wydaniem ręcznie przyznanego pliku.
+
 ## 0.9.0
 
 - wyszukiwarka produktów WooCommerce w profilu użytkownika w panelu WordPress,

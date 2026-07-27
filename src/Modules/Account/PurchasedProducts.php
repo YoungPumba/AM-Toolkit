@@ -13,6 +13,7 @@ final class PurchasedProducts
     {
         add_action('init', [$this, 'registerEndpoint']);
         add_action('init', [$this, 'maybeFlushRewriteRules'], 99);
+        add_action('template_redirect', [$this, 'handleManualDownload'], 0);
         add_filter('woocommerce_get_query_vars', [$this, 'addQueryVar']);
         add_filter('woocommerce_account_menu_items', [$this, 'addMenuItem']);
         add_action('woocommerce_account_' . self::ENDPOINT . '_endpoint', [$this, 'output']);
@@ -102,7 +103,16 @@ final class PurchasedProducts
             ],
         ];
 
-        foreach ($this->purchasedProducts(get_current_user_id()) as $product) {
+        $userId = get_current_user_id();
+        $downloadsByProduct = $this->customerDownloads($userId);
+
+        foreach ($this->purchasedProducts($userId) as $product) {
+            $product['downloads'] = $downloadsByProduct[$product['id']] ?? [];
+
+            if ($product['source'] === 'manual') {
+                $product['downloads'] = $this->manualProductDownloads($product['id'], $userId);
+            }
+
             $groupKey = 'other';
 
             foreach (['consultations', 'courses', 'downloads'] as $candidate) {
@@ -134,7 +144,7 @@ final class PurchasedProducts
                     <p class="am-purchased-products__intro"><?php echo esc_html__('Wszystkie kupione kursy, konsultacje i materiały znajdziesz w jednym miejscu.', 'am-toolkit'); ?></p>
                 </div>
                 <span class="am-purchased-products__total">
-                    <?php echo esc_html(sprintf(_n('%d produkt', '%d produktów', $total, 'am-toolkit'), $total)); ?>
+                    <?php echo esc_html($this->productCountLabel($total)); ?>
                 </span>
             </header>
 
@@ -169,6 +179,19 @@ final class PurchasedProducts
                                             ?>
                                         </span>
                                         <h4><?php echo esc_html($product['name']); ?></h4>
+
+                                        <?php if ($product['downloads'] !== []) : ?>
+                                            <div class="am-purchased-product__downloads" aria-label="<?php echo esc_attr(sprintf(__('Pliki produktu: %s', 'am-toolkit'), $product['name'])); ?>">
+                                                <?php foreach ($product['downloads'] as $download) : ?>
+                                                    <a class="am-purchased-product__download" href="<?php echo esc_url($download['url']); ?>">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                            <path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14" />
+                                                        </svg>
+                                                        <span><?php echo esc_html($download['name']); ?></span>
+                                                    </a>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
 
                                         <?php if ($product['url'] !== '') : ?>
                                             <a class="am-purchased-product__action" href="<?php echo esc_url($product['url']); ?>">
@@ -261,5 +284,131 @@ final class PurchasedProducts
         }
 
         return array_values($products);
+    }
+
+    private function productCountLabel(int $count): string
+    {
+        $lastDigit = $count % 10;
+        $lastTwoDigits = $count % 100;
+
+        if ($count === 1) {
+            $form = __('produkt', 'am-toolkit');
+        } elseif ($lastDigit >= 2 && $lastDigit <= 4 && ($lastTwoDigits < 12 || $lastTwoDigits > 14)) {
+            $form = __('produkty', 'am-toolkit');
+        } else {
+            $form = __('produktów', 'am-toolkit');
+        }
+
+        return sprintf('%d %s', $count, $form);
+    }
+
+    /** @return array<int, array<int, array{name: string, url: string}>> */
+    private function customerDownloads(int $userId): array
+    {
+        if (!function_exists('wc_get_customer_available_downloads')) {
+            return [];
+        }
+
+        $downloadsByProduct = [];
+
+        foreach (wc_get_customer_available_downloads($userId) as $download) {
+            $productId = absint($download['product_id'] ?? 0);
+            $url = isset($download['download_url']) ? (string) $download['download_url'] : '';
+
+            if (!$productId || $url === '') {
+                continue;
+            }
+
+            $product = wc_get_product($productId);
+
+            if ($product && $product->is_type('variation')) {
+                $productId = $product->get_parent_id();
+            }
+
+            $file = isset($download['file']) && is_array($download['file'])
+                ? $download['file']
+                : [];
+            $name = (string) ($file['name'] ?? $download['download_name'] ?? __('Pobierz plik', 'am-toolkit'));
+
+            $downloadsByProduct[$productId][] = [
+                'name' => sanitize_text_field($name),
+                'url'  => esc_url_raw($url),
+            ];
+        }
+
+        return $downloadsByProduct;
+    }
+
+    /** @return array<int, array{name: string, url: string}> */
+    private function manualProductDownloads(int $productId, int $userId): array
+    {
+        if (!isset(ManualProductAssignments::assignments($userId)[$productId])) {
+            return [];
+        }
+
+        $product = wc_get_product($productId);
+
+        if (!$product || !$product->is_downloadable()) {
+            return [];
+        }
+
+        $downloads = [];
+
+        foreach ($product->get_downloads() as $downloadId => $download) {
+            if (!$download->get_enabled() || $download->get_file() === '') {
+                continue;
+            }
+
+            $downloads[] = [
+                'name' => sanitize_text_field($download->get_name() ?: __('Pobierz plik', 'am-toolkit')),
+                'url'  => add_query_arg([
+                    'amt_manual_download' => $productId,
+                    'download_id'         => $downloadId,
+                    '_wpnonce'            => wp_create_nonce($this->manualDownloadNonceAction($userId, $productId, (string) $downloadId)),
+                ], home_url('/')),
+            ];
+        }
+
+        return $downloads;
+    }
+
+    public function handleManualDownload(): void
+    {
+        if (!isset($_GET['amt_manual_download'], $_GET['download_id'], $_GET['_wpnonce'])) {
+            return;
+        }
+
+        $userId = get_current_user_id();
+        $productId = absint(wp_unslash($_GET['amt_manual_download']));
+        $downloadId = sanitize_text_field(wp_unslash($_GET['download_id']));
+        $nonce = sanitize_text_field(wp_unslash($_GET['_wpnonce']));
+
+        if (!$userId || !$productId || $downloadId === '') {
+            wp_die(esc_html__('Nie masz dostępu do tego pliku.', 'am-toolkit'), '', ['response' => 403]);
+        }
+
+        $action = $this->manualDownloadNonceAction($userId, $productId, $downloadId);
+        $assignments = ManualProductAssignments::assignments($userId);
+
+        if (!wp_verify_nonce($nonce, $action) || !isset($assignments[$productId])) {
+            wp_die(esc_html__('Odnośnik pobierania wygasł lub nie masz dostępu do tego pliku.', 'am-toolkit'), '', ['response' => 403]);
+        }
+
+        $product = wc_get_product($productId);
+        $downloads = $product ? $product->get_downloads() : [];
+        $download = $downloads[$downloadId] ?? null;
+
+        if (!$product || !$download || !$download->get_enabled() || $download->get_file() === '') {
+            wp_die(esc_html__('Ten plik nie jest już dostępny.', 'am-toolkit'), '', ['response' => 404]);
+        }
+
+        nocache_headers();
+        \WC_Download_Handler::download($download->get_file(), $productId);
+        exit;
+    }
+
+    private function manualDownloadNonceAction(int $userId, int $productId, string $downloadId): string
+    {
+        return sprintf('amt_manual_download_%d_%d_%s', $userId, $productId, $downloadId);
     }
 }
