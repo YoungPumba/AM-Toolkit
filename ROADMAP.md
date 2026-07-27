@@ -1,5 +1,15 @@
 # Roadmap AM Toolkit
 
+## Zasady modułu „Moje konto”
+
+- zachowujemy stylistykę Klaudia Socials: Poppins dla interfejsu, Buffalo dla głównych tytułów, akcent `#F176A4`, ciepłe beże i białe powierzchnie,
+- podstawowy promień dużych kart i paneli wynosi `25px`,
+- każdy etap kończymy testem na komputerze i telefonie,
+- każdy etap sprawdzamy dla użytkownika niezalogowanego, zalogowanego bez zakupów oraz zalogowanego z zakupami,
+- najpierw kończymy i zatwierdzamy aktualny widok, dopiero później przechodzimy do następnego modułu,
+- funkcje planowane, lecz jeszcze niedostępne, oznaczamy etykietą „W budowie”,
+- nowe wersje pakujemy wyłącznie według schematu opisanego w `.build/PACKAGING.md`.
+
 ## Powitanie panelu konta
 
 - [x] animacja wyświetlana raz dziennie na głównym widoku konta,
@@ -21,12 +31,56 @@
 - [x] dynamiczna sekcja „Ostatnie zamówienie”,
 - [x] odnośniki i liczniki szybkiego dostępu.
 
-## Nawigacja konta
+## Audyt konta klienta — 27 lipca 2026
+
+### Elementy działające poprawnie
+
+- [x] panel główny poprawnie pobiera dane klienta, produkty, zamówienie i liczniki,
+- [x] widok `/moje-konto/moje-produkty/` działa na komputerze i telefonie bez poziomego przewijania całej strony,
+- [x] karuzela szybkiego dostępu przewija się poziomo na telefonie bez rozszerzania dokumentu,
+- [x] chronione odnośniki do pobrania plików są generowane poprawnie,
+- [x] widok „Moje produkty” ma prawidłową hierarchię nagłówków, opisy alternatywne obrazów i etykiety regionów.
+
+### Problemy wymagające naprawy
+
+- [ ] przywrócić zawartość podstawowych endpointów WooCommerce: `orders`, `view-order`, `edit-account` i `edit-address`,
+- [ ] zweryfikować formularz logowania WooCommerce — standardowy formularz WordPress zalogował konto, natomiast formularz na stronie konta wymaga ponownego testu,
+- [x] poprawić klasyfikację produktów przypisanych do podkategorii,
+- [x] zaokrąglić avatar użytkownika niezależnie od obrazu zwracanego przez WordPress,
+- [ ] dodać dostępny opis do ikony konta w nagłówku, np. `aria-label="Moje konto"`.
+
+## v0.9.2 — dopracowanie widoku „Moje produkty”
+
+- [x] mocniej oddzielić kategorie „Konsultacje”, „Kursy”, „Pliki do pobrania” i „Pozostałe produkty”,
+- [x] dodać pod nagłówkiem kategorii krótką różową linię oraz delikatną linię na pozostałej szerokości,
+- [x] zmniejszyć wysokość zdjęć z około `228px` do `190px` na komputerze,
+- [x] zmniejszyć wysokość zdjęć z około `199px` do `170px` na telefonie,
+- [x] zmniejszyć pionowe odstępy wewnątrz kart bez pogarszania czytelności,
+- [x] zachować trzy kolumny na dużym ekranie, dwie na tablecie i jedną na telefonie,
+- [x] zachować obecny wygląd i działanie przycisków pobierania,
+- [x] obsłużyć przypisanie produktu do kategorii nadrzędnej lub jej podkategorii,
+- [ ] sprawdzić długie nazwy produktów i plików,
+- [ ] sprawdzić kategorie puste, pojedynczą kartę oraz wiele kart,
+- [ ] przetestować linki produktu i chronione pobieranie plików,
+- [ ] wykonać test wizualny przy szerokościach `360px`, `768px`, `1024px` i co najmniej `1440px`.
+
+## v0.10.0 — podstawowe endpointy konta
+
+- [ ] wyświetlić listę zamówień na `/moje-konto/orders/`,
+- [ ] wyświetlić szczegóły zamówienia na `/moje-konto/view-order/{id}/`,
+- [ ] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
+- [ ] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
+- [ ] przygotować spójne puste widoki i komunikaty błędów,
+- [ ] sprawdzić wszystkie odnośniki prowadzące z panelu głównego,
+- [ ] przetestować endpointy na komputerze i telefonie.
+
+## v0.11.0 — nawigacja konta
 
 - [ ] kliknięcie ikony niezalogowanego użytkownika prowadzi do logowania i rejestracji,
 - [ ] kliknięcie ikony zalogowanego użytkownika otwiera menu konta,
 - [ ] jednakowe zachowanie na komputerze i telefonie,
-- [ ] obsługa klawiatury, zamykania poza panelem i klawiszem Escape.
+- [ ] obsługa klawiatury, zamykania poza panelem i klawiszem Escape,
+- [ ] dostępna nazwa przycisku i poprawne atrybuty `aria-expanded` oraz `aria-controls`.
 
 ## Odzyskiwanie i ustawianie hasła
 
@@ -38,9 +92,34 @@
 - [x] dopasować wygląd formularza oraz komunikatów do panelu konta,
 - [ ] przetestować cały proces w trybie niezalogowanym na komputerze i telefonie.
 
-## Późniejsze moduły konta
+## v0.12.0 — Konsultacje i terminy
 
-- [ ] konsultacje i terminy — „W budowie”,
-- [ ] dokumenty zakupu,
-- [ ] korzyści, kupony i oferty użytkownika,
-- [ ] centrum pomocy, zwrotów i reklamacji.
+- [ ] kafelek pozostaje oznaczony jako „W budowie” do czasu ukończenia modułu,
+- [ ] lista kupionych konsultacji,
+- [ ] status wykorzystania konsultacji,
+- [ ] termin najbliższego spotkania,
+- [ ] odnośnik do rezerwacji lub zmiany terminu,
+- [ ] historia konsultacji.
+
+## v0.13.0 — Dokumenty i obsługa zamówień
+
+- [ ] dokumenty zakupu i faktury,
+- [ ] centrum pomocy,
+- [ ] zwroty i reklamacje,
+- [ ] czytelne statusy zgłoszeń.
+
+## v0.14.0 — Korzyści klienta
+
+- [ ] kupony przypisane do użytkownika,
+- [ ] indywidualne oferty,
+- [ ] rekomendacje na podstawie posiadanych produktów,
+- [ ] wygasanie i warunki wykorzystania korzyści.
+
+## v1.0.0 — stabilny moduł konta
+
+- [ ] kompletne testy wszystkich endpointów konta,
+- [ ] pełna obsługa klawiatury i czytników ekranu,
+- [ ] spójne stany ładowania, puste widoki, błędy i komunikaty,
+- [ ] brak poziomego przewijania całej strony na obsługiwanych urządzeniach,
+- [ ] panel ustawień najważniejszych elementów w AM Toolkit,
+- [ ] dokumentacja administratora strony.

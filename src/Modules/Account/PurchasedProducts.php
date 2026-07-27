@@ -116,7 +116,7 @@ final class PurchasedProducts
             $groupKey = 'other';
 
             foreach (['consultations', 'courses', 'downloads'] as $candidate) {
-                if (has_term($groups[$candidate]['slug'], 'product_cat', $product['id'])) {
+                if ($this->belongsToProductCategory($product['id'], $groups[$candidate]['slug'])) {
                     $groupKey = $candidate;
                     break;
                 }
@@ -300,6 +300,46 @@ final class PurchasedProducts
         }
 
         return sprintf('%d %s', $count, $form);
+    }
+
+    /**
+     * Matches both the configured product category and any of its descendants.
+     *
+     * A product assigned only to a child category should still appear in the
+     * corresponding account group.
+     */
+    private function belongsToProductCategory(int $productId, string $categorySlug): bool
+    {
+        if ($categorySlug === '') {
+            return false;
+        }
+
+        $category = get_term_by('slug', $categorySlug, 'product_cat');
+
+        if (!$category instanceof \WP_Term) {
+            return false;
+        }
+
+        $productTermIds = wp_get_post_terms($productId, 'product_cat', ['fields' => 'ids']);
+
+        if (is_wp_error($productTermIds)) {
+            return false;
+        }
+
+        $categoryId = (int) $category->term_id;
+
+        foreach ($productTermIds as $productTermId) {
+            $productTermId = (int) $productTermId;
+
+            if (
+                $productTermId === $categoryId ||
+                in_array($categoryId, get_ancestors($productTermId, 'product_cat', 'taxonomy'), true)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return array<int, array<int, array{name: string, url: string}>> */

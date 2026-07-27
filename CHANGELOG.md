@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.9.2
+
+- mocniejsze oddzielenie kategorii w bibliotece produktów za pomocą różowo-szarych separatorów,
+- niższe zdjęcia i bardziej zwarte karty produktów na komputerze, tablecie i telefonie,
+- zachowany układ trzech, dwóch i jednej kolumny zależnie od szerokości ekranu,
+- klasyfikowanie produktów przypisanych do podkategorii właściwej grupy konta,
+- zaokrąglony avatar użytkownika niezależnie od obrazu zwracanego przez WordPress,
+- zachowany wygląd i działanie chronionych przycisków pobierania.
+
 ## 0.9.1
 
 - poprawna polska odmiana licznika: „1 produkt”, „2–4 produkty” i „5+ produktów”,
