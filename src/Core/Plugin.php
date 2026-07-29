@@ -8,6 +8,7 @@ use AMToolkit\Admin\CheckoutSettings;
 use AMToolkit\Integrations\LiteSpeed;
 use AMToolkit\Modules\Account\AccountDashboard;
 use AMToolkit\Modules\Account\AccountOnboarding;
+use AMToolkit\Modules\Account\AccountOrders;
 use AMToolkit\Modules\Account\AccountProductImage;
 use AMToolkit\Modules\Account\ManualProductAssignments;
 use AMToolkit\Modules\Account\PurchasedProducts;
@@ -24,7 +25,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.9.3';
+    public const VERSION = '0.10.0';
 
     /**
      * Uruchamia wtyczkę.
@@ -54,6 +55,7 @@ final class Plugin
             (new AccountProductImage())->boot();
             (new ManualProductAssignments())->boot();
             (new PurchasedProducts())->boot();
+            (new AccountOrders())->boot();
         }
     }
 

@@ -1,5 +1,16 @@
 # Historia zmian AM Toolkit
 
+## 0.10.0
+
+- dedykowany widok `/moje-konto/orders/` renderowany niezależnie od szablonów ShopEngine,
+- stylistyka zgodna z biblioteką „Moje produkty”: Buffalo, Poppins, biała powierzchnia, promień 25 px i różowe akcenty,
+- responsywna tabela zamówień na komputerze oraz osobne karty na tablecie i telefonie,
+- numer, data, produkty, typ produktu, status, kwota i działania dla każdego zamówienia,
+- kolorystyczne etykiety statusów WooCommerce,
+- filtrowanie według statusu i sortowanie według daty albo kwoty,
+- bezpieczne odnośniki do szczegółów, płatności i plików cyfrowych udostępnionych przez WooCommerce,
+- paginacja oraz czytelny stan pustej historii zamówień.
+
 ## 0.9.3
 
 - dodatkowe pole „Obraz w panelu «Moje produkty»” w edycji produktu WooCommerce,

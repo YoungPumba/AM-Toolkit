@@ -78,7 +78,9 @@
 
 ## v0.10.0 — podstawowe endpointy konta
 
-- [ ] wyświetlić listę zamówień na `/moje-konto/orders/`,
+- [x] wyświetlić listę zamówień na `/moje-konto/orders/`,
+- [x] dodać filtrowanie, sortowanie, statusy, pobieranie plików i paginację listy zamówień,
+- [x] przygotować responsywny układ tabeli na komputerze i kart na telefonie,
 - [ ] wyświetlić szczegóły zamówienia na `/moje-konto/view-order/{id}/`,
 - [ ] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
 - [ ] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
