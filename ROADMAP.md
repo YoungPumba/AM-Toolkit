@@ -81,7 +81,9 @@
 - [x] wyświetlić listę zamówień na `/moje-konto/orders/`,
 - [x] dodać filtrowanie, sortowanie, statusy, pobieranie plików i paginację listy zamówień,
 - [x] przygotować responsywny układ tabeli na komputerze i kart na telefonie,
-- [ ] wyświetlić szczegóły zamówienia na `/moje-konto/view-order/{id}/`,
+- [x] wyświetlić szczegóły zamówienia na `/moje-konto/view-order/{id}/`,
+- [x] zabezpieczyć szczegóły zamówienia kontrolą zalogowanego właściciela,
+- [x] wyświetlić produkty, kwoty, płatność, adresy, pliki cyfrowe i notatkę klienta,
 - [ ] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
 - [ ] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
 - [ ] przygotować spójne puste widoki i komunikaty błędów,
@@ -137,3 +139,25 @@
 - [ ] brak poziomego przewijania całej strony na obsługiwanych urządzeniach,
 - [ ] panel ustawień najważniejszych elementów w AM Toolkit,
 - [ ] dokumentacja administratora strony.
+
+## v1.1.0 — widżety AM Toolkit dla Elementora
+
+- [ ] dodać w Elementorze osobną kategorię widżetów „AM Toolkit”,
+- [ ] umożliwić budowanie panelu konta z pojedynczych widżetów bez edycji plików wtyczki,
+- [ ] dodać widżet „Podsumowanie moich produktów” z własnym tytułem, opisem i odnośnikiem,
+- [ ] dodać repeater pozycji podsumowania, pozwalający tworzyć elementy takie jak „Kursy”, „Konsultacje”, „Pliki do pobrania” i „Książki”,
+- [ ] wybierać kategorię WooCommerce z listy zamiast wpisywania jej identyfikatora albo klasy CSS,
+- [ ] automatycznie zliczać zakupione i ręcznie przyznane produkty z wybranej kategorii oraz jej podkategorii,
+- [ ] umożliwić zmianę etykiety pozycji niezależnie od nazwy kategorii WooCommerce,
+- [ ] dodać widżet „Wymaga Twojej uwagi” z automatycznymi regułami i edytowalnymi komunikatami,
+- [ ] dodać widżet „Ostatnie zamówienie” z konfigurowalnymi etykietami, przyciskiem i zakresem wyświetlanych danych,
+- [ ] dodać pojedynczy widżet szybkiego dostępu z wyborem typu danych, ikony, odnośnika i stanu „W budowie”,
+- [ ] dodać widżet ostatnio nabytych produktów oraz opcjonalny limit wyświetlanych pozycji,
+- [ ] zapewnić automatyczne odnośniki do endpointów konta z możliwością świadomego ustawienia własnego adresu,
+- [ ] udostępnić kontrolki treści: tytuły, opisy, etykiety przycisków, teksty pustych stanów i widoczność poszczególnych elementów,
+- [ ] udostępnić kontrolki wyglądu: typografia, kolory, obramowanie, promień, odstępy, ikony i ustawienia responsywne,
+- [ ] wyświetlać rzeczywiste lub bezpieczne przykładowe dane w podglądzie Elementora,
+- [ ] zachować wspólną warstwę danych w PHP, aby wszystkie widżety korzystały z tych samych liczników, zamówień i uprawnień,
+- [ ] pozostawić dotychczasowe shortcode’y jako warstwę zgodności wstecznej,
+- [ ] zadbać o dostępność klawiatury, poprawne nagłówki i atrybuty ARIA,
+- [ ] przygotować możliwość eksportowania i ponownego użycia gotowego układu panelu.

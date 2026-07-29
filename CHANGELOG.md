@@ -1,5 +1,15 @@
 # Historia zmian AM Toolkit
 
+## 0.10.2
+
+- dedykowany widok `/moje-konto/view-order/{id}/` niezależny od szablonów ShopEngine,
+- kontrola właściciela zamówienia chroniąca dane klienta przed odczytem po zmianie numeru w adresie,
+- nagłówek ze statusem oraz podsumowanie daty, wartości, płatności i liczby pozycji,
+- responsywna lista produktów z ilością, wariantami, ceną i odnośnikami do produktu,
+- bezpieczne przyciski pobierania plików udostępnionych klientowi przez WooCommerce,
+- podsumowanie kwot, przycisk płatności dla nieopłaconego zamówienia, adresy oraz notatka klienta,
+- spójny komunikat dla nieistniejącego albo niedostępnego zamówienia.
+
 ## 0.10.1
 
 - zachowanie komórki „Akcje” jako prawidłowej komórki tabeli i ciągłe tło całego wiersza na komputerze,
