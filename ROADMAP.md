@@ -84,7 +84,7 @@
 - [x] wyświetlić szczegóły zamówienia na `/moje-konto/view-order/{id}/`,
 - [x] zabezpieczyć szczegóły zamówienia kontrolą zalogowanego właściciela,
 - [x] wyświetlić produkty, kwoty, płatność, adresy, pliki cyfrowe i notatkę klienta,
-- [ ] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
+- [x] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
 - [ ] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
 - [ ] przygotować spójne puste widoki i komunikaty błędów,
 - [ ] sprawdzić wszystkie odnośniki prowadzące z panelu głównego,

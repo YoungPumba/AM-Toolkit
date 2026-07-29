@@ -1,5 +1,15 @@
 # Historia zmian AM Toolkit
 
+## 0.10.3
+
+- dedykowany widok `/moje-konto/edit-account/` spójny wizualnie z biblioteką produktów i zamówieniami,
+- bezpieczny zapis imienia, nazwiska, nazwy wyświetlanej, adresu e-mail oraz hasła przez standardowy mechanizm WooCommerce,
+- opcjonalny numer telefonu zapisywany w danych rozliczeniowych klienta,
+- sekcje podstawowych informacji i bezpieczeństwa z czytelną hierarchią oraz zaokrąglonym avatarem,
+- lekkie przyciski „Pokaż” i „Ukryj” z obsługą klawiatury oraz atrybutami dostępności,
+- responsywny układ pól, komunikatów walidacji i przycisku zapisu na telefonie,
+- zachowanie wpisanych wartości formularza po błędzie walidacji.
+
 ## 0.10.2
 
 - dedykowany widok `/moje-konto/view-order/{id}/` niezależny od szablonów ShopEngine,

@@ -7,6 +7,7 @@ use AMToolkit\Admin\NotificationSettings;
 use AMToolkit\Admin\CheckoutSettings;
 use AMToolkit\Integrations\LiteSpeed;
 use AMToolkit\Modules\Account\AccountDashboard;
+use AMToolkit\Modules\Account\AccountDetails;
 use AMToolkit\Modules\Account\AccountOnboarding;
 use AMToolkit\Modules\Account\AccountOrderDetails;
 use AMToolkit\Modules\Account\AccountOrders;
@@ -26,7 +27,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.10.2';
+    public const VERSION = '0.10.3';
 
     /**
      * Uruchamia wtyczkę.
@@ -58,6 +59,7 @@ final class Plugin
             (new PurchasedProducts())->boot();
             (new AccountOrders())->boot();
             (new AccountOrderDetails())->boot();
+            (new AccountDetails())->boot();
         }
     }
 

@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Wersja 0.10.2 dodaje bezpieczny i responsywny widok szczegółów pojedynczego zamówienia.
+Wersja 0.10.3 dodaje bezpieczny i responsywny formularz danych konta.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 
@@ -15,7 +15,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - panel konfiguracji komunikatu checkoutu z podglądem zmian.
 - responsywne kafelki szybkiego dostępu w panelu konta,
 - ustawianie hasła z odnośnika rejestracyjnego i konfiguracja podstawowych danych konta.
-- dedykowany widok „Moje zamówienia” niezależny od szablonów ShopEngine.
+- dedykowany widok „Moje zamówienia” niezależny od szablonów ShopEngine,
+- dedykowane widoki szczegółów zamówienia i edycji danych konta.
 
 ## Wymagania
 
