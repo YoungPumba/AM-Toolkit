@@ -8,13 +8,18 @@ final class AccountDetails
 {
     private const ENDPOINT = 'edit-account';
     private const SCRIPT_HANDLE = 'am-toolkit-account-details';
+    private const AVATAR_META_KEY = '_am_toolkit_avatar_attachment_id';
+    private const AVATAR_OWNER_META_KEY = '_am_toolkit_avatar_owner';
+    private const MAX_AVATAR_SIZE = 3145728;
 
     public function boot(): void
     {
         add_shortcode('am_account_details', [$this, 'render']);
         add_filter('template_include', [$this, 'accountTemplate'], 102);
         add_action('woocommerce_save_account_details', [$this, 'saveOptionalPhone']);
+        add_action('woocommerce_save_account_details', [$this, 'saveAvatar'], 20);
         add_action('wp_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_filter('get_avatar_data', [$this, 'filterAvatarData'], 10, 2);
     }
 
     public function accountTemplate(string $template): string
@@ -79,6 +84,178 @@ final class AccountDetails
         update_user_meta($userId, 'billing_phone', $phone);
     }
 
+    public function saveAvatar(int $userId): void
+    {
+        $nonce = isset($_POST['save-account-details-nonce'])
+            ? sanitize_text_field(wp_unslash($_POST['save-account-details-nonce']))
+            : '';
+
+        if (
+            $userId <= 0 ||
+            $userId !== get_current_user_id() ||
+            !wp_verify_nonce($nonce, 'save_account_details')
+        ) {
+            return;
+        }
+
+        $file = isset($_FILES['am_account_avatar']) && is_array($_FILES['am_account_avatar'])
+            ? $_FILES['am_account_avatar']
+            : [];
+        $hasUpload = isset($file['error']) && (int) $file['error'] !== UPLOAD_ERR_NO_FILE;
+        $removeAvatar = isset($_POST['am_remove_account_avatar'])
+            && '1' === sanitize_text_field(wp_unslash($_POST['am_remove_account_avatar']));
+
+        if ($removeAvatar && !$hasUpload) {
+            $this->removeCustomAvatar($userId);
+            return;
+        }
+
+        if (!$hasUpload) {
+            return;
+        }
+
+        $uploadError = isset($file['error']) ? (int) $file['error'] : UPLOAD_ERR_NO_FILE;
+
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            wc_add_notice(
+                __('Nie udało się przesłać avatara. Wybierz plik ponownie.', 'am-toolkit'),
+                'error'
+            );
+            return;
+        }
+
+        $fileSize = isset($file['size']) ? (int) $file['size'] : 0;
+
+        if ($fileSize <= 0 || $fileSize > self::MAX_AVATAR_SIZE) {
+            wc_add_notice(
+                __('Avatar może mieć maksymalnie 3 MB.', 'am-toolkit'),
+                'error'
+            );
+            return;
+        }
+
+        $fileName = isset($file['name']) ? sanitize_file_name((string) $file['name']) : '';
+        $temporaryPath = isset($file['tmp_name']) ? (string) $file['tmp_name'] : '';
+        $allowedMimes = [
+            'jpg|jpeg|jpe' => 'image/jpeg',
+            'png'          => 'image/png',
+            'webp'         => 'image/webp',
+        ];
+        $checkedFile = wp_check_filetype_and_ext(
+            $temporaryPath,
+            $fileName,
+            $allowedMimes
+        );
+
+        if (empty($checkedFile['ext']) || empty($checkedFile['type'])) {
+            wc_add_notice(
+                __('Avatar musi być obrazem JPG, PNG albo WebP.', 'am-toolkit'),
+                'error'
+            );
+            return;
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+
+        $uploaded = wp_handle_upload(
+            $file,
+            [
+                'test_form' => false,
+                'mimes'     => $allowedMimes,
+            ]
+        );
+
+        if (isset($uploaded['error']) || empty($uploaded['file']) || empty($uploaded['url'])) {
+            wc_add_notice(
+                isset($uploaded['error'])
+                    ? sanitize_text_field((string) $uploaded['error'])
+                    : __('Nie udało się zapisać avatara.', 'am-toolkit'),
+                'error'
+            );
+            return;
+        }
+
+        $attachmentId = wp_insert_attachment(
+            [
+                'post_mime_type' => sanitize_mime_type((string) ($uploaded['type'] ?? $checkedFile['type'])),
+                'post_title'     => sanitize_text_field(pathinfo($fileName, PATHINFO_FILENAME)),
+                'post_content'   => '',
+                'post_status'    => 'inherit',
+                'post_author'    => $userId,
+            ],
+            (string) $uploaded['file']
+        );
+
+        if (is_wp_error($attachmentId) || $attachmentId <= 0) {
+            wp_delete_file((string) $uploaded['file']);
+            wc_add_notice(
+                __('Nie udało się utworzyć avatara. Spróbuj ponownie.', 'am-toolkit'),
+                'error'
+            );
+            return;
+        }
+
+        $metadata = wp_generate_attachment_metadata(
+            $attachmentId,
+            (string) $uploaded['file']
+        );
+
+        if (is_array($metadata)) {
+            wp_update_attachment_metadata($attachmentId, $metadata);
+        }
+
+        $previousAttachmentId = (int) get_user_meta(
+            $userId,
+            self::AVATAR_META_KEY,
+            true
+        );
+
+        update_post_meta($attachmentId, self::AVATAR_OWNER_META_KEY, $userId);
+        update_user_meta($userId, self::AVATAR_META_KEY, $attachmentId);
+
+        if ($previousAttachmentId > 0 && $previousAttachmentId !== $attachmentId) {
+            $this->deleteOwnedAvatarAttachment($previousAttachmentId, $userId);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @param mixed $idOrEmail
+     * @return array<string, mixed>
+     */
+    public function filterAvatarData(array $args, $idOrEmail): array
+    {
+        $userId = $this->resolveAvatarUserId($idOrEmail);
+
+        if ($userId <= 0) {
+            return $args;
+        }
+
+        $attachmentId = (int) get_user_meta(
+            $userId,
+            self::AVATAR_META_KEY,
+            true
+        );
+
+        if ($attachmentId <= 0 || !wp_attachment_is_image($attachmentId)) {
+            return $args;
+        }
+
+        $size = isset($args['size']) ? max(24, (int) $args['size']) : 96;
+        $image = wp_get_attachment_image_src($attachmentId, [$size, $size]);
+
+        if (!is_array($image) || empty($image[0])) {
+            return $args;
+        }
+
+        $args['url'] = $image[0];
+        $args['found_avatar'] = true;
+
+        return $args;
+    }
+
     public function render(): string
     {
         if (!is_user_logged_in()) {
@@ -96,6 +273,7 @@ final class AccountDetails
         $displayName = $this->fieldValue('account_display_name', $user->display_name);
         $email       = $this->fieldValue('account_email', $user->user_email);
         $phone       = $this->fieldValue('billing_phone', (string) get_user_meta($user->ID, 'billing_phone', true));
+        $customAvatarId = (int) get_user_meta($user->ID, self::AVATAR_META_KEY, true);
 
         ob_start();
         ?>
@@ -140,6 +318,7 @@ final class AccountDetails
                 class="am-account-details__form woocommerce-EditAccountForm edit-account"
                 action=""
                 method="post"
+                enctype="multipart/form-data"
                 <?php do_action('woocommerce_edit_account_form_tag'); ?>
             >
                 <?php do_action('woocommerce_edit_account_form_start'); ?>
@@ -158,6 +337,51 @@ final class AccountDetails
                     </header>
 
                     <div class="am-account-details__fields">
+                        <div class="am-account-details__avatar-editor am-account-details__field--wide">
+                            <div class="am-account-details__avatar-preview">
+                                <?php
+                                echo get_avatar(
+                                    $user->ID,
+                                    112,
+                                    '',
+                                    sprintf(__('Podgląd avatara użytkownika %s', 'am-toolkit'), $user->display_name),
+                                    [
+                                        'class' => 'am-account-details__avatar-preview-image',
+                                        'extra_attr' => 'data-am-account-avatar-preview="true"',
+                                    ]
+                                ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                ?>
+                            </div>
+                            <div class="am-account-details__avatar-controls">
+                                <strong><?php echo esc_html__('Zdjęcie profilowe', 'am-toolkit'); ?></strong>
+                                <p>
+                                    <?php echo esc_html__('Najlepiej użyć kwadratowego zdjęcia JPG, PNG lub WebP. Maksymalny rozmiar pliku: 3 MB.', 'am-toolkit'); ?>
+                                </p>
+                                <div class="am-account-details__avatar-actions">
+                                    <input
+                                        class="am-account-details__avatar-input"
+                                        type="file"
+                                        name="am_account_avatar"
+                                        id="am_account_avatar"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        data-am-account-avatar-input
+                                    />
+                                    <label class="am-account-details__avatar-select" for="am_account_avatar">
+                                        <?php echo esc_html($customAvatarId > 0 ? __('Zmień zdjęcie', 'am-toolkit') : __('Wybierz zdjęcie', 'am-toolkit')); ?>
+                                    </label>
+                                    <span class="am-account-details__avatar-file" data-am-account-avatar-file>
+                                        <?php echo esc_html__('Nie wybrano nowego pliku', 'am-toolkit'); ?>
+                                    </span>
+                                </div>
+                                <?php if ($customAvatarId > 0) : ?>
+                                    <label class="am-account-details__avatar-remove">
+                                        <input type="checkbox" name="am_remove_account_avatar" value="1" />
+                                        <span><?php echo esc_html__('Usuń własny avatar i wróć do Gravatara', 'am-toolkit'); ?></span>
+                                    </label>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
                         <?php
                         echo $this->textField(
                             'account_first_name',
@@ -347,5 +571,62 @@ final class AccountDetails
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    private function removeCustomAvatar(int $userId): void
+    {
+        $attachmentId = (int) get_user_meta(
+            $userId,
+            self::AVATAR_META_KEY,
+            true
+        );
+
+        delete_user_meta($userId, self::AVATAR_META_KEY);
+
+        if ($attachmentId > 0) {
+            $this->deleteOwnedAvatarAttachment($attachmentId, $userId);
+        }
+    }
+
+    private function deleteOwnedAvatarAttachment(int $attachmentId, int $userId): void
+    {
+        $ownerId = (int) get_post_meta(
+            $attachmentId,
+            self::AVATAR_OWNER_META_KEY,
+            true
+        );
+
+        if ($ownerId === $userId) {
+            wp_delete_attachment($attachmentId, true);
+        }
+    }
+
+    /**
+     * @param mixed $idOrEmail
+     */
+    private function resolveAvatarUserId($idOrEmail): int
+    {
+        if (is_numeric($idOrEmail)) {
+            return absint($idOrEmail);
+        }
+
+        if ($idOrEmail instanceof \WP_User) {
+            return (int) $idOrEmail->ID;
+        }
+
+        if ($idOrEmail instanceof \WP_Comment) {
+            if ((int) $idOrEmail->user_id > 0) {
+                return (int) $idOrEmail->user_id;
+            }
+
+            $idOrEmail = $idOrEmail->comment_author_email;
+        }
+
+        if (is_string($idOrEmail) && is_email($idOrEmail)) {
+            $user = get_user_by('email', $idOrEmail);
+            return $user instanceof \WP_User ? (int) $user->ID : 0;
+        }
+
+        return 0;
     }
 }

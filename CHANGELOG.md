@@ -1,5 +1,16 @@
 # Historia zmian AM Toolkit
 
+## 0.10.4
+
+- małe, tekstowe przyciski „Pokaż” i „Ukryj” zgodne z formularzem odzyskiwania hasła,
+- mocniejsze zabezpieczenie wyglądu przycisków przed globalnymi stylami motywu i WooCommerce,
+- możliwość przesłania własnego avatara z poziomu danych konta,
+- natychmiastowy podgląd wybranego zdjęcia przed zapisaniem formularza,
+- obsługa obrazów JPG, PNG i WebP o rozmiarze do 3 MB,
+- możliwość usunięcia własnego avatara i powrotu do Gravatara,
+- automatyczne używanie własnego avatara we wszystkich elementach AM Toolkit korzystających z mechanizmu WordPressa,
+- bezpieczne usuwanie wyłącznie plików avatara utworzonych dla danego użytkownika.
+
 ## 0.10.3
 
 - dedykowany widok `/moje-konto/edit-account/` spójny wizualnie z biblioteką produktów i zamówieniami,

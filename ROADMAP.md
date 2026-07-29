@@ -85,6 +85,7 @@
 - [x] zabezpieczyć szczegóły zamówienia kontrolą zalogowanego właściciela,
 - [x] wyświetlić produkty, kwoty, płatność, adresy, pliki cyfrowe i notatkę klienta,
 - [x] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
+- [x] umożliwić zmianę i usuwanie własnego avatara z poziomu danych konta,
 - [ ] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
 - [ ] przygotować spójne puste widoki i komunikaty błędów,
 - [ ] sprawdzić wszystkie odnośniki prowadzące z panelu głównego,
