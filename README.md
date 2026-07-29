@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Wersja 0.10.0 dodaje dedykowaną, responsywną historię zamówień klienta z filtrowaniem, sortowaniem, statusami i pobieraniem plików.
+Wersja 0.10.1 dopracowuje responsywny układ historii zamówień na komputerach i telefonach.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 

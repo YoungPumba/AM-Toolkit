@@ -158,7 +158,9 @@ final class AccountOrders
                                         <?php echo wp_kses_post($order->get_formatted_order_total()); ?>
                                     </td>
                                     <td class="am-account-order__actions" data-label="<?php echo esc_attr__('Akcje', 'am-toolkit'); ?>">
-                                        <?php echo $this->orderActions($order); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                        <div class="am-account-order__actions-inner">
+                                            <?php echo $this->orderActions($order); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

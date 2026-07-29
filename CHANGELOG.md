@@ -1,5 +1,12 @@
 # Historia zmian AM Toolkit
 
+## 0.10.1
+
+- zachowanie komórki „Akcje” jako prawidłowej komórki tabeli i ciągłe tło całego wiersza na komputerze,
+- osobny wewnętrzny kontener działań bez naruszania układu tabeli,
+- wyrównanie odnośnika „Szczegóły” do kolumny wartości na telefonie,
+- ograniczenie mobilnej etykiety statusu do szerokości jej treści.
+
 ## 0.10.0
 
 - dedykowany widok `/moje-konto/orders/` renderowany niezależnie od szablonów ShopEngine,

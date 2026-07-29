@@ -1157,7 +1157,10 @@
 .am-account-order__status {
     display: inline-flex;
     align-items: center;
+    justify-self: start;
     gap: 7px;
+    width: fit-content;
+    max-width: 100%;
     min-height: 29px;
     padding: 5px 10px;
     border-radius: 999px;
@@ -1207,7 +1210,7 @@
     font-weight: 600 !important;
 }
 
-.am-account-order__actions {
+.am-account-order__actions-inner {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1445,8 +1448,9 @@
         border-bottom: 0;
     }
 
-    .am-account-order__actions {
-        display: flex !important;
+    .am-account-order__actions-inner {
+        align-self: center;
+        justify-self: start;
     }
 }
 
@@ -1561,7 +1565,7 @@
         padding: 11px 14px !important;
     }
 
-    .am-account-order__actions {
+    .am-account-order__actions-inner {
         gap: 8px 14px;
     }
 
