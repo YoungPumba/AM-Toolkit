@@ -47,11 +47,34 @@ final class Assets
             $this->assetVersion('assets/css/account.css')
         );
 
+        wp_enqueue_style(
+            'am-toolkit-account-navigation',
+            AM_TOOLKIT_URL . 'assets/css/account-navigation.css',
+            ['am-toolkit-account'],
+            $this->assetVersion('assets/css/account-navigation.css')
+        );
+
         wp_enqueue_script(
             'am-toolkit-core',
             AM_TOOLKIT_URL . 'assets/js/core.js',
             [],
             $this->assetVersion('assets/js/core.js'),
+            true
+        );
+
+        wp_add_inline_script(
+            'am-toolkit-core',
+            'window.AMToolkitConfig = ' . wp_json_encode([
+                'version' => AM_TOOLKIT_VERSION,
+            ]) . ';',
+            'before'
+        );
+
+        wp_enqueue_script(
+            'am-toolkit-account-navigation',
+            AM_TOOLKIT_URL . 'assets/js/account-navigation.js',
+            ['am-toolkit-core'],
+            $this->assetVersion('assets/js/account-navigation.js'),
             true
         );
 

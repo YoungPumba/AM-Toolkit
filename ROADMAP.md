@@ -43,7 +43,7 @@
 
 ### Problemy wymagające naprawy
 
-- [ ] przywrócić zawartość podstawowych endpointów WooCommerce: `orders`, `view-order`, `edit-account` i `edit-address`,
+- [x] przywrócić zawartość podstawowych endpointów WooCommerce: `orders`, `view-order`, `edit-account` i `edit-address`,
 - [ ] zweryfikować formularz logowania WooCommerce — standardowy formularz WordPress zalogował konto, natomiast formularz na stronie konta wymaga ponownego testu,
 - [x] poprawić klasyfikację produktów przypisanych do podkategorii,
 - [x] zaokrąglić avatar użytkownika niezależnie od obrazu zwracanego przez WordPress,
@@ -93,11 +93,14 @@
 
 ## v0.11.0 — nawigacja konta
 
-- [ ] kliknięcie ikony niezalogowanego użytkownika prowadzi do logowania i rejestracji,
-- [ ] kliknięcie ikony zalogowanego użytkownika otwiera menu konta,
+- [x] kliknięcie ikony niezalogowanego użytkownika prowadzi do logowania i rejestracji,
+- [x] kliknięcie ikony zalogowanego użytkownika otwiera menu konta,
+- [x] dodać w menu wyraźnie oddzieloną pozycję „Kontakt i pomoc” prowadzącą do `/moje-konto/#pomoc-konto`,
+- [x] utrzymać pozycję pomocy widoczną niezależnie od aktualnie otwartego endpointu konta,
+- [x] uwzględnić odsunięcie kotwicy od przyklejonego nagłówka, aby formularz nie został po przewinięciu zasłonięty,
 - [ ] jednakowe zachowanie na komputerze i telefonie,
-- [ ] obsługa klawiatury, zamykania poza panelem i klawiszem Escape,
-- [ ] dostępna nazwa przycisku i poprawne atrybuty `aria-expanded` oraz `aria-controls`.
+- [x] obsługa klawiatury, zamykania poza panelem i klawiszem Escape,
+- [x] dostępna nazwa przycisku i poprawne atrybuty `aria-expanded` oraz `aria-controls`.
 
 ## Odzyskiwanie i ustawianie hasła
 
@@ -109,7 +112,74 @@
 - [x] dopasować wygląd formularza oraz komunikatów do panelu konta,
 - [ ] przetestować cały proces w trybie niezalogowanym na komputerze i telefonie.
 
-## v0.12.0 — Konsultacje i terminy
+## v0.12.0 — Kursy, dostęp i postęp
+
+### Model danych i panel właścicielki
+
+- [ ] zbudować niezależny moduł AM Courses bez wymaganej integracji z zewnętrznym LMS,
+- [ ] rozdzielić encje „Kurs”, „Lekcja”, „Spotkanie” i „Dostęp uczestnika”,
+- [ ] umożliwić tworzenie kursu z tytułem, opisem, grafiką, uporządkowaną listą lekcji, materiałami dodatkowymi i prywatnym odnośnikiem do grupy Telegram,
+- [ ] umożliwić dodawanie, usuwanie i zmianę kolejności lekcji bez edycji plików wtyczki,
+- [ ] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,
+- [ ] umożliwić przypisanie do lekcji wielu plików do pobrania z własną nazwą, opisem i kolejnością,
+- [ ] wybrać i udokumentować sposób hostowania filmów oraz ochrony dostępu przed rozpoczęciem implementacji odtwarzacza,
+- [ ] zachować prosty model: jeden kurs, wspólna treść i spotkania oraz wielu niezależnie przypisanych uczestników,
+- [ ] określić zasadę rozbudowy programu tak, aby dodanie nowej lekcji nie odbierało statusu ukończenia osobom, które wcześniej ukończyły kurs,
+- [ ] dodać właścicielce prosty panel zarządzania kursem, lekcjami, uczestnikami, spotkaniami i stanem publikacji,
+- [ ] zapisywać wszystkie daty z jednoznaczną strefą czasową i prezentować je klientowi w strefie `Europe/Warsaw`.
+
+### Spotkania przypisane do kursu
+
+- [ ] pozwolić dodać do kursu dowolną liczbę spotkań,
+- [ ] dla spotkania zapisywać tytuł, datę, godzinę rozpoczęcia i zakończenia, miejsce lub platformę, link Zoom, opis oraz opcjonalny link do nagrania,
+- [ ] umożliwić właścicielce edycję daty, miejsca i linków bez ingerencji w kod,
+- [ ] pokazywać uczestnikowi najbliższe spotkanie na stronie kursu oraz na panelu głównym konta,
+- [ ] chronić link Zoom i nagranie przed użytkownikami bez aktywnego dostępu do danego kursu,
+- [ ] przygotować wiadomości przypominające o spotkaniu i plik kalendarza `.ics`,
+- [ ] obsłużyć stan bez zaplanowanego spotkania oraz zmianę lub odwołanie terminu.
+
+### Dostęp po zakupie i dostęp ręczny
+
+- [ ] mapować jeden lub więcej produktów WooCommerce na konkretny kurs,
+- [ ] przyznawać dostęp idempotentnie dopiero po opłaceniu zamówienia,
+- [ ] wykorzystać istniejące ręczne przypisania produktów, ale zapisywać osobny dostęp do kursu ze źródłem, datą nadania, statusem i opcjonalnym terminem wygaśnięcia,
+- [ ] umożliwić właścicielce ręczne przyznanie i odebranie dostępu do wybranego kursu,
+- [ ] przygotować bezpieczne przypisanie dostępu osobom, które kupiły kurs przed uruchomieniem modułu,
+- [ ] zdefiniować i obsłużyć zasady odebrania dostępu po anulowaniu, zwrocie lub chargebacku,
+- [ ] zabezpieczyć wszystkie widoki lekcji tak, aby użytkownik widział wyłącznie własne aktywne dostępy.
+
+### Hub kursów i lekcje
+
+- [ ] dodać endpoint `/moje-konto/kursy/` z listą aktywnych, ukończonych i wygasłych kursów,
+- [ ] dodać kafelek „Kursy” do szybkiego dostępu i pozycję do menu konta, gdy endpoint będzie gotowy,
+- [ ] dodać chroniony widok pojedynczego kursu z programem, postępem, najbliższym spotkaniem i przyciskiem „Kontynuuj”,
+- [ ] pokazywać w widoku kursu przycisk prowadzący do grupy Telegram wyłącznie uczestnikom z aktywnym dostępem,
+- [ ] dodać chroniony widok lekcji z odtwarzaczem, opisem etapu, plikami do pobrania, nawigacją „Poprzednia/Następna” i spisem programu,
+- [ ] udostępniać pliki lekcji przez kontrolowany mechanizm pobierania sprawdzający aktywny dostęp, zamiast ujawniać publiczny adres pliku,
+- [ ] zapamiętywać ostatnio otwartą lekcję oraz opcjonalnie pozycję odtwarzania filmu,
+- [ ] przygotować czytelne puste widoki dla braku kursów, braku lekcji, niedostępnej lekcji i wygasłego dostępu,
+- [ ] zapewnić responsywny i dostępny odtwarzacz, napisy lub transkrypcję oraz obsługę klawiatury.
+
+### Postęp kursu
+
+- [ ] liczyć postęp jako stosunek ukończonych wymaganych lekcji do wszystkich wymaganych lekcji kursu,
+- [ ] nie uznawać samego otwarcia strony lekcji za jej obejrzenie,
+- [ ] dla wspieranego odtwarzacza automatycznie oznaczać lekcję po osiągnięciu ustalonego progu, np. `90%`, a w pozostałych przypadkach udostępnić przycisk „Oznacz jako ukończoną”,
+- [ ] przechowywać postęp osobno dla każdego uczestnika i każdego kursu,
+- [ ] obsłużyć stany: nierozpoczęty, w trakcie, ukończony oraz wygasły,
+- [ ] po ukończeniu ostatniej wymaganej lekcji trwale zapisać ukończenie kursu,
+- [ ] pokazywać procent, liczbę ukończonych lekcji, ostatnią lekcję i przycisk „Kontynuuj” w hubie oraz panelu głównym,
+- [ ] dodać do „Wymaga Twojej uwagi” wyłącznie rzeczywiste zdarzenia, np. zbliżające się spotkanie lub wymagany etap, bez reklamowych przypomnień.
+
+### Testy akceptacyjne
+
+- [ ] przetestować brak dostępu, zakup nowy, zakup historyczny, ręczne przyznanie, odebranie, zwrot i wygaśnięcie,
+- [ ] przetestować wielu użytkowników przypisanych do tego samego kursu oraz jednego użytkownika przypisanego do kilku kursów,
+- [ ] przetestować zmianę terminu, linku Zoom i linku Telegram oraz brak możliwości ich odczytania przez osobę bez dostępu,
+- [ ] przetestować postęp, wznowienie nauki i ukończenie na komputerze oraz telefonie,
+- [ ] przetestować dodanie nowej lekcji bez odebrania zapisanego statusu ukończenia dotychczasowym absolwentom.
+
+## v0.13.0 — Konsultacje i terminy
 
 - [ ] kafelek pozostaje oznaczony jako „W budowie” do czasu ukończenia modułu,
 - [ ] zbudować niezależny moduł AM Reservations bez wymaganej integracji z Amelia,
@@ -132,18 +202,6 @@
 - [ ] usunąć zadanie po poprawnym powiązaniu terminu z uprawnieniem,
 - [ ] zapewnić, że jedno uprawnienie nie pozwala utworzyć wielu aktywnych rezerwacji,
 - [ ] przetestować zakup pojedynczej konsultacji, pakietu, ręczne przyznanie, zwrot, anulowanie i zmianę terminu.
-
-## v0.13.0 — Kursy i dostęp do treści
-
-- [ ] ustalić system prowadzący kursy oraz źródło informacji o lekcjach i postępie,
-- [ ] mapować produkty WooCommerce na odpowiednie kursy lub programy,
-- [ ] przyznawać dostęp po opłaceniu zamówienia oraz po ręcznym przypisaniu produktu,
-- [ ] odbierać niewykorzystany dostęp po zwrocie lub anulowaniu zgodnie z przyjętymi zasadami,
-- [ ] dodać endpoint `/moje-konto/kursy/`,
-- [ ] wyświetlić aktywne kursy, postęp, ostatnią lekcję i przycisk „Kontynuuj”,
-- [ ] obsłużyć stan kursu: nierozpoczęty, w trakcie, ukończony oraz wygasły,
-- [ ] dodać do sekcji „Wymaga Twojej uwagi” tylko rzeczywiste zadania kursowe, a nie reklamowe przypomnienia,
-- [ ] przetestować dostęp bez zakupów, po zakupie, po ręcznym przyznaniu i po zwrocie.
 
 ## v0.14.0 — Dokumenty i obsługa zamówień
 

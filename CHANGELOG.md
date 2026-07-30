@@ -1,5 +1,15 @@
 # Historia zmian AM Toolkit
 
+## 0.11.0
+
+- shortcode `[am_account_menu]` zastępujący statyczną ikonę konta w nagłówku,
+- bezpośrednie przejście gościa do widoku logowania i rejestracji,
+- rozwijane menu zalogowanego klienta z panelem głównym, produktami, zamówieniami, danymi i adresami,
+- wyróżniony odnośnik „Kontakt i pomoc” prowadzący do kotwicy `#pomoc-konto`,
+- responsywny panel odporny na przycinanie przez kontenery nagłówka Elementora,
+- zamykanie poza panelem i klawiszem Escape, obsługa klawiatury oraz atrybuty dostępności,
+- automatyczne pobieranie numeru wersji JavaScriptu z wersji wtyczki w PHP.
+
 ## 0.10.6
 
 - dedykowany widok `/moje-konto/edit-address/` spójny z pozostałymi endpointami AM Toolkit,

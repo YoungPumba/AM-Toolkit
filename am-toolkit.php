@@ -3,7 +3,7 @@
  * Plugin Name: AM Toolkit
  * Plugin URI: https://github.com/ArekMokicki/am-toolkit
  * Description: Toolkit rozszerzający WordPress, Elementor i WooCommerce.
- * Version: 0.10.6
+ * Version: 0.11.0
  * Requires PHP: 8.0
  * Author: Arkadiusz Mokicki
  * License: GPL-2.0-or-later
@@ -15,7 +15,7 @@ defined('ABSPATH') || exit;
 /**
  * Ścieżki i adresy.
  */
-define('AM_TOOLKIT_VERSION', '0.10.6');
+define('AM_TOOLKIT_VERSION', '0.11.0');
 define('AM_TOOLKIT_PATH', plugin_dir_path(__FILE__));
 define('AM_TOOLKIT_URL', plugin_dir_url(__FILE__));
 
@@ -39,6 +39,7 @@ require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountOrders.php';
 require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountOrderDetails.php';
 require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountDetails.php';
 require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountAddresses.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountNavigation.php';
 require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountOnboarding.php';
 require_once AM_TOOLKIT_PATH . 'src/Modules/Account/WelcomeAnimation.php';
 

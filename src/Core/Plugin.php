@@ -8,6 +8,7 @@ use AMToolkit\Admin\CheckoutSettings;
 use AMToolkit\Integrations\LiteSpeed;
 use AMToolkit\Modules\Account\AccountDashboard;
 use AMToolkit\Modules\Account\AccountAddresses;
+use AMToolkit\Modules\Account\AccountNavigation;
 use AMToolkit\Modules\Account\AccountDetails;
 use AMToolkit\Modules\Account\AccountOnboarding;
 use AMToolkit\Modules\Account\AccountOrderDetails;
@@ -28,7 +29,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.10.6';
+    public const VERSION = '0.11.0';
 
     /**
      * Uruchamia wtyczkę.
@@ -62,6 +63,7 @@ final class Plugin
             (new AccountOrderDetails())->boot();
             (new AccountDetails())->boot();
             (new AccountAddresses())->boot();
+            (new AccountNavigation())->boot();
         }
     }
 
