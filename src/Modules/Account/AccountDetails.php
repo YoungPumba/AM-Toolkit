@@ -373,9 +373,21 @@ final class AccountDetails
                                         <?php echo esc_html__('Nie wybrano nowego pliku', 'am-toolkit'); ?>
                                     </span>
                                 </div>
+                                <span
+                                    class="am-account-details__avatar-status"
+                                    data-am-account-avatar-status
+                                    role="status"
+                                    aria-live="polite"
+                                    hidden
+                                ></span>
                                 <?php if ($customAvatarId > 0) : ?>
                                     <label class="am-account-details__avatar-remove">
-                                        <input type="checkbox" name="am_remove_account_avatar" value="1" />
+                                        <input
+                                            type="checkbox"
+                                            name="am_remove_account_avatar"
+                                            value="1"
+                                            data-am-account-avatar-remove
+                                        />
                                         <span><?php echo esc_html__('Usuń własny avatar i wróć do Gravatara', 'am-toolkit'); ?></span>
                                     </label>
                                 <?php endif; ?>

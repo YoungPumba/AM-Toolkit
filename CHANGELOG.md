@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## 0.10.5
+
+- poprawne kwadratowe kadrowanie świeżo wybranego avatara niezależnie od stylów obrazów motywu,
+- komunikat informujący, że nowe zdjęcie oczekuje na zapisanie formularza,
+- komunikat o zaplanowanym usunięciu własnego avatara,
+- natychmiastowa walidacja typu JPG, PNG lub WebP oraz limitu 3 MB przed wysłaniem formularza,
+- przywracanie aktualnego podglądu po anulowaniu wyboru albo wskazaniu nieprawidłowego pliku.
+
 ## 0.10.4
 
 - małe, tekstowe przyciski „Pokaż” i „Ukryj” zgodne z formularzem odzyskiwania hasła,
