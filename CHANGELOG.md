@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## 0.10.6
+
+- dedykowany widok `/moje-konto/edit-address/` spójny z pozostałymi endpointami AM Toolkit,
+- formularze adresu rozliczeniowego i dostawy dostępne jednocześnie na jednej stronie,
+- pola krajów i regionów generowane dynamicznie przez WooCommerce,
+- niezależny zapis każdego adresu przez standardową walidację, nonce i mechanizm zapisu WooCommerce,
+- zachowanie wpisanych wartości po błędzie walidacji oraz czytelne komunikaty sukcesu i błędu,
+- responsywny układ dwóch kart na komputerze i pojedynczej kolumny na tablecie oraz telefonie.
+
 ## 0.10.5
 
 - poprawne kwadratowe kadrowanie świeżo wybranego avatara niezależnie od stylów obrazów motywu,

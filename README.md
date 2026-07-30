@@ -1,6 +1,7 @@
 # AM Toolkit
 
-Wersja 0.10.5 poprawia podgląd i komunikaty edytora własnego avatara.
+Wersja 0.10.6 dodaje kompletny, responsywny widok edycji adresu
+rozliczeniowego i adresu dostawy w panelu klienta.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 

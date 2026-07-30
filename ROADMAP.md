@@ -86,7 +86,7 @@
 - [x] wyświetlić produkty, kwoty, płatność, adresy, pliki cyfrowe i notatkę klienta,
 - [x] wyświetlić formularz danych konta na `/moje-konto/edit-account/`,
 - [x] umożliwić zmianę i usuwanie własnego avatara z poziomu danych konta,
-- [ ] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
+- [x] wyświetlić formularz adresów na `/moje-konto/edit-address/`,
 - [ ] przygotować spójne puste widoki i komunikaty błędów,
 - [ ] sprawdzić wszystkie odnośniki prowadzące z panelu głównego,
 - [ ] przetestować endpointy na komputerze i telefonie.
@@ -112,20 +112,47 @@
 ## v0.12.0 — Konsultacje i terminy
 
 - [ ] kafelek pozostaje oznaczony jako „W budowie” do czasu ukończenia modułu,
-- [ ] lista kupionych konsultacji,
-- [ ] status wykorzystania konsultacji,
-- [ ] termin najbliższego spotkania,
-- [ ] odnośnik do rezerwacji lub zmiany terminu,
-- [ ] historia konsultacji.
+- [ ] zbudować niezależny moduł AM Reservations bez wymaganej integracji z Amelia,
+- [ ] dodać w edycji produktu WooCommerce jawne oznaczenie „Produkt konsultacyjny”, liczbę przyznawanych spotkań, czas trwania, bufor i termin ważności,
+- [ ] utworzyć jednoznaczny rejestr uprawnień: źródło zakupu, liczba przyznanych, zarezerwowanych i pozostałych spotkań, termin ważności oraz identyfikatory rezerwacji,
+- [ ] dodać ustawienia tygodniowej dostępności, przerw, urlopów, minimalnego wyprzedzenia i okresu rezerwacji naprzód,
+- [ ] przed zakupem pokazywać rzeczywisty, tylko informacyjny podgląd dostępnych dni i godzin,
+- [ ] przy kliknięciu „Dodaj do koszyka” otwierać na komputerze modal, a na telefonie dostępny panel dolny z kalendarzem i potwierdzeniem zakupu,
+- [ ] wyświetlać informację, że podgląd nie blokuje terminu, a właściwa rezerwacja będzie dostępna po opłaceniu zakupu w „Moje konto → Konsultacje”,
+- [ ] wyświetlać najbliższy wolny termin przy przycisku produktu i blokować zakup, jeśli w skonfigurowanym okresie nie ma żadnego terminu,
+- [ ] przyznawać uprawnienia dopiero po opłaceniu zamówienia i nie naliczać ich ponownie przy kolejnych zmianach statusu,
+- [ ] obsłużyć ręczne przyznanie konsultacji, anulowanie zamówienia, zwrot oraz ponowne udostępnienie terminu po dozwolonym odwołaniu,
+- [ ] dodać endpoint `/moje-konto/konsultacje/`,
+- [ ] wyświetlić listę kupionych konsultacji i status ich wykorzystania,
+- [ ] wyświetlić termin najbliższego spotkania oraz historię konsultacji,
+- [ ] udostępnić rezerwację pozostałego spotkania, zmianę terminu i dozwolone anulowanie,
+- [ ] zabezpieczyć zapis transakcją i unikalną blokadą, aby ten sam termin nie został przyznany dwóm klientom,
+- [ ] wysyłać potwierdzenia i przypomnienia e-mail oraz udostępnić plik kalendarza `.ics`,
+- [ ] dodać do sekcji „Wymaga Twojej uwagi” zadanie „Zarezerwuj termin konsultacji” dla każdego niewykorzystanego uprawnienia,
+- [ ] usunąć zadanie po poprawnym powiązaniu terminu z uprawnieniem,
+- [ ] zapewnić, że jedno uprawnienie nie pozwala utworzyć wielu aktywnych rezerwacji,
+- [ ] przetestować zakup pojedynczej konsultacji, pakietu, ręczne przyznanie, zwrot, anulowanie i zmianę terminu.
 
-## v0.13.0 — Dokumenty i obsługa zamówień
+## v0.13.0 — Kursy i dostęp do treści
+
+- [ ] ustalić system prowadzący kursy oraz źródło informacji o lekcjach i postępie,
+- [ ] mapować produkty WooCommerce na odpowiednie kursy lub programy,
+- [ ] przyznawać dostęp po opłaceniu zamówienia oraz po ręcznym przypisaniu produktu,
+- [ ] odbierać niewykorzystany dostęp po zwrocie lub anulowaniu zgodnie z przyjętymi zasadami,
+- [ ] dodać endpoint `/moje-konto/kursy/`,
+- [ ] wyświetlić aktywne kursy, postęp, ostatnią lekcję i przycisk „Kontynuuj”,
+- [ ] obsłużyć stan kursu: nierozpoczęty, w trakcie, ukończony oraz wygasły,
+- [ ] dodać do sekcji „Wymaga Twojej uwagi” tylko rzeczywiste zadania kursowe, a nie reklamowe przypomnienia,
+- [ ] przetestować dostęp bez zakupów, po zakupie, po ręcznym przyznaniu i po zwrocie.
+
+## v0.14.0 — Dokumenty i obsługa zamówień
 
 - [ ] dokumenty zakupu i faktury,
 - [ ] centrum pomocy,
 - [ ] zwroty i reklamacje,
 - [ ] czytelne statusy zgłoszeń.
 
-## v0.14.0 — Korzyści klienta
+## v0.15.0 — Korzyści klienta
 
 - [ ] kupony przypisane do użytkownika,
 - [ ] indywidualne oferty,
