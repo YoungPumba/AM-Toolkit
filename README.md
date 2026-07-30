@@ -1,7 +1,7 @@
 # AM Toolkit
 
-Wersja 0.11.0 dodaje responsywne menu konta otwierane z ikony użytkownika
-oraz wyróżniony odnośnik do formularza pomocy.
+Wersja 0.11.1 dopracowuje wygląd ikony rozwijanego menu konta oraz jej
+odporność na globalne style przycisków motywu i Elementora.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 

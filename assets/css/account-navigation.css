@@ -13,27 +13,47 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
 }
 
-.am-account-menu__trigger {
+.am-account-menu button.am-account-menu__trigger,
+a.am-account-menu__trigger {
+    appearance: none !important;
+    -webkit-appearance: none !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
-    padding: 5px;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--am-account-menu-text);
+    flex: 0 0 42px;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    margin: 0 !important;
+    padding: 5px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--am-account-menu-text) !important;
     font: inherit;
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
     transition:
         color 180ms ease,
-        background-color 180ms ease,
         transform 180ms ease;
+}
+
+.am-account-menu button.am-account-menu__trigger::before,
+.am-account-menu button.am-account-menu__trigger::after {
+    display: none !important;
+    content: none !important;
 }
 
 .am-account-menu__trigger .screen-reader-text {
@@ -46,28 +66,39 @@
     white-space: nowrap;
 }
 
-.am-account-menu__trigger:hover,
-.am-account-menu__trigger:focus-visible,
-.am-account-menu.is-open .am-account-menu__trigger {
-    background: var(--am-account-menu-pink-soft);
-    color: var(--am-account-menu-pink);
+.am-account-menu button.am-account-menu__trigger:hover,
+.am-account-menu button.am-account-menu__trigger:focus-visible,
+.am-account-menu.is-open button.am-account-menu__trigger,
+a.am-account-menu__trigger:hover,
+a.am-account-menu__trigger:focus-visible {
+    background: transparent !important;
+    color: var(--am-account-menu-pink) !important;
 }
 
-.am-account-menu__trigger:active {
+.am-account-menu button.am-account-menu__trigger:active,
+a.am-account-menu__trigger:active {
     transform: scale(0.96);
 }
 
-.am-account-menu__trigger:focus-visible {
+.am-account-menu button.am-account-menu__trigger:focus-visible,
+a.am-account-menu__trigger:focus-visible {
     outline: 2px solid var(--am-account-menu-pink);
     outline-offset: 3px;
 }
 
 .am-account-menu__user-icon {
     display: block;
-    width: 31px;
-    height: 31px;
+    flex: 0 0 31px;
+    width: 31px !important;
+    min-width: 31px !important;
+    max-width: 31px !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    max-height: 31px !important;
+    margin: 0 !important;
     overflow: visible;
-    fill: currentColor;
+    fill: currentColor !important;
+    color: inherit !important;
 }
 
 .am-account-menu__panel {
@@ -304,15 +335,26 @@
 }
 
 @media (max-width: 767px) {
-    .am-account-menu__trigger {
-        width: 40px;
-        height: 40px;
-        padding: 4px;
+    .am-account-menu button.am-account-menu__trigger,
+    a.am-account-menu__trigger {
+        flex-basis: 40px;
+        width: 40px !important;
+        min-width: 40px !important;
+        max-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        padding: 4px !important;
     }
 
     .am-account-menu__user-icon {
-        width: 30px;
-        height: 30px;
+        flex-basis: 30px;
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 30px !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
     }
 
     .am-account-menu__panel {

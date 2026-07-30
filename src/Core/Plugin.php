@@ -29,7 +29,7 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.11.0';
+    public const VERSION = '0.11.1';
 
     /**
      * Uruchamia wtyczkę.

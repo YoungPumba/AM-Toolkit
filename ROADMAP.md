@@ -98,7 +98,7 @@
 - [x] dodać w menu wyraźnie oddzieloną pozycję „Kontakt i pomoc” prowadzącą do `/moje-konto/#pomoc-konto`,
 - [x] utrzymać pozycję pomocy widoczną niezależnie od aktualnie otwartego endpointu konta,
 - [x] uwzględnić odsunięcie kotwicy od przyklejonego nagłówka, aby formularz nie został po przewinięciu zasłonięty,
-- [ ] jednakowe zachowanie na komputerze i telefonie,
+- [x] jednakowe zachowanie na komputerze i telefonie,
 - [x] obsługa klawiatury, zamykania poza panelem i klawiszem Escape,
 - [x] dostępna nazwa przycisku i poprawne atrybuty `aria-expanded` oraz `aria-controls`.
 

@@ -1,5 +1,12 @@
 # Historia zmian AM Toolkit
 
+## 0.11.1
+
+- identyczny rozmiar i wygląd ikony konta dla gościa oraz zalogowanego klienta,
+- zabezpieczenie przycisku menu przed globalnym tłem, paddingiem i wymiarami przycisków motywu oraz Elementora,
+- zmiana koloru wyłącznie samej ikony na różowy po najechaniu lub otwarciu menu,
+- stała szerokość przycisku zapobiegająca rozsuwaniu mobilnego nagłówka.
+
 ## 0.11.0
 
 - shortcode `[am_account_menu]` zastępujący statyczną ikonę konta w nagłówku,
