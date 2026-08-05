@@ -1,7 +1,7 @@
 # AM Toolkit
 
-Wersja 0.11.1 dopracowuje wygląd ikony rozwijanego menu konta oraz jej
-odporność na globalne style przycisków motywu i Elementora.
+Wersja 0.11.2 dodaje wspólny fundament uprawnień i zdarzeń, na którym będą
+budowane kursy, konsultacje i kolejne chronione moduły AM Toolkit.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 
@@ -19,6 +19,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - dedykowany widok „Moje zamówienia” niezależny od szablonów ShopEngine,
 - dedykowane widoki szczegółów zamówienia, danych konta i adresów,
 - shortcode `[am_account_menu]` z nawigacją zalogowanego klienta.
+- `AM Access Core` z idempotentnymi grantami, okresem ważności i obsługą wielu źródeł dostępu,
+- dziennik zdarzeń przygotowany dla postępu kursów, powiadomień i przyszłych automatyzacji.
 
 ## Wymagania
 
@@ -36,6 +38,43 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 ## Konfiguracja
 
 Ustawienia komunikatów są dostępne w kokpicie WordPressa w sekcji **AM Toolkit → Powiadomienia**.
+
+## API dostępu
+
+Moduły kursów i pozostałe chronione widoki powinny korzystać ze wspólnego API,
+zamiast samodzielnie sprawdzać identyfikatory produktów WooCommerce:
+
+```php
+use AMToolkit\Modules\Access\Access;
+
+$grant_id = Access::grant(
+    $user_id,
+    'course',
+    $course_id,
+    [
+        'source_type' => 'order_item',
+        'source_id'   => $order_item_id,
+        'metadata'    => ['order_id' => $order_id],
+    ]
+);
+
+if (Access::userHas($user_id, 'course', $course_id)) {
+    // Renderuj chronioną zawartość kursu.
+}
+
+Access::revokeSource(
+    $user_id,
+    'course',
+    $course_id,
+    'order_item',
+    $order_item_id
+);
+```
+
+Ponowne nadanie dostępu z identycznego źródła zwraca ten sam grant, a wcześniej
+cofnięty grant zostaje ponownie aktywowany. Dwa różne
+źródła są zapisywane osobno, dlatego odebranie jednego z nich nie usuwa dostępu,
+jeśli nadal istnieje inny aktywny grant.
 
 ## Historia zmian
 

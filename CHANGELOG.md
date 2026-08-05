@@ -1,5 +1,16 @@
 # Historia zmian AM Toolkit
 
+## 0.11.2
+
+- wspólny fundament `AM Access Core` przygotowany dla kursów, konsultacji i chronionych materiałów,
+- osobne, idempotentne granty dostępu pozwalające łączyć zakup, ręczne nadanie, migrację, pakiet i przyszłą subskrypcję,
+- centralne API do sprawdzania, nadawania i odbierania dostępu bez uzależniania widoków od identyfikatora produktu WooCommerce,
+- obsługa początku i wygaśnięcia dostępu oraz wielu niezależnych źródeł dostępu do tego samego zasobu,
+- ponowne nadanie wcześniej cofniętego dostępu z tego samego źródła bez tworzenia zduplikowanego grantu,
+- dziennik istotnych zdarzeń dostępu z unikalnymi kluczami i hookami dla przyszłych powiadomień, analityki i automatyzacji,
+- wersjonowany instalator tworzący i aktualizujący tabele AM Toolkit przy aktywacji oraz aktualizacji wtyczki,
+- dodany kontraktowy test idempotencji, wielu źródeł, wygaśnięcia, cofania i ponownego nadawania dostępu.
+
 ## 0.11.1
 
 - identyczny rozmiar i wygląd ikony konta dla gościa oraz zalogowanego klienta,

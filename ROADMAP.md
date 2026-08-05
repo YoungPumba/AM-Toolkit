@@ -112,7 +112,29 @@
 - [x] dopasować wygląd formularza oraz komunikatów do panelu konta,
 - [ ] przetestować cały proces w trybie niezalogowanym na komputerze i telefonie.
 
+## v0.11.2 — fundament dostępu AM Toolkit
+
+- [x] dodać wspólne `AM Access Core` używane docelowo przez kursy, konsultacje i chronione materiały,
+- [x] przechowywać każde źródło dostępu jako osobny, idempotentny grant zamiast uzależniać widoki od konkretnego produktu WooCommerce,
+- [x] obsłużyć źródła takie jak zakup, ręczne nadanie, migracja, pakiet i przyszła subskrypcja,
+- [x] zapisywać datę nadania, okres ważności, status, źródło i bezpieczne metadane dostępu,
+- [x] udostępnić jedno API do sprawdzania, nadawania i odbierania dostępu,
+- [x] dodać dziennik istotnych zdarzeń oraz hooki pozwalające później podłączać powiadomienia, analitykę i sekcję „Wymaga Twojej uwagi”,
+- [x] wykonać bezpieczną, wersjonowaną migrację tabel przy aktywacji i aktualizacji wtyczki,
+- [ ] przetestować idempotentne nadanie, wielokrotne źródła dostępu, wygaśnięcie i odebranie grantu.
+
 ## v0.12.0 — Kursy, dostęp i postęp
+
+### Fundament AM Courses
+
+- [ ] korzystać wyłącznie ze wspólnego `AM Access Core` przy ochronie kursów i lekcji,
+- [ ] przyjąć rozszerzalny model `Kurs → opcjonalny Moduł → Lekcja`, zachowując możliwość prostego kursu bez ręcznego tworzenia modułów,
+- [ ] nadać kursom, modułom i lekcjom trwałe identyfikatory niezależne od ich kolejności,
+- [ ] wersjonować program i zapisywać zestaw wymaganych lekcji przy ukończeniu, aby późniejsza rozbudowa kursu nie cofała absolwentom statusu 100%,
+- [ ] rejestrować ustandaryzowane zdarzenia kursu, postępu, lekcji, materiałów i spotkań,
+- [ ] wyznaczać jedno „następne najlepsze działanie” używane wspólnie w hubie kursów, panelu konta i sekcji „Wymaga Twojej uwagi”,
+- [ ] przygotować role i możliwości uczestnika, właścicielki oraz przyszłego mentora lub moderatora bez udostępniania niegotowych paneli,
+- [ ] udostępnić hooki i stabilne API dla przyszłych notatek, zadań, dyskusji kontekstowych, ogłoszeń i powiadomień.
 
 ### Model danych i panel właścicielki
 

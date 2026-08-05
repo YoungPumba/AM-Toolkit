@@ -3,7 +3,7 @@
  * Plugin Name: AM Toolkit
  * Plugin URI: https://github.com/ArekMokicki/am-toolkit
  * Description: Toolkit rozszerzający WordPress, Elementor i WooCommerce.
- * Version: 0.11.1
+ * Version: 0.11.2
  * Requires PHP: 8.0
  * Author: Arkadiusz Mokicki
  * License: GPL-2.0-or-later
@@ -15,7 +15,7 @@ defined('ABSPATH') || exit;
 /**
  * Ścieżki i adresy.
  */
-define('AM_TOOLKIT_VERSION', '0.11.1');
+define('AM_TOOLKIT_VERSION', '0.11.2');
 define('AM_TOOLKIT_PATH', plugin_dir_path(__FILE__));
 define('AM_TOOLKIT_URL', plugin_dir_url(__FILE__));
 
@@ -24,6 +24,13 @@ define('AM_TOOLKIT_URL', plugin_dir_url(__FILE__));
  */
 require_once AM_TOOLKIT_PATH . 'src/Core/Plugin.php';
 require_once AM_TOOLKIT_PATH . 'src/Core/Assets.php';
+require_once AM_TOOLKIT_PATH . 'src/Core/Installer.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Access/EntitlementStore.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Access/ActivityEventStore.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Access/WpdbEntitlementStore.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Access/WpdbActivityEventStore.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Access/AccessManager.php';
+require_once AM_TOOLKIT_PATH . 'src/Modules/Access/Access.php';
 require_once AM_TOOLKIT_PATH . 'src/Settings/Notifications.php';
 require_once AM_TOOLKIT_PATH . 'src/Settings/CheckoutNotice.php';
 require_once AM_TOOLKIT_PATH . 'src/Admin/NotificationSettings.php';
@@ -44,6 +51,9 @@ require_once AM_TOOLKIT_PATH . 'src/Modules/Account/AccountOnboarding.php';
 require_once AM_TOOLKIT_PATH . 'src/Modules/Account/WelcomeAnimation.php';
 
 use AMToolkit\Core\Plugin;
+use AMToolkit\Core\Installer;
+
+register_activation_hook(__FILE__, [Installer::class, 'activate']);
 
 /**
  * Uruchomienie wtyczki.

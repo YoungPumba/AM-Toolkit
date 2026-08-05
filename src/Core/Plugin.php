@@ -29,13 +29,15 @@ final class Plugin
     /**
      * Wersja AM Toolkit.
      */
-    public const VERSION = '0.11.1';
+    public const VERSION = '0.11.2';
 
     /**
      * Uruchamia wtyczkę.
      */
     public function boot(): void
     {
+        add_action('plugins_loaded', [Installer::class, 'maybeUpgrade'], 5);
+
         (new Assets())->boot();
         (new NotificationSettings())->boot();
         (new CheckoutSettings())->boot();
