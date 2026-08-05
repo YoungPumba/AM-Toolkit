@@ -1,0 +1,6 @@
+/vendor/
+/dist/
+/.phpcs-cache
+/.phpunit.result.cache
+/.build-output/
+/.vscode/settings.json

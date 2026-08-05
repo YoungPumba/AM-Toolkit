@@ -82,6 +82,21 @@ Pełna lista zmian znajduje się w pliku [CHANGELOG.md](CHANGELOG.md).
 
 Plan kolejnych etapów znajduje się w pliku [ROADMAP.md](ROADMAP.md).
 
+## Rozwój lokalny
+
+Kompletna instrukcja przygotowania środowiska na Windows znajduje się w
+[dokumentacji deweloperskiej repozytorium](https://github.com/YoungPumba/AM-Toolkit/blob/main/docs/DEVELOPMENT-SETUP-WINDOWS.md).
+
+Kolejność codziennego uruchamiania Local, VS Code, testów i logów opisuje
+[runbook pracy lokalnej](https://github.com/YoungPumba/AM-Toolkit/blob/main/docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md).
+
+Przed rozpoczęciem pracy zainstaluj zależności i uruchom kontrolę składni:
+
+```powershell
+composer install
+composer check
+```
+
 ## Licencja
 
 GPL-2.0-or-later.
