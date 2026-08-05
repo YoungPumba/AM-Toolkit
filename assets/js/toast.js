@@ -2,6 +2,7 @@
     'use strict';
 
     const toolkit = window.AMToolkit = window.AMToolkit || {};
+    const recentToasts = toolkit._recentToasts = toolkit._recentToasts || new Map();
     const DEFAULT_DURATION = 4000;
     const VALID_TYPES = new Set(['success', 'info', 'warning', 'error']);
 
@@ -104,6 +105,19 @@
 
     function showToast(options) {
         const config = normalizeOptions(options);
+        const signature = JSON.stringify([
+            config.type,
+            config.title,
+            config.message,
+            config.actionText,
+            config.actionUrl
+        ]);
+        const duplicate = recentToasts.get(signature);
+
+        if (duplicate?.api?.element?.isConnected) {
+            return duplicate.api;
+        }
+
         const toast = buildToast(config);
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let dismissed = false;
@@ -112,6 +126,7 @@
         let dragging = false;
         let startX = 0;
         let deltaX = 0;
+        let api = null;
 
         getRegion().append(toast.element);
 
@@ -139,6 +154,10 @@
             toast.element.classList.add('amt-toast--leaving');
 
             const remove = () => toast.element.remove();
+
+            if (recentToasts.get(signature)?.api === api) {
+                recentToasts.delete(signature);
+            }
 
             if (reduceMotion) {
                 remove();
@@ -219,7 +238,7 @@
             updateTimerState();
         });
 
-        return {
+        api = {
             element: toast.element,
             close: dismiss,
             pause() {
@@ -231,6 +250,10 @@
                 updateTimerState();
             }
         };
+
+        recentToasts.set(signature, {api});
+
+        return api;
     }
 
     toolkit.toast = showToast;

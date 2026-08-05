@@ -1,0 +1,381 @@
+.am-account-menu,
+.am-account-menu__trigger,
+.am-account-menu__panel {
+    --am-account-menu-pink: #f176a4;
+    --am-account-menu-pink-soft: #fff0f6;
+    --am-account-menu-text: #33271f;
+    --am-account-menu-muted: #716a66;
+    --am-account-menu-border: #e5dfdc;
+}
+
+.am-account-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.am-account-menu button.am-account-menu__trigger,
+a.am-account-menu__trigger {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    margin: 0 !important;
+    padding: 5px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--am-account-menu-text) !important;
+    font: inherit;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        color 180ms ease,
+        transform 180ms ease;
+}
+
+.am-account-menu button.am-account-menu__trigger::before,
+.am-account-menu button.am-account-menu__trigger::after {
+    display: none !important;
+    content: none !important;
+}
+
+.am-account-menu__trigger .screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.am-account-menu button.am-account-menu__trigger:hover,
+.am-account-menu button.am-account-menu__trigger:focus-visible,
+.am-account-menu.is-open button.am-account-menu__trigger,
+a.am-account-menu__trigger:hover,
+a.am-account-menu__trigger:focus-visible {
+    background: transparent !important;
+    color: var(--am-account-menu-pink) !important;
+}
+
+.am-account-menu button.am-account-menu__trigger:active,
+a.am-account-menu__trigger:active {
+    transform: scale(0.96);
+}
+
+.am-account-menu button.am-account-menu__trigger:focus-visible,
+a.am-account-menu__trigger:focus-visible {
+    outline: 2px solid var(--am-account-menu-pink);
+    outline-offset: 3px;
+}
+
+.am-account-menu__user-icon {
+    display: block;
+    flex: 0 0 31px;
+    width: 31px !important;
+    min-width: 31px !important;
+    max-width: 31px !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    max-height: 31px !important;
+    margin: 0 !important;
+    overflow: visible;
+    fill: currentColor !important;
+    color: inherit !important;
+}
+
+.am-account-menu__panel {
+    --am-account-menu-top: 72px;
+    --am-account-menu-right: 16px;
+
+    position: fixed;
+    z-index: 1000001;
+    top: var(--am-account-menu-top);
+    right: var(--am-account-menu-right);
+    width: min(360px, calc(100vw - 24px));
+    max-height: calc(100dvh - var(--am-account-menu-top) - 12px);
+    overflow-y: auto;
+    padding: 18px;
+    border: 1px solid var(--am-account-menu-border);
+    border-radius: 25px;
+    background: #fff;
+    box-shadow:
+        0 22px 55px rgb(51 39 31 / 17%),
+        0 5px 16px rgb(51 39 31 / 8%);
+    color: var(--am-account-menu-text);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate3d(0, -8px, 0) scale(0.98);
+    transform-origin: top right;
+    transition:
+        opacity 180ms ease,
+        visibility 180ms ease,
+        transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.am-account-menu__panel.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0) scale(1);
+}
+
+.am-account-menu__profile {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 3px 3px 16px;
+    border-bottom: 1px dashed var(--am-account-menu-border);
+}
+
+.am-account-menu__avatar {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    overflow: hidden;
+    border: 2px solid var(--am-account-menu-pink-soft);
+    border-radius: 999px;
+    background: var(--am-account-menu-pink-soft);
+}
+
+.am-account-menu__avatar img,
+.am-account-menu__avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
+.am-account-menu__profile-copy {
+    min-width: 0;
+}
+
+.am-account-menu__profile-copy strong,
+.am-account-menu__profile-copy span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.am-account-menu__profile-copy strong {
+    color: var(--am-account-menu-text);
+    font-family: Poppins, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.am-account-menu__profile-copy span {
+    margin-top: 2px;
+    color: var(--am-account-menu-muted);
+    font-family: Poppins, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.am-account-menu__navigation {
+    padding-top: 10px;
+}
+
+.am-account-menu__list {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.am-account-menu__list li {
+    margin: 0;
+    padding: 0;
+}
+
+.am-account-menu__link,
+.am-account-menu__help {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 20px;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 6px 9px;
+    border-radius: 14px;
+    color: var(--am-account-menu-text);
+    font-family: Poppins, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    text-decoration: none;
+    transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        transform 160ms ease;
+}
+
+.am-account-menu__link:hover,
+.am-account-menu__link:focus-visible,
+.am-account-menu__link[aria-current="page"] {
+    background: var(--am-account-menu-pink-soft);
+    color: var(--am-account-menu-pink);
+}
+
+.am-account-menu__link:hover,
+.am-account-menu__help:hover {
+    transform: translateX(2px);
+}
+
+.am-account-menu__link:focus-visible,
+.am-account-menu__help:focus-visible,
+.am-account-menu__logout:focus-visible {
+    outline: 2px solid var(--am-account-menu-pink);
+    outline-offset: 2px;
+}
+
+.am-account-menu__link-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background: #faf7f5;
+    color: #7a858d;
+}
+
+.am-account-menu__link-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.am-account-menu__arrow {
+    color: var(--am-account-menu-pink);
+    font-size: 18px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.am-account-menu__help {
+    margin-top: 11px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: 1px solid #f7cfe0;
+    background: var(--am-account-menu-pink-soft);
+}
+
+.am-account-menu__help:hover,
+.am-account-menu__help:focus-visible {
+    border-color: var(--am-account-menu-pink);
+    color: var(--am-account-menu-text);
+}
+
+.am-account-menu__help strong,
+.am-account-menu__help small {
+    display: block;
+}
+
+.am-account-menu__help strong {
+    color: var(--am-account-menu-pink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.am-account-menu__help small {
+    margin-top: 2px;
+    color: var(--am-account-menu-muted);
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.am-account-menu__footer {
+    margin-top: 13px;
+    padding: 13px 3px 2px;
+    border-top: 1px dashed var(--am-account-menu-border);
+    text-align: right;
+}
+
+.am-account-menu__logout {
+    color: #8a514f;
+    font-family: Poppins, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.am-account-menu__logout:hover {
+    color: #c3424a;
+}
+
+#pomoc-konto {
+    scroll-margin-top: 110px;
+}
+
+@media (max-width: 767px) {
+    .am-account-menu button.am-account-menu__trigger,
+    a.am-account-menu__trigger {
+        flex-basis: 40px;
+        width: 40px !important;
+        min-width: 40px !important;
+        max-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        padding: 4px !important;
+    }
+
+    .am-account-menu__user-icon {
+        flex-basis: 30px;
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 30px !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+    }
+
+    .am-account-menu__panel {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-height: calc(100dvh - var(--am-account-menu-top) - 12px);
+        padding: 16px;
+        transform-origin: top center;
+    }
+
+    #pomoc-konto {
+        scroll-margin-top: 90px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .am-account-menu__trigger,
+    .am-account-menu__panel,
+    .am-account-menu__link,
+    .am-account-menu__help {
+        transition-duration: 1ms;
+    }
+}

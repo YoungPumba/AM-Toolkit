@@ -1,0 +1,25 @@
+{
+    "name": "arekmokicki/am-toolkit",
+    "description": "Toolkit rozszerzający WordPress, Elementor i WooCommerce.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "php-parallel-lint/php-parallel-lint": "^1.4",
+        "wp-coding-standards/wpcs": "^3.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "check": "@check:syntax",
+        "check:syntax": "parallel-lint --exclude vendor .",
+        "audit:style": "phpcs",
+        "fix:style": "phpcbf"
+    }
+}

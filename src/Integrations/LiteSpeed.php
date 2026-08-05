@@ -28,6 +28,8 @@ final class LiteSpeed
             '/am-toolkit/assets/js/toast.js',
             '/am-toolkit/assets/js/woocommerce-toast.js',
             '/am-toolkit/assets/js/cart.js',
+            '/am-toolkit/assets/js/account-welcome.js',
+            '/am-toolkit/assets/js/account-onboarding.js',
         ];
 
         return array_values(array_unique(array_merge($excludes, $criticalScripts)));
@@ -45,6 +47,8 @@ final class LiteSpeed
             'am-toolkit-toast',
             'am-toolkit-woocommerce-toast',
             'am-toolkit-cart',
+            'am-toolkit-account-welcome',
+            'am-toolkit-account-onboarding',
         ];
 
         if (!in_array($handle, $criticalHandles, true) || str_contains($tag, 'data-no-defer')) {

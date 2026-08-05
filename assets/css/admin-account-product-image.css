@@ -1,0 +1,51 @@
+.amt-account-product-image__field {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: min(520px, calc(100% - 162px));
+}
+
+.amt-account-product-image__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 240px;
+    max-width: 100%;
+    aspect-ratio: 1.9 / 1;
+    overflow: hidden;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #f6f7f7;
+}
+
+.amt-account-product-image__preview-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.amt-account-product-image__placeholder {
+    padding: 12px;
+    color: #646970;
+    font-size: 12px;
+    text-align: center;
+}
+
+.amt-account-product-image__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.amt-account-product-image__field > .description {
+    max-width: 680px;
+    margin: 0;
+}
+
+@media (max-width: 782px) {
+    .amt-account-product-image__field {
+        width: 100%;
+    }
+}

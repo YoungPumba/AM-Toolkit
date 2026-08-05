@@ -1,0 +1,60 @@
+.amt-admin select {
+    width: 100%;
+    max-width: none;
+    min-height: 36px;
+    border-color: #c3c4c7;
+    border-radius: 8px;
+}
+
+.amt-color-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.amt-color-field input[type='color'] {
+    width: 52px;
+    height: 38px;
+    padding: 2px;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.amt-checkout-preview {
+    position: relative;
+    display: flex;
+    gap: 14px;
+    margin-top: 18px;
+    padding: 20px 24px;
+    border: var(--preview-border-width) solid var(--preview-border);
+    border-radius: var(--preview-radius);
+    background: var(--preview-background);
+    color: var(--preview-text);
+    font-family: var(--preview-font-family);
+    font-size: var(--preview-font-size);
+    font-weight: var(--preview-font-weight);
+    line-height: 1.55;
+}
+
+.amt-checkout-preview__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--preview-icon);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.amt-checkout-preview a {
+    display: inline-block;
+    margin-top: 6px;
+    color: var(--preview-link);
+    font-weight: var(--preview-link-weight);
+    text-decoration: none;
+}
