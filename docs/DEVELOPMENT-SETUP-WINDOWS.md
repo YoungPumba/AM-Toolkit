@@ -148,7 +148,8 @@ composer install
 composer check
 ```
 
-`composer check` sprawdza składnię wszystkich plików PHP poza `vendor`.
+`composer check` sprawdza składnię wszystkich plików PHP poza `vendor` i
+uruchamia kontraktowy test `AM Access Core`.
 
 Kontrola standardów kodowania jest dostępna osobno:
 
@@ -163,10 +164,16 @@ przeglądu zmian.
 ## 5. Konfiguracja Visual Studio Code
 
 Otwórz katalog główny repozytorium przez **File → Open Folder**. Projekt
-zawiera `.vscode/settings.json`, który ustawia między innymi walidację PHP.
+zawiera `.vscode/settings.example.json` z bezpiecznym wzorem ustawień.
 
-Jeżeli PHP znajduje się w innym katalogu niż zapisany w ustawieniach, zmień
-lokalnie wartość:
+Skopiuj go do prywatnego pliku, który jest ignorowany przez Git:
+
+```powershell
+Copy-Item .vscode\settings.example.json .vscode\settings.json
+```
+
+W `.vscode/settings.json` ustaw ścieżkę do PHP zainstalowanego na swoim
+komputerze:
 
 ```json
 "php.validate.executablePath": "C:\\ścieżka\\do\\php.exe"

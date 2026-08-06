@@ -1,0 +1,17 @@
+{
+  "php.validate.executablePath": "C:\\Tools\\php83\\php.exe",
+  "php.validate.run": "onType",
+  "intelephense.environment.phpVersion": "8.0.0",
+  "files.watcherExclude": {
+    "**/vendor/**": true
+  },
+  "search.exclude": {
+    "**/vendor/**": true
+  },
+  "[php]": {
+    "editor.formatOnSave": false,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4
+  }
+}
+

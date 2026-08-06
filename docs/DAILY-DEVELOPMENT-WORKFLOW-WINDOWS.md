@@ -42,8 +42,8 @@ Docelowy układ zespołowy:
 C:\Projects\am-toolkit
 ```
 
-Obecna instalacja może korzystać z innej ścieżki. Źródłem prawdy jest katalog,
-na który wskazuje `Target` połączenia:
+Obecna instalacja może korzystać z innej ścieżki. `Target` połączenia musi
+wskazywać katalog sklonowanego repozytorium, a nie drugą kopię źródeł:
 
 ```powershell
 $link = "C:\Users\<użytkownik>\Local Sites\am-toolkit-dev\app\public\wp-content\plugins\am-toolkit"
@@ -55,6 +55,16 @@ Oczekiwany `LinkType`:
 ```text
 Junction
 ```
+
+Przejdź do wartości `Target` i sprawdź, czy jest to repozytorium Git:
+
+```powershell
+Set-Location (Get-Item $link).Target[0]
+git status --short --branch
+```
+
+Jeśli polecenie zgłasza brak repozytorium, zatrzymaj pracę. Nie edytuj tej
+kopii i nie próbuj synchronizować jej ręcznie z GitHubem.
 
 ### Krok 3: otwórz terminal projektu
 
@@ -123,7 +133,7 @@ Na frontendzie otwórz narzędzia deweloperskie przeglądarki i konsolę. Powini
 pojawić się wpis podobny do:
 
 ```text
-[AM Toolkit] v0.11.2 initialized.
+[AM Toolkit] vX.Y.Z initialized.
 ```
 
 Możesz również wpisać:
@@ -132,8 +142,8 @@ Możesz również wpisać:
 AMToolkit.version
 ```
 
-Wersja musi być zgodna z `Version` w `am-toolkit.php`. Numer `0.11.2` jest
-przykładem bieżącym w chwili tworzenia dokumentu i będzie się zmieniał.
+Wersja musi być zgodna z `Version` w `am-toolkit.php`; `X.Y.Z` oznacza aktualny
+numer wydania.
 
 ## 2. Praca nad zmianą
 
