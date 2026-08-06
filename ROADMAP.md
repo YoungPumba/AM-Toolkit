@@ -135,12 +135,13 @@
 
 ## v0.11.4 — modułowy bootstrap i migracje
 
-- [ ] włączyć autoloading PSR-4 przez Composer bez zmiany publicznego API wtyczki,
-- [ ] wprowadzić `ModuleInterface` i centralny rejestr modułów,
-- [ ] zastąpić ręczne tworzenie modułów w `Plugin` deklaracją jawnych zależności,
-- [ ] rozdzielić globalny instalator na sekwencyjne migracje należące do modułów,
-- [ ] dodać centralne policies i capabilities dla operacji administracyjnych,
-- [ ] dodać feature flags i bezpieczne przełączniki awaryjne nowych modułów.
+- [x] włączyć autoloading PSR-4 przez Composer bez zmiany publicznego API wtyczki,
+- [x] wprowadzić `ModuleInterface` i centralny rejestr modułów,
+- [x] zastąpić ręczne tworzenie modułów w `Plugin` deklaracją jawnych zależności,
+- [x] rozdzielić globalny instalator na sekwencyjne migracje należące do modułów,
+- [x] dodać centralne policies i capabilities dla operacji administracyjnych,
+- [x] dodać feature flags i bezpieczne przełączniki awaryjne nowych modułów,
+- [x] dodać test bootstrapu, kolejności modułów, blokowania zależności, migracji i capabilities.
 
 ## v0.11.5 — testy i fundament diagnostyki
 

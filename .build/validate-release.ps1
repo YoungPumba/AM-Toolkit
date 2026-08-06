@@ -67,6 +67,17 @@ try {
         throw 'The release must contain exactly one am-toolkit/am-toolkit.php file.'
     }
 
+    if ($null -eq $zip.GetEntry('am-toolkit/vendor/autoload.php')) {
+        throw 'The release is missing the production Composer autoloader.'
+    }
+
+    if (
+        $null -ne $zip.GetEntry('am-toolkit/composer.json') -or
+        $null -ne $zip.GetEntry('am-toolkit/composer.lock')
+    ) {
+        throw 'Composer metadata must not be shipped in the production ZIP.'
+    }
+
     $duplicates = @(
         $entries |
             Group-Object FullName |
@@ -88,6 +99,10 @@ try {
 
     if ($mainFileContents -notmatch '(?m)^\s*\*\s*Plugin Name:\s*AM Toolkit\s*$') {
         throw 'The main file is missing the Plugin Name: AM Toolkit header.'
+    }
+
+    if ($mainFileContents -notmatch "require_once\s+AM_TOOLKIT_PATH\s*\.\s*'vendor/autoload\.php'") {
+        throw 'The production bootstrap does not load vendor/autoload.php.'
     }
 
     $versionMatch = [regex]::Match(

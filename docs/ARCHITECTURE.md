@@ -45,9 +45,9 @@ kontraktu domenowego, ale nie odwrotnie.
 
 ## Moduły
 
-Docelowo każdy moduł implementuje wspólny kontrakt, np. `ModuleInterface`, i
-jest rejestrowany w jednym `ModuleRegistry`. Rejestr odpowiada za kolejność
-uruchomienia oraz sprawdzanie wymagań, takich jak aktywny WooCommerce.
+Każdy moduł implementuje `ModuleInterface` i jest rejestrowany w jednym
+`ModuleRegistry`. Rejestr rozwiązuje jawne zależności, sprawdza dostępność oraz
+nie uruchamia modułu, jeśli jego zależność jest wyłączona lub niedostępna.
 
 Planowane moduły:
 
@@ -141,6 +141,12 @@ Nowe moduły można włączać etapami. Krytyczne automatyzacje otrzymają osobn
 przełącznik awaryjny, który zatrzymuje dalsze zapisy lub wysyłkę bez usuwania
 danych i bez wyłączania całej wtyczki.
 
+Aktualnie moduły można wyłączyć wpisem w opcji `am_toolkit_feature_flags`,
+filtrem `am_toolkit_feature_enabled` lub stałą w `wp-config.php`, np.
+`AM_TOOLKIT_DISABLE_ACCOUNT`. Stała `AM_TOOLKIT_SAFE_MODE` pozostawia aktywny
+tylko fundament `Core` i `Access`, dzięki czemu interfejsowe integracje można
+zatrzymać bez usuwania danych dostępu.
+
 ## Testy wymagane przed wydaniem
 
 - testy jednostkowe reguł domenowych,
@@ -156,4 +162,3 @@ Nie wdrażamy pełnego event sourcingu, mikroserwisów ani własnego frameworka
 kontenerów. Aktualny stan pozostaje źródłem prawdy, a dziennik zdarzeń służy
 audytowi, diagnostyce i integracjom. Architektura ma pomagać, nie organizować
 konkurs na największą liczbę katalogów.
-

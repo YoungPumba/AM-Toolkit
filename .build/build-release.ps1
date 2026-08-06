@@ -59,6 +59,10 @@ if ((Test-Path -LiteralPath $archivePath) -and -not $Force) {
 $temporaryArchivePath = Join-Path $outputPath (
     ".am-toolkit-build-$version-$PID.zip"
 )
+$stagingContainer = Join-Path ([IO.Path]::GetTempPath()) (
+    "am-toolkit-release-$version-$PID"
+)
+$stagingPath = Join-Path $stagingContainer $pluginRootName
 
 function Get-SourceRelativePath {
     param(
@@ -127,6 +131,52 @@ function Add-ZipFile {
 }
 
 try {
+    [IO.Directory]::CreateDirectory($stagingPath) | Out-Null
+
+    $sourceFiles = Get-ChildItem -LiteralPath $sourcePath -Recurse -File |
+        Where-Object {
+            -not (Test-IsBuildFile -RelativePath (
+                Get-SourceRelativePath -FullName $_.FullName
+            ))
+        }
+
+    foreach ($file in $sourceFiles) {
+        $relativePath = Get-SourceRelativePath -FullName $file.FullName
+        $targetPath = Join-Path $stagingPath $relativePath
+        [IO.Directory]::CreateDirectory((Split-Path -Parent $targetPath)) | Out-Null
+        [IO.File]::Copy($file.FullName, $targetPath, $true)
+    }
+
+    foreach ($composerFile in @('composer.json', 'composer.lock')) {
+        [IO.File]::Copy(
+            (Join-Path $sourcePath $composerFile),
+            (Join-Path $stagingPath $composerFile),
+            $true
+        )
+    }
+
+    $composerCommand = Get-Command 'composer' -ErrorAction SilentlyContinue
+
+    if ($null -eq $composerCommand) {
+        throw 'Composer is required to build the production autoloader.'
+    }
+
+    & $composerCommand.Source install `
+        --working-dir=$stagingPath `
+        --no-dev `
+        --classmap-authoritative `
+        --no-interaction `
+        --no-progress
+
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Composer failed while creating the production autoloader.'
+    }
+
+    [IO.File]::Delete((Join-Path $stagingPath 'composer.json'))
+    [IO.File]::Delete((Join-Path $stagingPath 'composer.lock'))
+
+    $packageMainPath = Join-Path $stagingPath 'am-toolkit.php'
+
     $archiveStream = [IO.File]::Open(
         $temporaryArchivePath,
         [IO.FileMode]::CreateNew,
@@ -144,23 +194,20 @@ try {
         # v0.9.0 reference: the main plugin file is the first ZIP entry.
         Add-ZipFile `
             -Archive $archive `
-            -File (Get-Item -LiteralPath $mainPluginPath) `
+            -File (Get-Item -LiteralPath $packageMainPath) `
             -EntryName "$pluginRootName/am-toolkit.php"
 
-        $files = Get-ChildItem -LiteralPath $sourcePath -Recurse -File |
+        $files = Get-ChildItem -LiteralPath $stagingPath -Recurse -File |
             Where-Object {
-                $_.FullName -ne $mainPluginPath -and
-                -not (Test-IsBuildFile -RelativePath (
-                    Get-SourceRelativePath -FullName $_.FullName
-                ))
+                $_.FullName -ne $packageMainPath
             } |
             Sort-Object {
-                (Get-SourceRelativePath -FullName $_.FullName).Replace('\', '/')
+                $_.FullName.Substring($stagingPath.Length).TrimStart('\', '/').Replace('\', '/')
             }
 
         foreach ($file in $files) {
             $relativePath = (
-                Get-SourceRelativePath -FullName $file.FullName
+                $file.FullName.Substring($stagingPath.Length).TrimStart('\', '/')
             ).Replace('\', '/')
 
             Add-ZipFile `
@@ -189,5 +236,9 @@ try {
 } finally {
     if (Test-Path -LiteralPath $temporaryArchivePath) {
         [IO.File]::Delete($temporaryArchivePath)
+    }
+
+    if (Test-Path -LiteralPath $stagingContainer) {
+        [IO.Directory]::Delete($stagingContainer, $true)
     }
 }

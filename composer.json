@@ -6,6 +6,11 @@
     "require": {
         "php": ">=8.0"
     },
+    "autoload": {
+        "psr-4": {
+            "AMToolkit\\": "src/"
+        }
+    },
     "require-dev": {
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "wp-coding-standards/wpcs": "^3.0"
@@ -19,10 +24,18 @@
     "scripts": {
         "check": [
             "@check:syntax",
-            "@test:access-core"
+            "@test:bootstrap",
+            "@test:access-core",
+            "@test:module-registry",
+            "@test:migrations",
+            "@test:capabilities"
         ],
         "check:syntax": "parallel-lint --exclude vendor .",
+        "test:bootstrap": "php .build/test-bootstrap.php",
         "test:access-core": "php .build/test-access-core.php",
+        "test:module-registry": "php .build/test-module-registry.php",
+        "test:migrations": "php .build/test-migrations.php",
+        "test:capabilities": "php .build/test-capabilities.php",
         "audit:style": "phpcs",
         "fix:style": "phpcbf"
     }

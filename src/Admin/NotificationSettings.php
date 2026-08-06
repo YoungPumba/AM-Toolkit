@@ -2,6 +2,8 @@
 
 namespace AMToolkit\Admin;
 
+use AMToolkit\Core\Authorization;
+use AMToolkit\Core\Capabilities;
 use AMToolkit\Settings\Notifications;
 
 if (!defined('ABSPATH')) {
@@ -43,7 +45,7 @@ final class NotificationSettings
         add_menu_page(
             __('AM Toolkit', 'am-toolkit'),
             __('AM Toolkit', 'am-toolkit'),
-            'manage_options',
+            Capabilities::MANAGE_SETTINGS,
             self::PAGE_SLUG,
             [$this, 'render'],
             'dashicons-bell',
@@ -85,7 +87,7 @@ final class NotificationSettings
 
     public function render(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Authorization::canManageSettings()) {
             return;
         }
 
@@ -216,7 +218,7 @@ final class NotificationSettings
 
     public function reset(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Authorization::canManageSettings()) {
             wp_die(esc_html__('Nie masz uprawnień do wykonania tej operacji.', 'am-toolkit'));
         }
 
