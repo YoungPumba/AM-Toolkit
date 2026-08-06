@@ -1,7 +1,8 @@
 # AM Toolkit
 
-Wersja 0.11.2 dodaje wspólny fundament uprawnień i zdarzeń, na którym będą
-budowane kursy, konsultacje i kolejne chronione moduły AM Toolkit.
+Wersja 0.11.3 porządkuje fundament techniczny projektu przed rozpoczęciem
+implementacji kursów: architekturę, diagnostykę, testy i automatyczną kontrolę
+jakości.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 
@@ -76,6 +77,14 @@ cofnięty grant zostaje ponownie aktywowany. Dwa różne
 źródła są zapisywane osobno, dlatego odebranie jednego z nich nie usuwa dostępu,
 jeśli nadal istnieje inny aktywny grant.
 
+## Dokumentacja techniczna
+
+- [Architektura AM Toolkit](docs/ARCHITECTURE.md)
+- [Model domeny AM Courses](docs/COURSES-DOMAIN.md)
+- [Diagnostyka AM Courses](docs/COURSES-DIAGNOSTICS.md)
+- [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
+- [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
+
 ## Historia zmian
 
 Pełna lista zmian znajduje się w pliku [CHANGELOG.md](CHANGELOG.md).
@@ -90,12 +99,15 @@ Kompletna instrukcja przygotowania środowiska na Windows znajduje się w
 Kolejność codziennego uruchamiania Local, VS Code, testów i logów opisuje
 [runbook pracy lokalnej](https://github.com/YoungPumba/AM-Toolkit/blob/main/docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md).
 
-Przed rozpoczęciem pracy zainstaluj zależności i uruchom kontrolę składni:
+Przed rozpoczęciem pracy zainstaluj zależności i uruchom pełną kontrolę
+projektu:
 
 ```powershell
 composer install
 composer check
 ```
+
+Kontrola obejmuje składnię PHP oraz kontraktowy test `AM Access Core`.
 
 ## Licencja
 

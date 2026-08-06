@@ -123,6 +123,36 @@
 - [x] wykonać bezpieczną, wersjonowaną migrację tabel przy aktywacji i aktualizacji wtyczki,
 - [ ] przetestować idempotentne nadanie, wielokrotne źródła dostępu, wygaśnięcie i odebranie grantu.
 
+## v0.11.3 — repozytorium i automatyczna kontrola jakości
+
+- [x] przyjąć repozytorium Git jako jedyne źródło prawdy dla kodu,
+- [x] opisać architekturę modułową, model domeny kursów i zasady diagnostyki,
+- [x] dodać `.editorconfig`, normalizację zakończeń linii i przykładowe ustawienia VS Code,
+- [x] rozszerzyć `composer check` o kontraktowy test `AM Access Core`,
+- [x] dodać GitHub Actions sprawdzające PHP 8.0 i 8.3 oraz audyt zależności,
+- [x] przepiąć lokalny `Junction` z dawnej kopii roboczej bezpośrednio na repozytorium,
+- [x] potwierdzić pełny workflow po świeżym sklonowaniu repozytorium.
+
+## v0.11.4 — modułowy bootstrap i migracje
+
+- [ ] włączyć autoloading PSR-4 przez Composer bez zmiany publicznego API wtyczki,
+- [ ] wprowadzić `ModuleInterface` i centralny rejestr modułów,
+- [ ] zastąpić ręczne tworzenie modułów w `Plugin` deklaracją jawnych zależności,
+- [ ] rozdzielić globalny instalator na sekwencyjne migracje należące do modułów,
+- [ ] dodać centralne policies i capabilities dla operacji administracyjnych,
+- [ ] dodać feature flags i bezpieczne przełączniki awaryjne nowych modułów.
+
+## v0.11.5 — testy i fundament diagnostyki
+
+- [ ] dodać PHPUnit oraz analizę statyczną PHPStan na najniższym użytecznym poziomie,
+- [ ] udostępnić odczyt zdarzeń przez `ActivityEventStore` bez bezpośrednich zapytań widoków do tabel,
+- [ ] generować i propagować `request_id` dla operacji zmieniających stan,
+- [ ] rozdzielić zdarzenia domenowe od technicznych logów błędów,
+- [ ] zdefiniować wersjonowany kontrakt zdarzeń i ograniczony payload,
+- [ ] przygotować bezpieczny eksport diagnostyczny oraz kontrolę integralności tylko do odczytu,
+- [ ] przygotować źródło prawdy postępu i idempotentne przeliczanie agregatów,
+- [ ] dodać testy wielu urządzeń, powtórzonych żądań, dostępu i nieudanych zapisów.
+
 ## v0.12.0 — Kursy, dostęp i postęp
 
 ### Fundament AM Courses

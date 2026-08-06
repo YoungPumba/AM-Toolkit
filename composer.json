@@ -17,8 +17,12 @@
         "sort-packages": true
     },
     "scripts": {
-        "check": "@check:syntax",
+        "check": [
+            "@check:syntax",
+            "@test:access-core"
+        ],
         "check:syntax": "parallel-lint --exclude vendor .",
+        "test:access-core": "php .build/test-access-core.php",
         "audit:style": "phpcs",
         "fix:style": "phpcbf"
     }

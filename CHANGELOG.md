@@ -1,5 +1,15 @@
 # Historia zmian AM Toolkit
 
+## 0.11.3 — 2026-08-06
+
+- opis docelowej architektury modułowej przed rozpoczęciem implementacji kursów,
+- model domeny kursów, wersjonowania programu, dostępu i postępu,
+- zasady diagnostyki, identyfikatorów żądań oraz bezpiecznych narzędzi naprawczych,
+- wspólne ustawienia edytora i zakończeń linii dla pracy zespołowej,
+- automatyczna kontrola składni PHP 8.0 i 8.3 oraz test AM Access Core w GitHub Actions,
+- rozszerzenie `composer check` o kontraktowy test dostępu,
+- aktualizacja PHP_CodeSniffer do wersji usuwającej znaną podatność bezpieczeństwa.
+
 ## 0.11.2
 
 - wspólny fundament `AM Access Core` przygotowany dla kursów, konsultacji i chronionych materiałów,
