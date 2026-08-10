@@ -2,8 +2,6 @@
 
 namespace AMToolkit\Modules\Access;
 
-use AMToolkit\Core\Installer;
-
 defined('ABSPATH') || exit;
 
 final class WpdbEntitlementStore implements EntitlementStore
@@ -17,7 +15,7 @@ final class WpdbEntitlementStore implements EntitlementStore
         global $wpdb;
 
         $this->database = $database ?? $wpdb;
-        $this->table = $table ?? Installer::accessGrantsTable();
+        $this->table = $table ?? AccessSchema::grantsTable();
     }
 
     public function create(array $grant): array|\WP_Error

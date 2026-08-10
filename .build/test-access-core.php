@@ -75,9 +75,7 @@ function do_action(string $hook, mixed ...$args): void
 {
 }
 
-require_once dirname(__DIR__) . '/src/Modules/Access/EntitlementStore.php';
-require_once dirname(__DIR__) . '/src/Modules/Access/ActivityEventStore.php';
-require_once dirname(__DIR__) . '/src/Modules/Access/AccessManager.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use AMToolkit\Modules\Access\AccessManager;
 use AMToolkit\Modules\Access\ActivityEventStore;

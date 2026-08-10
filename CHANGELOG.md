@@ -1,5 +1,16 @@
 # Historia zmian AM Toolkit
 
+## 0.11.4 — 2026-08-06
+
+- zastąpienie ręcznej listy `require_once` produkcyjnym autoloadingiem PSR-4,
+- centralny `ModuleRegistry` z jawnymi zależnościami i kontrolą dostępności,
+- moduły `Core`, `Access`, `WooCommerce` oraz `Account` uruchamiane w ustalonej kolejności,
+- osobne, sekwencyjne migracje schematu dla modułów bez oznaczania nieudanej migracji jako wykonanej,
+- centralne capabilities i polityki autoryzacji ustawień oraz ręcznego dostępu,
+- feature flags, stałe wyłączające moduły i tryb awaryjny `AM_TOOLKIT_SAFE_MODE`,
+- produkcyjny autoloader dołączany automatycznie do paczki ZIP,
+- testy bootstrapu, rejestru modułów, mechanizmu migracji i capabilities.
+
 ## 0.11.3 — 2026-08-06
 
 - opis docelowej architektury modułowej przed rozpoczęciem implementacji kursów,

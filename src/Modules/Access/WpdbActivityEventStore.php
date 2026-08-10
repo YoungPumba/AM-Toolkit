@@ -2,8 +2,6 @@
 
 namespace AMToolkit\Modules\Access;
 
-use AMToolkit\Core\Installer;
-
 defined('ABSPATH') || exit;
 
 final class WpdbActivityEventStore implements ActivityEventStore
@@ -17,7 +15,7 @@ final class WpdbActivityEventStore implements ActivityEventStore
         global $wpdb;
 
         $this->database = $database ?? $wpdb;
-        $this->table = $table ?? Installer::activityEventsTable();
+        $this->table = $table ?? AccessSchema::eventsTable();
     }
 
     public function record(array $event): array|\WP_Error

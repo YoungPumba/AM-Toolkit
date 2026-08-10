@@ -2,6 +2,7 @@
 
 namespace AMToolkit\Modules\Account;
 
+use AMToolkit\Core\Authorization;
 use WP_User;
 
 defined('ABSPATH') || exit;
@@ -149,6 +150,6 @@ final class ManualProductAssignments
 
     private function canManageAssignments(): bool
     {
-        return current_user_can('manage_woocommerce') || current_user_can('manage_options');
+        return Authorization::canManageAccess();
     }
 }

@@ -7,9 +7,15 @@ $ErrorActionPreference = 'Stop'
 $sourcePath = (Split-Path -Parent $PSScriptRoot)
 $mainPath = Join-Path $sourcePath 'am-toolkit.php'
 $pluginPath = Join-Path $sourcePath 'src\Core\Plugin.php'
+$composerPath = Join-Path $sourcePath 'composer.json'
 
 $main = Get-Content -LiteralPath $mainPath -Raw -Encoding UTF8
 $plugin = Get-Content -LiteralPath $pluginPath -Raw -Encoding UTF8
+$composer = Get-Content -LiteralPath $composerPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+if ($composer.autoload.'psr-4'.'AMToolkit\' -ne 'src/') {
+    throw 'Composer PSR-4 mapping must map AMToolkit\ to src/.'
+}
 
 $headerVersion = [regex]::Match(
     $main,
@@ -95,6 +101,10 @@ foreach ($file in $phpFiles) {
 
 $accessFiles = @(
     'src\Core\Installer.php',
+    'src\Core\MigrationInterface.php',
+    'src\Core\MigrationRunner.php',
+    'src\Modules\Access\AccessSchema.php',
+    'src\Modules\Access\Migrations\CreateAccessTables.php',
     'src\Modules\Access\EntitlementStore.php',
     'src\Modules\Access\ActivityEventStore.php',
     'src\Modules\Access\WpdbEntitlementStore.php',
