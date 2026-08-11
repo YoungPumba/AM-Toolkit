@@ -13,7 +13,15 @@ final class CreateAccessTables implements MigrationInterface
     {
         global $wpdb;
 
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        if (! function_exists('dbDelta')) {
+            $upgradeFile = ABSPATH . 'wp-admin/includes/upgrade.php';
+
+            if (! is_file($upgradeFile)) {
+                return false;
+            }
+
+            require_once $upgradeFile;
+        }
 
         $charsetCollate = $wpdb->get_charset_collate();
         $accessTable = AccessSchema::grantsTable();
@@ -50,13 +58,16 @@ final class CreateAccessTables implements MigrationInterface
             actor_id bigint(20) unsigned NOT NULL DEFAULT 0,
             object_type varchar(64) NOT NULL,
             object_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            schema_version smallint(5) unsigned NOT NULL DEFAULT 1,
+            request_id varchar(64) NOT NULL DEFAULT '',
             payload longtext NULL,
             occurred_at datetime NOT NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY event_key (event_key),
             KEY user_events (user_id, occurred_at),
             KEY object_events (object_type, object_id, occurred_at),
-            KEY event_type (event_type, occurred_at)
+            KEY event_type (event_type, occurred_at),
+            KEY request_events (request_id, occurred_at)
         ) {$charsetCollate};");
 
         return $this->tableExists($accessTable)

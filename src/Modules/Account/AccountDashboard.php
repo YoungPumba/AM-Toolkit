@@ -540,20 +540,21 @@ final class AccountDashboard
             [
                 'label' => __('Konsultacje', 'am-toolkit'),
                 'slug'  => sanitize_title((string) $attributes['consultations']),
+                'count' => 0,
             ],
             [
                 'label' => __('Kursy', 'am-toolkit'),
                 'slug'  => sanitize_title((string) $attributes['courses']),
+                'count' => 0,
             ],
             [
                 'label' => __('Pliki do pobrania', 'am-toolkit'),
                 'slug'  => sanitize_title((string) $attributes['downloads']),
+                'count' => 0,
             ],
         ];
 
         foreach ($categories as &$category) {
-            $category['count'] = 0;
-
             foreach ($productIds as $productId) {
                 if (has_term($category['slug'], 'product_cat', $productId)) {
                     $category['count']++;

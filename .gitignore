@@ -1,4 +1,6 @@
 /vendor/
+/.build/phpstan/
+/.build/phpstan*.log
 /dist/
 /.phpcs-cache
 /.phpunit.result.cache

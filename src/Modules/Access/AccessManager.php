@@ -2,14 +2,21 @@
 
 namespace AMToolkit\Modules\Access;
 
+use AMToolkit\Core\Diagnostics\DomainEvent;
+use AMToolkit\Core\Diagnostics\RequestId;
+use AMToolkit\Core\Diagnostics\TechnicalLogger;
+use AMToolkit\Core\Diagnostics\WpTechnicalLogger;
+
 defined('ABSPATH') || exit;
 
 final class AccessManager
 {
     public function __construct(
         private EntitlementStore $entitlements,
-        private ActivityEventStore $events
+        private ActivityEventStore $events,
+        private ?TechnicalLogger $logger = null
     ) {
+        $this->logger ??= new WpTechnicalLogger();
     }
 
     public static function createDefault(): self
@@ -54,7 +61,8 @@ final class AccessManager
      *     source_id?: int,
      *     starts_at?: mixed,
      *     expires_at?: mixed,
-     *     metadata?: array<string, mixed>
+     *     metadata?: array<string, mixed>,
+     *     request_id?: string
      * } $context
      */
     public function grant(
@@ -66,6 +74,9 @@ final class AccessManager
         $resourceType = sanitize_key($resourceType);
         $sourceType = sanitize_key((string) ($context['source_type'] ?? 'manual'));
         $sourceId = absint($context['source_id'] ?? 0);
+        $requestId = RequestId::normalize(
+            isset($context['request_id']) ? (string) $context['request_id'] : null
+        );
 
         if ($userId <= 0 || $resourceId <= 0 || $resourceType === '') {
             return new \WP_Error(
@@ -151,24 +162,21 @@ final class AccessManager
                 }
 
                 if ($restored) {
-                    $event = $this->events->record([
-                        'event_key' => 'access.restored.' . $grantKey . '.' . wp_generate_uuid4(),
-                        'event_type' => 'access.restored',
-                        'user_id' => $userId,
-                        'actor_id' => get_current_user_id(),
-                        'object_type' => $resourceType,
-                        'object_id' => $resourceId,
-                        'payload' => wp_json_encode([
+                    $this->recordEvent(
+                        'access.restored.' . $grantKey . '.' . wp_generate_uuid4(),
+                        'access.restored',
+                        $userId,
+                        $resourceType,
+                        $resourceId,
+                        [
                             'grant_id' => $stored['id'],
                             'source_type' => $sourceType,
                             'source_id' => $sourceId,
-                        ]),
-                        'occurred_at' => $now,
-                    ]);
-
-                    if (is_wp_error($event)) {
-                        do_action('am_toolkit_access_event_error', $event, $grant);
-                    }
+                        ],
+                        $now,
+                        $requestId,
+                        $grant
+                    );
 
                     do_action('am_toolkit_access_restored', $grant, $stored['id']);
                 }
@@ -176,24 +184,21 @@ final class AccessManager
         }
 
         if ($stored['created']) {
-            $event = $this->events->record([
-                'event_key' => 'access.granted.' . $grantKey,
-                'event_type' => 'access.granted',
-                'user_id' => $userId,
-                'actor_id' => get_current_user_id(),
-                'object_type' => $resourceType,
-                'object_id' => $resourceId,
-                'payload' => wp_json_encode([
+            $this->recordEvent(
+                'access.granted.' . $grantKey,
+                'access.granted',
+                $userId,
+                $resourceType,
+                $resourceId,
+                [
                     'grant_id' => $stored['id'],
                     'source_type' => $sourceType,
                     'source_id' => $sourceId,
-                ]),
-                'occurred_at' => $now,
-            ]);
-
-            if (is_wp_error($event)) {
-                do_action('am_toolkit_access_event_error', $event, $grant);
-            }
+                ],
+                $now,
+                $requestId,
+                $grant
+            );
 
             do_action('am_toolkit_access_granted', $grant, $stored['id']);
         }
@@ -201,7 +206,8 @@ final class AccessManager
         return $stored['id'];
     }
 
-    public function revoke(string $grantKey): bool|\WP_Error
+    /** @param array{request_id?: string} $context */
+    public function revoke(string $grantKey, array $context = []): bool|\WP_Error
     {
         $grantKey = $this->sanitizeGrantKey($grantKey);
 
@@ -225,20 +231,19 @@ final class AccessManager
             return $revoked;
         }
 
-        $event = $this->events->record([
-            'event_key' => 'access.revoked.' . $grantKey . '.' . wp_generate_uuid4(),
-            'event_type' => 'access.revoked',
-            'user_id' => (int) $grant['user_id'],
-            'actor_id' => get_current_user_id(),
-            'object_type' => (string) $grant['resource_type'],
-            'object_id' => (int) $grant['resource_id'],
-            'payload' => wp_json_encode(['grant_id' => (int) $grant['id']]),
-            'occurred_at' => $now,
-        ]);
-
-        if (is_wp_error($event)) {
-            do_action('am_toolkit_access_event_error', $event, $grant);
-        }
+        $this->recordEvent(
+            'access.revoked.' . $grantKey . '.' . wp_generate_uuid4(),
+            'access.revoked',
+            (int) $grant['user_id'],
+            (string) $grant['resource_type'],
+            (int) $grant['resource_id'],
+            ['grant_id' => (int) $grant['id']],
+            $now,
+            RequestId::normalize(
+                isset($context['request_id']) ? (string) $context['request_id'] : null
+            ),
+            $grant
+        );
 
         do_action('am_toolkit_access_revoked', $grant);
 
@@ -250,7 +255,8 @@ final class AccessManager
         string $resourceType,
         int $resourceId,
         string $sourceType,
-        int $sourceId
+        int $sourceId,
+        array $context = []
     ): bool|\WP_Error {
         $resourceType = sanitize_key($resourceType);
         $sourceType = sanitize_key($sourceType);
@@ -276,8 +282,64 @@ final class AccessManager
                 $resourceId,
                 $sourceType,
                 $sourceId
-            )
+            ),
+            $context
         );
+    }
+
+    /**
+     * Domain events are diagnostic history, not the transaction itself. A failed
+     * diagnostic write is reported separately and must not revoke a valid grant.
+     *
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $subject
+     */
+    private function recordEvent(
+        string $eventKey,
+        string $eventType,
+        int $userId,
+        string $objectType,
+        int $objectId,
+        array $payload,
+        string $occurredAt,
+        string $requestId,
+        array $subject
+    ): void {
+        try {
+            $result = $this->events->record(
+                DomainEvent::create(
+                    $eventKey,
+                    $eventType,
+                    $userId,
+                    get_current_user_id(),
+                    $objectType,
+                    $objectId,
+                    $payload,
+                    $occurredAt,
+                    $requestId
+                )
+            );
+        } catch (\Throwable $exception) {
+            $result = new \WP_Error(
+                'am_toolkit_invalid_domain_event',
+                $exception->getMessage()
+            );
+        }
+
+        if (!is_wp_error($result)) {
+            return;
+        }
+
+        $this->logger?->error(
+            'Domain event could not be recorded.',
+            [
+                'error_code' => $result->get_error_code(),
+                'event_type' => $eventType,
+                'request_id' => $requestId,
+            ]
+        );
+
+        do_action('am_toolkit_access_event_error', $result, $subject);
     }
 
     private function grantKey(

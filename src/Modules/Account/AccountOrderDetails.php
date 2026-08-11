@@ -148,7 +148,7 @@ final class AccountOrderDetails
                 'loading' => 'lazy',
             ])
             : wc_placeholder_img('woocommerce_thumbnail');
-        $productUrl  = $product && $product->is_visible() ? $product->get_permalink($item) : '';
+        $productUrl  = $product && $product->is_visible() ? $product->get_permalink() : '';
         $downloads   = $this->downloadsForItem($order->get_id(), $productId, $item->get_product_id());
         $itemMeta    = wc_display_item_meta($item, [
             'echo'      => false,

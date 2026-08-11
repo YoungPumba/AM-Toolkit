@@ -175,7 +175,7 @@ final class ToastIntegration
         }
 
         $cartItem = WC()->cart->get_cart_item($cartItemKey);
-        $product = is_array($cartItem) ? ($cartItem['data'] ?? null) : null;
+        $product = $cartItem['data'] ?? null;
 
         if (!$product || !is_a($product, 'WC_Product')) {
             return $link;
