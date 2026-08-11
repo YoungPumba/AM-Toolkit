@@ -80,6 +80,9 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 use AMToolkit\Modules\Access\AccessManager;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Access\EntitlementStore;
+use AMToolkit\Core\Diagnostics\ActivityEventQuery;
+use AMToolkit\Core\Diagnostics\DomainEvent;
+use AMToolkit\Core\Diagnostics\RequestId;
 
 final class MemoryEntitlements implements EntitlementStore
 {
@@ -163,8 +166,10 @@ final class MemoryEvents implements ActivityEventStore
 {
     public array $events = [];
 
-    public function record(array $event): array|WP_Error
+    public function record(DomainEvent $event): array|WP_Error
     {
+        $event = $event->toRecord();
+
         if (isset($this->events[$event['event_key']])) {
             return [
                 'id' => $this->events[$event['event_key']]['id'],
@@ -176,6 +181,11 @@ final class MemoryEvents implements ActivityEventStore
         $this->events[$event['event_key']] = $event;
 
         return ['id' => $event['id'], 'created' => true];
+    }
+
+    public function find(ActivityEventQuery $query): array|WP_Error
+    {
+        return array_slice(array_values($this->events), 0, $query->limit());
     }
 }
 
@@ -206,6 +216,9 @@ assertSameValue(1, $firstId, 'Pierwszy grant powinien zostać zapisany');
 assertSameValue($firstId, $duplicateId, 'Ponowne zdarzenie nie może dublować grantu');
 assertSameValue(1, count($entitlements->grants), 'Grant musi być idempotentny');
 assertSameValue(1, count($events->events), 'Zdarzenie nadania musi być idempotentne');
+$firstEvent = array_values($events->events)[0];
+assertSameValue(DomainEvent::SCHEMA_VERSION, $firstEvent['schema_version'], 'Zdarzenie ma wersję kontraktu');
+assertSameValue(true, RequestId::isValid($firstEvent['request_id']), 'Zdarzenie ma poprawny request ID');
 assertSameValue(true, $access->userHasAccess(7, 'course', 42), 'Aktywny grant daje dostęp');
 
 $manualGrant = [

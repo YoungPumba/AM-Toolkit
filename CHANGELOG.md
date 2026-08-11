@@ -1,5 +1,16 @@
 # Historia zmian AM Toolkit
 
+## 0.11.5 — 2026-08-11
+
+- dodanie PHPUnit oraz analizy statycznej PHPStan dla kluczowych modułów wtyczki,
+- wprowadzenie wspólnego identyfikatora `request_id` do śledzenia operacji zmieniających stan,
+- rozdzielenie zdarzeń domenowych od technicznych logów błędów,
+- wersjonowany i ograniczony kontrakt zdarzeń aktywności wraz z migracją istniejącej tabeli,
+- bezpieczny interfejs odczytu zdarzeń bez bezpośrednich zapytań widoków do bazy danych,
+- diagnostyka integralności i pseudonimizowany eksport danych bez możliwości modyfikowania stanu,
+- testy kontraktu identyfikatorów, zdarzeń, filtrów diagnostycznych i bezpiecznego eksportu,
+- poprawki wykryte przez analizę statyczną w modułach konta i integracji WooCommerce.
+
 ## 0.11.4 — 2026-08-06
 
 - zastąpienie ręcznej listy `require_once` produkcyjnym autoloadingiem PSR-4,

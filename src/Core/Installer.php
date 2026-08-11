@@ -4,12 +4,13 @@ namespace AMToolkit\Core;
 
 use AMToolkit\Modules\Access\AccessSchema;
 use AMToolkit\Modules\Access\Migrations\CreateAccessTables;
+use AMToolkit\Modules\Access\Migrations\UpgradeActivityEventContract;
 
 defined('ABSPATH') || exit;
 
 final class Installer
 {
-    public const SCHEMA_VERSION = '1';
+    public const SCHEMA_VERSION = '2';
 
     public static function activate(): void
     {
@@ -39,6 +40,7 @@ final class Installer
             $runner = new MigrationRunner();
             $runner->run('access', [
                 1 => new CreateAccessTables(),
+                2 => new UpgradeActivityEventContract(),
             ]);
 
             Capabilities::install();

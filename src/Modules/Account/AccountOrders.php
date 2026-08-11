@@ -314,7 +314,7 @@ final class AccountOrders
 
     private function orderProducts(\WC_Order $order): string
     {
-        $items = array_values($order->get_items('line_item'));
+        $items = $order->get_items('line_item');
         $shown = array_slice($items, 0, 3);
 
         ob_start();

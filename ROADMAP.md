@@ -145,14 +145,16 @@
 
 ## v0.11.5 — testy i fundament diagnostyki
 
-- [ ] dodać PHPUnit oraz analizę statyczną PHPStan na najniższym użytecznym poziomie,
-- [ ] udostępnić odczyt zdarzeń przez `ActivityEventStore` bez bezpośrednich zapytań widoków do tabel,
-- [ ] generować i propagować `request_id` dla operacji zmieniających stan,
-- [ ] rozdzielić zdarzenia domenowe od technicznych logów błędów,
-- [ ] zdefiniować wersjonowany kontrakt zdarzeń i ograniczony payload,
-- [ ] przygotować bezpieczny eksport diagnostyczny oraz kontrolę integralności tylko do odczytu,
+- [x] dodać PHPUnit oraz analizę statyczną PHPStan na najniższym użytecznym poziomie,
+- [x] udostępnić odczyt zdarzeń przez `ActivityEventStore` bez bezpośrednich zapytań widoków do tabel,
+- [x] generować i propagować `request_id` dla operacji zmieniających stan,
+- [x] rozdzielić zdarzenia domenowe od technicznych logów błędów,
+- [x] zdefiniować wersjonowany kontrakt zdarzeń i ograniczony payload,
+- [x] przygotować bezpieczny eksport diagnostyczny oraz kontrolę integralności tylko do odczytu,
 - [ ] przygotować źródło prawdy postępu i idempotentne przeliczanie agregatów,
 - [ ] dodać testy wielu urządzeń, powtórzonych żądań, dostępu i nieudanych zapisów.
+
+Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego modelu kursów i postępu, a nie samego fundamentu diagnostycznego.
 
 ## v0.12.0 — Kursy, dostęp i postęp
 

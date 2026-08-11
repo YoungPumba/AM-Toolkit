@@ -12,7 +12,10 @@
         }
     },
     "require-dev": {
+        "php-stubs/wordpress-stubs": "^6.8 || ^7.0",
         "php-parallel-lint/php-parallel-lint": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^9.6",
         "wp-coding-standards/wpcs": "^3.0"
     },
     "config": {
@@ -28,7 +31,9 @@
             "@test:access-core",
             "@test:module-registry",
             "@test:migrations",
-            "@test:capabilities"
+            "@test:capabilities",
+            "@analyse",
+            "@test:unit"
         ],
         "check:syntax": "parallel-lint --exclude vendor .",
         "test:bootstrap": "php .build/test-bootstrap.php",
@@ -36,6 +41,21 @@
         "test:module-registry": "php .build/test-module-registry.php",
         "test:migrations": "php .build/test-migrations.php",
         "test:capabilities": "php .build/test-capabilities.php",
+        "analyse": [
+            "@analyse:foundation",
+            "@analyse:access",
+            "@analyse:account:entry",
+            "@analyse:account:profile",
+            "@analyse:account:commerce",
+            "@analyse:woocommerce"
+        ],
+        "analyse:foundation": "phpstan analyse am-toolkit.php src/Core src/Admin src/Integrations src/Settings src/Modules/Core --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "analyse:access": "phpstan analyse src/Modules/Access --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "analyse:account:entry": "phpstan analyse src/Modules/Account/AccountModule.php src/Modules/Account/AccountNavigation.php src/Modules/Account/AccountDashboard.php src/Modules/Account/WelcomeAnimation.php --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "analyse:account:profile": "phpstan analyse src/Modules/Account/AccountDetails.php src/Modules/Account/AccountAddresses.php src/Modules/Account/AccountOnboarding.php src/Modules/Account/AccountProductImage.php --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "analyse:account:commerce": "phpstan analyse src/Modules/Account/AccountOrders.php src/Modules/Account/AccountOrderDetails.php src/Modules/Account/ManualProductAssignments.php src/Modules/Account/PurchasedProducts.php --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "analyse:woocommerce": "phpstan analyse src/Modules/WooCommerce --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "test:unit": "phpunit --colors=always",
         "audit:style": "phpcs",
         "fix:style": "phpcbf"
     }

@@ -185,10 +185,12 @@ final class AccountDetails
                 'post_status'    => 'inherit',
                 'post_author'    => $userId,
             ],
-            (string) $uploaded['file']
+            (string) $uploaded['file'],
+            0,
+            true
         );
 
-        if (is_wp_error($attachmentId) || $attachmentId <= 0) {
+        if (is_wp_error($attachmentId)) {
             wp_delete_file((string) $uploaded['file']);
             wc_add_notice(
                 __('Nie udało się utworzyć avatara. Spróbuj ponownie.', 'am-toolkit'),
@@ -202,9 +204,7 @@ final class AccountDetails
             (string) $uploaded['file']
         );
 
-        if (is_array($metadata)) {
-            wp_update_attachment_metadata($attachmentId, $metadata);
-        }
+        wp_update_attachment_metadata($attachmentId, $metadata);
 
         $previousAttachmentId = (int) get_user_meta(
             $userId,
