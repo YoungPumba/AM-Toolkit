@@ -5,6 +5,7 @@ namespace AMToolkit\Core;
 use AMToolkit\Modules\Access\AccessModule;
 use AMToolkit\Modules\Account\AccountModule;
 use AMToolkit\Modules\Core\CoreModule;
+use AMToolkit\Modules\Courses\CoursesModule;
 use AMToolkit\Modules\WooCommerce\WooCommerceModule;
 
 defined('ABSPATH') || exit;
@@ -45,6 +46,7 @@ final class Plugin
         $registry->register(new AccessModule());
         $registry->register(new WooCommerceModule());
         $registry->register(new AccountModule());
+        $registry->register(new CoursesModule());
 
         return $registry;
     }

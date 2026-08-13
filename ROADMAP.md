@@ -161,9 +161,9 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 ### Fundament AM Courses
 
 - [ ] korzystać wyłącznie ze wspólnego `AM Access Core` przy ochronie kursów i lekcji,
-- [ ] przyjąć rozszerzalny model `Kurs → opcjonalny Moduł → Lekcja`, zachowując możliwość prostego kursu bez ręcznego tworzenia modułów,
-- [ ] nadać kursom, modułom i lekcjom trwałe identyfikatory niezależne od ich kolejności,
-- [ ] wersjonować program i zapisywać zestaw wymaganych lekcji przy ukończeniu, aby późniejsza rozbudowa kursu nie cofała absolwentom statusu 100%,
+- [x] przyjąć rozszerzalny model `Kurs → opcjonalna Sekcja → Lekcja`, zachowując możliwość prostego kursu bez ręcznego tworzenia sekcji,
+- [x] nadać kursom, sekcjom i lekcjom trwałe identyfikatory niezależne od ich kolejności,
+- [x] wersjonować program i zapisywać zestaw wymaganych lekcji przy ukończeniu, aby późniejsza rozbudowa kursu nie cofała absolwentom statusu 100%,
 - [ ] rejestrować ustandaryzowane zdarzenia kursu, postępu, lekcji, materiałów i spotkań,
 - [ ] wyznaczać jedno „następne najlepsze działanie” używane wspólnie w hubie kursów, panelu konta i sekcji „Wymaga Twojej uwagi”,
 - [ ] przygotować role i możliwości uczestnika, właścicielki oraz przyszłego mentora lub moderatora bez udostępniania niegotowych paneli,
@@ -171,8 +171,8 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 ### Model danych i panel właścicielki
 
-- [ ] zbudować niezależny moduł AM Courses bez wymaganej integracji z zewnętrznym LMS,
-- [ ] rozdzielić encje „Kurs”, „Lekcja”, „Spotkanie” i „Dostęp uczestnika”,
+- [x] zbudować niezależny moduł AM Courses bez wymaganej integracji z zewnętrznym LMS,
+- [x] rozdzielić encje „Kurs”, „Lekcja”, „Spotkanie” i „Dostęp uczestnika”,
 - [ ] umożliwić tworzenie kursu z tytułem, opisem, grafiką, uporządkowaną listą lekcji, materiałami dodatkowymi i prywatnym odnośnikiem do grupy Telegram,
 - [ ] umożliwić dodawanie, usuwanie i zmianę kolejności lekcji bez edycji plików wtyczki,
 - [ ] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,

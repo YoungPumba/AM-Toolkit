@@ -1,155 +1,188 @@
 # Model domeny AM Courses
 
-Status: specyfikacja przed implementacją `v0.12.0`.
+Status: fundament domeny i schematu zaimplementowany w ramach `VIA-29` dla
+wydania `v0.12.0`. Panel, widoki, automatyczne granty i obsługa spotkań należą
+do kolejnych zadań.
 
-## Zakres pierwszej wersji
+## Granica modułu
 
-AM Courses udostępnia kursy klientom posiadającym aktywny grant w
-`AM Access Core`. Właścicielka zarządza programem, lekcjami, materiałami,
-spotkaniami, uczestnikami oraz publikacją bez edycji plików wtyczki.
+AM Courses jest modułem AM Toolkit. Zależy wyłącznie od `Core` i `Access`, jest
+rejestrowany w centralnym `ModuleRegistry` i domyślnie pozostaje wyłączony flagą
+`courses`. Można go włączyć opcją `am_toolkit_feature_flags`, filtrem
+`am_toolkit_feature_enabled` albo wyłączyć stałą `AM_TOOLKIT_DISABLE_COURSES`.
 
-Pierwsza wersja obsługuje jeden wspólny program kursu dla wszystkich
-uczestników. Model nie wprowadza grup ani sezonów, ale nie może blokować ich
-dodania w przyszłości.
+Wyłączenie modułu zatrzymuje jego uruchamianie. Migracje pozostają bezpieczne do
+ponownego wykonania, a wyłączenie lub dezaktywacja wtyczki nie usuwa tabel ani
+danych.
 
-## Encje
+## Decyzja o składowaniu danych
+
+Treść redakcyjna Courses i dane transakcyjne używają dedykowanych tabel.
+Nie korzystamy z `postmeta` jako modelu domenowego. Powodem jest konieczność
+niezmiennego wersjonowania programu, jednoznacznego porządku, unikalnych
+snapshotów i przewidywalnych zapytań integralności. Przyszły panel WordPressa
+będzie klientem publicznych usług i repozytoriów, a nie właścicielem reguł.
+
+Podział jest następujący:
+
+- katalog redakcyjny: kursy, wersje programu, sekcje, lekcje, przypisania lekcji
+  do programu i materiały;
+- stan transakcyjny: postęp lekcji i ukończenia kursu;
+- granty dostępu i zdarzenia audytowe: istniejące tabele `AM Access Core`.
+
+Schemat nie deklaruje kluczy obcych. `dbDelta()` i cykl życia tabel WordPressa
+nie zapewniają wystarczająco przewidywalnej obsługi constraintów FK na wszystkich
+wspieranych instalacjach. Integralność relacji egzekwują repozytoria i usługi,
+a baza wymusza kluczowe ograniczenia unikalności i indeksy wyszukiwania.
+
+## Identyfikatory
+
+Każdy publiczny zasób domenowy otrzymuje UUID zapisany jako `public_id`. UUID nie
+zależy od tytułu, URL, kolejności ani techniki renderowania.
+
+Tabele zachowują również liczbowy, niezmienny klucz `id`. Jest on używany do
+relacji wewnętrznych oraz jako `resource_id` w istniejącym kontrakcie
+`AM Access Core` z `resource_type = course`. Publiczny interfejs nie powinien
+ujawniać tego klucza jako adresu zasobu.
+
+## Encje i odpowiedzialności
 
 ### Course
 
-Opisuje kurs jako produkt edukacyjny: tytuł, opis, grafika, stan publikacji,
-prywatny link do Telegrama i bieżąca wersja programu.
+Produkt edukacyjny: tytuł, opis, grafika, stan publikacji i wskaźnik bieżącej
+wersji programu. Nie przechowuje grantu ani postępu użytkownika.
 
 ### CourseProgramVersion
 
-Niemutowalny zapis zestawu wymaganych lekcji obowiązującego w określonym
-momencie. Pozwala rozbudować kurs bez odebrania statusu ukończenia osobom,
-które wcześniej osiągnęły 100%.
+Niemutowalny po publikacji snapshot uporządkowanego programu. Ma kolejny numer
+w obrębie kursu, hash zawartości, datę publikacji oraz zbiór wymaganych lekcji.
+Zmiana opublikowanego programu tworzy nową wersję; nie poprawia starego rekordu
+w miejscu.
 
-### Module
+### CourseSection
 
-Opcjonalna grupa lekcji. Prosty kurs może mieć lekcje bez ręcznego tworzenia
-modułów.
+Opcjonalna grupa lekcji w konkretnej wersji programu. Nazwa `CourseSection`
+unika konfliktu z pojęciem modułu wtyczki. Lekcja może należeć do programu bez
+sekcji.
 
 ### Lesson
 
-Etap kursu z trwałym identyfikatorem, tytułem, opisem, filmem, czasem trwania,
-kolejnością, stanem publikacji i informacją, czy jest wymagany.
+Trwała treść etapu kursu: tytuł, opis, odniesienie do adaptera wideo, czas
+trwania, wersja treści i wersjonowany zestaw wymagań ukończenia. Kolejność i
+obowiązkowość nie należą do lekcji — są właściwościami przypisania do wersji
+programu.
+
+Wymagania ukończenia są nieprzezroczystym, wersjonowanym dokumentem JSON.
+Pozwala to później opisać próg obejrzenia filmu lub wymagane zadania bez
+sprzęgania domeny z odtwarzaczem i typem formularza.
 
 ### LessonMaterial
 
-Chroniony plik przypisany do lekcji. Ma nazwę, opis, kolejność i odwołanie do
-magazynu plików. Publiczny adres pliku nie jest prezentowany użytkownikowi.
+Chroniony materiał lekcji. Przechowuje nazwę, opis, kolejność oraz parę
+`storage_provider` / `storage_reference`. Nie przechowuje publicznego URL jako
+kontraktu domenowego.
 
 ### CourseMeeting
 
-Spotkanie związane z kursem: tytuł, początek i koniec, strefa czasowa, miejsce
-lub platforma, opis, link do spotkania i opcjonalne nagranie. Wszystkie daty są
-zapisywane jednoznacznie i wyświetlane w `Europe/Warsaw`.
-
-### AccessGrant
-
-Istniejący grant `AM Access Core`. Źródłem może być opłacona pozycja
-zamówienia, ręczne nadanie, migracja, pakiet albo przyszła subskrypcja.
+Kontrakt domenowy rozdzielający czas UTC, strefę prezentacji, platformę oraz
+chronione odniesienia do spotkania i nagrania. Persystencja, providerzy Zoom,
+Telegram i obsługa spotkań są świadomie poza VIA-29 i powstaną w VIA-43. Nie ma
+tymczasowej tabeli spotkań, której kontrakt trzeba byłoby później łamać.
 
 ### LessonProgress
 
-Serwerowy stan postępu użytkownika w lekcji. Minimalne dane:
-
-- `user_id`, `course_id`, `lesson_id`,
-- `status`,
-- `completed_at`,
-- `completion_source`,
-- `content_version`,
-- `created_at`, `updated_at`.
-
-Para `(user_id, course_id, lesson_id)` jest unikalna.
+Bieżący stan jednej pary użytkownik/kurs/lekcja. Brak rekordu oznacza stan
+nierozpoczęty; zapisane stany to `started` i `completed`. Ukończenie zawiera
+źródło, wersję treści i czas UTC. Para `(user_id, course_id, lesson_id)` jest
+unikalna.
 
 ### CourseCompletion
 
-Zapis ukończenia kursu wraz z wersją programu i zestawem wymaganych lekcji,
-który został spełniony. Nie jest obliczany wyłącznie na podstawie obecnej
-liczby lekcji.
+Niemutowalny fakt ukończenia określonej wersji programu. Przechowuje kanoniczny
+snapshot identyfikatorów wymaganych lekcji i jego hash. Unikalna jest para
+użytkownik/kurs/wersja programu. Późniejsze dodanie lekcji do nowej wersji nie
+cofa wcześniejszego ukończenia.
 
-### ActivityEvent
+### AccessGrant i ActivityEvent
 
-Niemutowalny wpis audytowy opisujący istotną zmianę. Nie zastępuje tabeli
-aktualnego postępu.
+Pozostają własnością `AM Access Core`. Courses nie duplikuje dostępu ani audytu.
+`AccessCoreCourseAccessPolicy` sprawdza zasób typu `course`; kolejne przypadki
+użycia zapisujące stan będą korzystały z istniejącego kontraktu zdarzeń i
+`request_id`.
 
-## Stany
+## Stany i archiwizacja
 
-Kurs i lekcja używają jawnych stanów, np. `draft`, `published`, `archived`.
-Archiwizacja zachowuje historię oraz odwołania. Fizyczne usunięcie opublikowanej
-treści nie jest standardową operacją panelu.
+Kurs, program, sekcja, lekcja i materiał używają stanów `draft`, `published`
+i `archived`. Archiwizacja zachowuje relacje i historię. Fizyczne usunięcie
+opublikowanego zasobu nie jest standardową operacją domenową.
 
-Postęp lekcji rozpoczyna się jako brak rekordu, następnie może przejść do
-`started` i `completed`. Cofnięcie ukończenia jest osobną, audytowaną operacją,
-a nie bezpośrednią edycją procentu.
+Opublikowana wersja programu musi mieć `published_at`. Szkic nie może udawać
+opublikowanego snapshotu. Wersja zarchiwizowana zachowuje pierwotny czas
+publikacji.
 
 ## Źródło prawdy postępu
 
-Źródłem prawdy są rekordy ukończenia wymaganych lekcji. Procent kursu jest
-wartością pochodną:
+Źródłem prawdy są rekordy ukończenia wymaganych lekcji wskazanych przez wersję
+programu:
 
 ```text
 ukończone wymagane lekcje / wszystkie wymagane lekcje wersji programu
 ```
 
-Zapisany agregat służy wydajności, ale zawsze można go odbudować. Klient nie
-przesyła procentu; wysyła intencję ukończenia konkretnej lekcji.
+Klient nie zapisuje procentu. `CompletionEvaluator` otrzymuje snapshot programu
+i identyfikatory ukończonych lekcji. `CourseCompletion` zapisuje dokładny zbiór,
+który doprowadził do ukończenia. Agregaty interfejsu będą danymi pochodnymi,
+możliwymi do odbudowy.
+
+## Tabele i migracje
+
+Migracja Courses `1` tworzy katalog:
+
+- `amt_courses`,
+- `amt_course_program_versions`,
+- `amt_course_sections`,
+- `amt_lessons`,
+- `amt_program_lessons`,
+- `amt_lesson_materials`.
+
+Migracja Courses `2` tworzy stan transakcyjny:
+
+- `amt_lesson_progress`,
+- `amt_course_completions`.
+
+Nazwy otrzymują prefix WordPressa. Każda migracja korzysta z `dbDelta()`, po
+wykonaniu weryfikuje istnienie tabel i kluczowych indeksów, a wersję zapisuje
+dopiero po pozytywnej weryfikacji. Opublikowane migracje nie zawierają `DROP`,
+`TRUNCATE` ani `DELETE`.
+
+## Publiczne kontrakty
+
+Warstwa `Contracts` udostępnia repozytoria kursów, programów, lekcji, postępu
+i ukończeń oraz polityki `CourseAccessPolicy` i `CompletionEvaluator`.
+Kontrakty używają obiektów domenowych i nie zależą od HTML, Elementora,
+WooCommerce ani konkretnego dostawcy wideo lub plików.
+
+Implementacje repozytoriów, transakcje publikacji, panel oraz endpointy należą
+do kolejnych zadań. Nie należy omijać kontraktów bezpośrednimi zapytaniami z
+warstwy widoku.
 
 ## Reguły dostępu
 
-1. Każdy widok kursu, lekcji, spotkania i pliku sprawdza aktywny grant.
-2. Różne źródła dostępu są niezależne. Zwrot jednego zakupu nie usuwa ręcznego
-   grantu ani innego aktywnego zakupu.
+1. Każdy przyszły widok kursu, lekcji, spotkania i pliku sprawdza aktywny grant.
+2. Różne źródła dostępu są niezależne.
 3. Wygaśnięcie dostępu nie usuwa postępu.
 4. Ponowne nadanie dostępu przywraca widok zachowanego postępu.
-5. Mapowanie produktu WooCommerce na kurs nie jest samo w sobie grantem.
-6. Dostęp z zamówienia powstaje dopiero po spełnieniu uzgodnionego stanu
-   płatności i jest idempotentny względem pozycji zamówienia.
+5. Mapowanie produktu WooCommerce na kurs nie jest grantem.
+6. Dostęp demo będzie zakresem grantu do lekcji programu, nie kopią kursu.
 
-## Następne najlepsze działanie
+## Poza VIA-29
 
-Jedna usługa wyznacza następny krok użytkownika. Może nim być:
+- panel administracyjny i UI klientki,
+- implementacje repozytoriów i przypadków użycia publikacji,
+- automatyczne granty z WooCommerce,
+- śledzenie i naprawa postępu,
+- spotkania, Zoom, Telegram i chronione dostarczanie materiałów,
+- analityka zachowania.
 
-- rozpoczęcie kursu,
-- kontynuacja ostatniej lekcji,
-- otwarcie następnej nieukończonej lekcji,
-- pobranie materiału,
-- dołączenie do najbliższego spotkania,
-- uzupełnienie wymaganych danych konta.
-
-Hub kursów, panel główny i sekcja „Wymaga Twojej uwagi” korzystają z tej samej
-usługi, aby nie prezentować sprzecznych komunikatów.
-
-## Widoki pierwszej wersji
-
-- `/moje-konto/kursy/` — kursy aktywne, ukończone i wygasłe,
-- widok kursu — program, postęp, spotkanie, Telegram i „Kontynuuj”,
-- widok lekcji — film, opis, materiały i nawigacja,
-- panel właścicielki — program, publikacja, mapowanie produktów, uczestnicy i
-  spotkania,
-- minimalna diagnostyka uczestnika i kursu.
-
-## Sytuacje brzegowe
-
-Implementacja musi obsłużyć:
-
-- podwójne kliknięcie „Ukończ lekcję”,
-- równoległe żądania z dwóch urządzeń,
-- ponowione callbacki WooCommerce,
-- dodanie, zmianę kolejności i archiwizację lekcji,
-- brak filmu albo materiału,
-- brak zaplanowanego spotkania,
-- zmianę lub odwołanie spotkania,
-- wygasły i ponownie nadany dostęp,
-- użytkownika z kilkoma źródłami dostępu,
-- wcześniejszych klientów migrowanych ręcznie,
-- niedostępnego dostawcę wideo lub powiadomień.
-
-## Poza MVP
-
-Notatki, zadania, dyskusje przy lekcji, grupy, sezony, certyfikaty, punkty,
-automatyczne śledzenie pozycji filmu i zaawansowana analityka pozostają poza
-MVP. Kontrakty i identyfikatory nie mogą jednak zamknąć drogi do tych funkcji.
-
+Te elementy muszą używać opisanych identyfikatorów, tabel i kontraktów zamiast
+tworzyć równoległe źródła prawdy.
