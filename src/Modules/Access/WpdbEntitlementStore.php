@@ -98,6 +98,28 @@ final class WpdbEntitlementStore implements EntitlementStore
         return is_array($grant) ? $grant : null;
     }
 
+    public function findActiveBySource(string $sourceType, int $sourceId): array|\WP_Error
+    {
+        $sql = $this->database->prepare(
+            "SELECT * FROM {$this->table}
+            WHERE source_type = %s AND source_id = %d AND status = 'active'
+            ORDER BY id ASC",
+            $sourceType,
+            $sourceId
+        );
+        $grants = $this->database->get_results($sql, ARRAY_A);
+
+        if ($this->database->last_error !== '') {
+            return new \WP_Error(
+                'am_toolkit_access_source_read_failed',
+                __('Nie udało się odczytać grantów źródła dostępu.', 'am-toolkit'),
+                ['database_error' => $this->database->last_error]
+            );
+        }
+
+        return is_array($grants) ? $grants : [];
+    }
+
     public function revoke(string $grantKey, string $revokedAt): bool|\WP_Error
     {
         $result = $this->database->query(

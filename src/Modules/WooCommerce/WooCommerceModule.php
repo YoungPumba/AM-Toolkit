@@ -27,5 +27,8 @@ final class WooCommerceModule implements ModuleInterface
     {
         (new ToastIntegration())->boot();
         (new CartIndicator())->boot();
+        add_action('am_toolkit_courses_ready', static function (): void {
+            (new CourseAccessIntegration())->boot();
+        });
     }
 }

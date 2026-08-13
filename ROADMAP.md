@@ -160,7 +160,7 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 ### Fundament AM Courses
 
-- [ ] korzystać wyłącznie ze wspólnego `AM Access Core` przy ochronie kursów i lekcji,
+- [x] korzystać wyłącznie ze wspólnego `AM Access Core` przy ochronie kursów i lekcji,
 - [x] przyjąć rozszerzalny model `Kurs → opcjonalna Sekcja → Lekcja`, zachowując możliwość prostego kursu bez ręcznego tworzenia sekcji,
 - [x] nadać kursom, sekcjom i lekcjom trwałe identyfikatory niezależne od ich kolejności,
 - [x] wersjonować program i zapisywać zestaw wymaganych lekcji przy ukończeniu, aby późniejsza rozbudowa kursu nie cofała absolwentom statusu 100%,
@@ -195,11 +195,11 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 ### Dostęp po zakupie i dostęp ręczny
 
-- [ ] mapować jeden lub więcej produktów WooCommerce na konkretny kurs,
-- [ ] przyznawać dostęp idempotentnie dopiero po opłaceniu zamówienia,
+- [x] mapować jeden lub więcej produktów WooCommerce na konkretny kurs,
+- [x] przyznawać dostęp idempotentnie dopiero po opłaceniu zamówienia,
 - [ ] wykorzystać istniejące ręczne przypisania produktów, ale zapisywać osobny dostęp do kursu ze źródłem, datą nadania, statusem i opcjonalnym terminem wygaśnięcia,
-- [ ] umożliwić właścicielce ręczne przyznanie i odebranie dostępu do wybranego kursu,
-- [ ] przygotować bezpieczne przypisanie dostępu osobom, które kupiły kurs przed uruchomieniem modułu,
+- [x] umożliwić właścicielce ręczne przyznanie i odebranie dostępu do wybranego kursu przez API (formularz powstaje w zadaniu panelu),
+- [x] przygotować bezpieczne przypisanie dostępu osobom, które kupiły kurs przed uruchomieniem modułu,
 - [ ] zdefiniować i obsłużyć zasady odebrania dostępu po anulowaniu, zwrocie lub chargebacku,
 - [ ] zabezpieczyć wszystkie widoki lekcji tak, aby użytkownik widział wyłącznie własne aktywne dostępy.
 

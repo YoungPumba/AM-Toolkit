@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 final class CoursesSchema
 {
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     public static function coursesTable(): string
     {
@@ -62,6 +62,31 @@ final class CoursesSchema
         global $wpdb;
 
         return $wpdb->prefix . 'amt_course_completions';
+    }
+
+    public static function productMappingsTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_course_product_mappings';
+    }
+
+    public static function productMappingDefinition(string $charsetCollate): string
+    {
+        $mappings = self::productMappingsTable();
+
+        return "CREATE TABLE {$mappings} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            product_id bigint(20) unsigned NOT NULL,
+            course_id bigint(20) unsigned NOT NULL,
+            status varchar(24) NOT NULL DEFAULT 'active',
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY product_course (product_id, course_id),
+            KEY active_product (product_id, status),
+            KEY active_course (course_id, status)
+        ) {$charsetCollate};";
     }
 
     /** @return array<string, string> */

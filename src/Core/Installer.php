@@ -7,6 +7,7 @@ use AMToolkit\Modules\Access\Migrations\CreateAccessTables;
 use AMToolkit\Modules\Access\Migrations\UpgradeActivityEventContract;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesCatalogTables;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesProgressTables;
+use AMToolkit\Modules\Courses\Migrations\CreateCourseProductMappingsTable;
 
 defined('ABSPATH') || exit;
 
@@ -47,6 +48,7 @@ final class Installer
             $runner->run('courses', [
                 1 => new CreateCoursesCatalogTables(),
                 2 => new CreateCoursesProgressTables(),
+                3 => new CreateCourseProductMappingsTable(),
             ]);
 
             Capabilities::install();

@@ -7,6 +7,7 @@ namespace AMToolkit\Tests\Unit;
 use AMToolkit\Modules\Courses\CoursesSchema;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesCatalogTables;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesProgressTables;
+use AMToolkit\Modules\Courses\Migrations\CreateCourseProductMappingsTable;
 use PHPUnit\Framework\TestCase;
 
 final class CoursesMigrationTest extends TestCase
@@ -35,25 +36,30 @@ final class CoursesMigrationTest extends TestCase
     {
         self::assertTrue((new CreateCoursesCatalogTables())->up());
         self::assertTrue((new CreateCoursesProgressTables())->up());
-        self::assertCount(8, $this->database->tables);
+        self::assertTrue((new CreateCourseProductMappingsTable())->up());
+        self::assertCount(9, $this->database->tables);
 
         self::assertArrayHasKey('course_version', $this->database->indexes[CoursesSchema::programVersionsTable()]);
         self::assertArrayHasKey('program_lesson', $this->database->indexes[CoursesSchema::programLessonsTable()]);
         self::assertArrayHasKey('user_course_lesson', $this->database->indexes[CoursesSchema::progressTable()]);
         self::assertArrayHasKey('user_course_program', $this->database->indexes[CoursesSchema::completionsTable()]);
+        self::assertArrayHasKey('product_course', $this->database->indexes[CoursesSchema::productMappingsTable()]);
     }
 
     public function testMigrationsCanRunAgainWithoutChangingTheSchema(): void
     {
         $catalog = new CreateCoursesCatalogTables();
         $progress = new CreateCoursesProgressTables();
+        $mappings = new CreateCourseProductMappingsTable();
 
         self::assertTrue($catalog->up());
         self::assertTrue($progress->up());
+        self::assertTrue($mappings->up());
         $firstSchema = [$this->database->tables, $this->database->indexes];
 
         self::assertTrue($catalog->up());
         self::assertTrue($progress->up());
+        self::assertTrue($mappings->up());
         self::assertSame($firstSchema, [$this->database->tables, $this->database->indexes]);
     }
 
@@ -63,6 +69,7 @@ final class CoursesMigrationTest extends TestCase
             CoursesSchema::catalogDefinitions(''),
             CoursesSchema::progressDefinitions('')
         );
+        $definitions[] = CoursesSchema::productMappingDefinition('');
         $sql = strtoupper(implode("\n", $definitions));
 
         self::assertStringNotContainsString('DROP TABLE', $sql);

@@ -150,6 +150,14 @@ Migracja Courses `2` tworzy stan transakcyjny:
 - `amt_lesson_progress`,
 - `amt_course_completions`.
 
+Migracja Courses `3` tworzy konfigurację integracji handlowej:
+
+- `amt_course_product_mappings`.
+
+Mapowanie jest relacją wiele-do-wielu i można je dezaktywować bez usuwania
+historycznych grantów. Szczegółowy kontrakt cyklu dostępu opisuje
+`docs/COURSES-ACCESS.md`.
+
 Nazwy otrzymują prefix WordPressa. Każda migracja korzysta z `dbDelta()`, po
 wykonaniu weryfikuje istnienie tabel i kluczowych indeksów, a wersję zapisuje
 dopiero po pozytywnej weryfikacji. Opublikowane migracje nie zawierają `DROP`,
