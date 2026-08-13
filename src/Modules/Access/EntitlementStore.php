@@ -20,6 +20,9 @@ interface EntitlementStore
 
     public function findByGrantKey(string $grantKey): ?array;
 
+    /** @return list<array<string, mixed>>|\WP_Error */
+    public function findActiveBySource(string $sourceType, int $sourceId): array|\WP_Error;
+
     public function revoke(string $grantKey, string $revokedAt): bool|\WP_Error;
 
     public function restore(array $grant): bool|\WP_Error;

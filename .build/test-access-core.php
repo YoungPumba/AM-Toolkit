@@ -88,6 +88,8 @@ final class MemoryEntitlements implements EntitlementStore
 {
     public array $grants = [];
 
+    public bool $failSourceRead = false;
+
     private int $nextId = 1;
 
     public function create(array $grant): array|WP_Error
@@ -130,6 +132,20 @@ final class MemoryEntitlements implements EntitlementStore
     public function findByGrantKey(string $grantKey): ?array
     {
         return $this->grants[$grantKey] ?? null;
+    }
+
+    public function findActiveBySource(string $sourceType, int $sourceId): array|WP_Error
+    {
+        if ($this->failSourceRead) {
+            return new WP_Error('source_read_failed', 'Source read failed');
+        }
+
+        return array_values(array_filter(
+            $this->grants,
+            static fn (array $grant): bool => $grant['source_type'] === $sourceType
+                && $grant['source_id'] === $sourceId
+                && $grant['status'] === 'active'
+        ));
     }
 
     public function revoke(string $grantKey, string $revokedAt): bool|WP_Error
@@ -257,6 +273,31 @@ assertSameValue(
     'Grant ręczny powinien dać się odebrać'
 );
 assertSameValue(false, $access->userHasAccess(7, 'course', 42), 'Brak aktywnych grantów odbiera dostęp');
+
+$access->grant(9, 'course', 42, ['source_type' => 'subscription', 'source_id' => 700]);
+$access->grant(9, 'course', 43, ['source_type' => 'subscription', 'source_id' => 700]);
+$access->grant(9, 'course', 42, ['source_type' => 'order', 'source_id' => 502]);
+$revocationRequestId = 'AM-20260810-123456ABCDEF';
+$eventCountBeforeSourceRevoke = count($events->events);
+
+assertSameValue(
+    2,
+    $access->revokeAllSource('subscription', 700, ['request_id' => $revocationRequestId]),
+    'Wygaszenie subskrypcji powinno cofnąć wszystkie jej granty'
+);
+assertSameValue(true, $access->userHasAccess(9, 'course', 42), 'Zakup zachowuje dostęp po wygaśnięciu subskrypcji');
+assertSameValue(false, $access->userHasAccess(9, 'course', 43), 'Kurs bez innego źródła traci dostęp');
+$sourceRevokeEvents = array_slice(array_values($events->events), $eventCountBeforeSourceRevoke);
+assertSameValue(2, count($sourceRevokeEvents), 'Każdy cofnięty grant ma zdarzenie audytowe');
+assertSameValue(
+    [$revocationRequestId, $revocationRequestId],
+    array_column($sourceRevokeEvents, 'request_id'),
+    'Jedno wygaszenie subskrypcji używa wspólnego request ID'
+);
+$entitlements->failSourceRead = true;
+$failedSourceRevoke = $access->revokeAllSource('subscription', 701);
+assertSameValue(true, is_wp_error($failedSourceRevoke), 'Błąd odczytu źródła nie może udawać sukcesu');
+$entitlements->failSourceRead = false;
 
 $expired = $access->grant(8, 'course', 42, [
     'source_type' => 'migration',

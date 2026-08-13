@@ -34,9 +34,10 @@ final class Access
         );
     }
 
-    public static function revoke(string $grantKey): bool|\WP_Error
+    /** @param array{request_id?: string} $context */
+    public static function revoke(string $grantKey, array $context = []): bool|\WP_Error
     {
-        return self::manager()->revoke($grantKey);
+        return self::manager()->revoke($grantKey, $context);
     }
 
     public static function revokeSource(
@@ -44,15 +45,26 @@ final class Access
         string $resourceType,
         int $resourceId,
         string $sourceType,
-        int $sourceId
+        int $sourceId,
+        array $context = []
     ): bool|\WP_Error {
         return self::manager()->revokeSource(
             $userId,
             $resourceType,
             $resourceId,
             $sourceType,
-            $sourceId
+            $sourceId,
+            $context
         );
+    }
+
+    /** @param array{request_id?: string} $context */
+    public static function revokeAllSource(
+        string $sourceType,
+        int $sourceId,
+        array $context = []
+    ): int|\WP_Error {
+        return self::manager()->revokeAllSource($sourceType, $sourceId, $context);
     }
 
     public static function replaceManager(AccessManager $manager): void

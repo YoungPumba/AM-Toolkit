@@ -15,6 +15,7 @@ final class FeatureFlags
         'woocommerce' => true,
         'account' => true,
         'courses' => false,
+        'courses-access-automation' => false,
     ];
 
     public function isEnabled(string $moduleId): bool

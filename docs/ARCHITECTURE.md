@@ -1,6 +1,7 @@
 # Architektura AM Toolkit
 
-Status: zaakceptowany kierunek rozwoju; fundament AM Courses wdrożony w VIA-29.
+Status: zaakceptowany kierunek rozwoju; fundament i cykl dostępu AM Courses
+wdrożone w VIA-29 oraz VIA-39.
 
 ## Cel
 
@@ -151,6 +152,9 @@ zatrzymać bez usuwania danych dostępu.
 
 Moduł `Courses` jest domyślnie wyłączony do czasu ukończenia kolejnych warstw
 MVP. Jego migracje nie usuwają danych, a sama flaga steruje wyłącznie bootem.
+Automatyczne granty mają dodatkową, domyślnie wyłączoną flagę
+`courses-access-automation`. Integracja WooCommerce jest adapterem modułu
+Courses; domena nie zna klas zamówień ani subskrypcji.
 
 ## Testy wymagane przed wydaniem
 

@@ -14,6 +14,15 @@
   unikalności chroniące przed duplikacją postępu i ukończeń,
 - testy migracji pustej bazy, ponownego uruchomienia, ograniczeń integralności
   i podstawowych reguł domenowych.
+- mapowanie wielu produktów WooCommerce na kursy w trzeciej migracji Courses,
+- idempotentne granty zakupu, subskrypcji, ręczne i demo przez jeden kontrakt
+  `AM Access Core`,
+- selektywne cofanie wszystkich grantów danego źródła bez naruszania innych
+  aktywnych źródeł dostępu,
+- warunkowy adapter WooCommerce Subscriptions z jawną polityką statusów,
+- stronicowana, wznawialna migracja opłaconych zamówień historycznych,
+- osobna flaga awaryjna automatyzacji dostępu oraz wspólny `request_id` dla
+  grantów utworzonych przez jedno zdarzenie.
 
 ## 0.11.5 — 2026-08-11
 

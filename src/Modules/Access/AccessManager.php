@@ -288,6 +288,55 @@ final class AccessManager
     }
 
     /**
+     * Revokes only grants created by the selected source. Other active sources
+     * for the same resource remain untouched.
+     *
+     * @param array{request_id?: string} $context
+     */
+    public function revokeAllSource(
+        string $sourceType,
+        int $sourceId,
+        array $context = []
+    ): int|\WP_Error {
+        $sourceType = sanitize_key($sourceType);
+        $sourceId = absint($sourceId);
+
+        if ($sourceType === '' || $sourceId <= 0) {
+            return new \WP_Error(
+                'am_toolkit_invalid_access_source',
+                __('Nieprawidłowe źródło dostępu.', 'am-toolkit')
+            );
+        }
+
+        $requestId = RequestId::normalize(
+            isset($context['request_id']) ? (string) $context['request_id'] : null
+        );
+        $revoked = 0;
+        $grants = $this->entitlements->findActiveBySource($sourceType, $sourceId);
+
+        if (is_wp_error($grants)) {
+            return $grants;
+        }
+
+        foreach ($grants as $grant) {
+            $result = $this->revoke(
+                (string) ($grant['grant_key'] ?? ''),
+                ['request_id' => $requestId]
+            );
+
+            if (is_wp_error($result)) {
+                return $result;
+            }
+
+            if ($result) {
+                ++$revoked;
+            }
+        }
+
+        return $revoked;
+    }
+
+    /**
      * Domain events are diagnostic history, not the transaction itself. A failed
      * diagnostic write is reported separately and must not revoke a valid grant.
      *

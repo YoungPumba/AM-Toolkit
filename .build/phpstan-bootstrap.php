@@ -189,6 +189,11 @@ if (!class_exists('WC_Order')) {
             return '';
         }
 
+        public function is_paid(): bool
+        {
+            return false;
+        }
+
         public function get_date_created(): ?WC_DateTime
         {
             return null;
@@ -305,6 +310,12 @@ if (!class_exists('WC_Order')) {
         {
             return [];
         }
+    }
+}
+
+if (!class_exists('WC_Subscription')) {
+    class WC_Subscription extends WC_Order
+    {
     }
 }
 
@@ -475,6 +486,22 @@ if (!function_exists('wc_get_order_statuses')) {
     function wc_get_order_statuses(): array
     {
         return [];
+    }
+}
+
+if (!function_exists('wc_get_is_paid_statuses')) {
+    /** @return list<string> */
+    function wc_get_is_paid_statuses(): array
+    {
+        return ['processing', 'completed'];
+    }
+}
+
+if (!function_exists('wcs_order_contains_subscription')) {
+    /** @param string|list<string> $orderType */
+    function wcs_order_contains_subscription(mixed $order, string|array $orderType = 'parent'): bool
+    {
+        return false;
     }
 }
 
