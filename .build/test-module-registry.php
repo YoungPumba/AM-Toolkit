@@ -99,4 +99,31 @@ assertSameValue(
     'Dependent module should expose its skip reason.'
 );
 
+$order = [];
+$coursesDisabled = new ModuleRegistry(new FeatureFlags());
+$coursesDisabled->register(new TestModule('core', [], $order));
+$coursesDisabled->register(new TestModule('access', ['core'], $order));
+$coursesDisabled->register(new TestModule('courses', ['core', 'access'], $order));
+$coursesDisabled->bootAll();
+
+assertSameValue(
+    'skipped:disabled',
+    $coursesDisabled->statuses()['courses'],
+    'Courses must stay disabled until its feature flag is enabled.'
+);
+
+$GLOBALS['amt_test_options']['am_toolkit_feature_flags'] = ['courses' => true];
+$order = [];
+$coursesEnabled = new ModuleRegistry(new FeatureFlags());
+$coursesEnabled->register(new TestModule('core', [], $order));
+$coursesEnabled->register(new TestModule('access', ['core'], $order));
+$coursesEnabled->register(new TestModule('courses', ['core', 'access'], $order));
+$coursesEnabled->bootAll();
+
+assertSameValue(
+    ['core', 'access', 'courses'],
+    $order,
+    'Enabled Courses module must boot after Core and Access.'
+);
+
 echo "OK: module registry\n";

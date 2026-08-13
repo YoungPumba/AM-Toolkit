@@ -69,4 +69,16 @@ function __(string $text, string $domain = 'default'): string
     return $text;
 }
 
+/** @param string|array<int, string> $queries */
+function dbDelta(string|array $queries = '', bool $execute = true): array
+{
+    $handler = $GLOBALS['amt_test_dbdelta_handler'] ?? null;
+
+    if (is_callable($handler)) {
+        return $handler($queries, $execute);
+    }
+
+    return [];
+}
+
 require_once dirname(__DIR__) . '/vendor/autoload.php';

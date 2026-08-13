@@ -47,6 +47,7 @@
         "analyse": [
             "@analyse:foundation",
             "@analyse:access",
+            "@analyse:courses",
             "@analyse:account:entry",
             "@analyse:account:profile",
             "@analyse:account:commerce",
@@ -54,6 +55,7 @@
         ],
         "analyse:foundation": "phpstan analyse am-toolkit.php src/Core src/Admin src/Integrations src/Settings src/Modules/Core --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
         "analyse:access": "phpstan analyse src/Modules/Access --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
+        "analyse:courses": "phpstan analyse src/Modules/Courses --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
         "analyse:account:entry": "phpstan analyse src/Modules/Account/AccountModule.php src/Modules/Account/AccountNavigation.php src/Modules/Account/AccountDashboard.php src/Modules/Account/WelcomeAnimation.php --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
         "analyse:account:profile": "phpstan analyse src/Modules/Account/AccountDetails.php src/Modules/Account/AccountAddresses.php src/Modules/Account/AccountOnboarding.php src/Modules/Account/AccountProductImage.php --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",
         "analyse:account:commerce": "phpstan analyse src/Modules/Account/AccountOrders.php src/Modules/Account/AccountOrderDetails.php src/Modules/Account/ManualProductAssignments.php src/Modules/Account/PurchasedProducts.php --level=5 --autoload-file=.build/phpstan-bootstrap.php --no-progress --debug --memory-limit=768M",

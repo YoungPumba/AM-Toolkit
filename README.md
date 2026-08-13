@@ -1,8 +1,8 @@
 # AM Toolkit
 
-Wersja 0.11.4 uruchamia wtyczkę przez Composer PSR-4 i centralny rejestr
-modułów. Jawne zależności, migracje per moduł, capabilities i przełączniki
-awaryjne tworzą bezpieczny fundament pod AM Courses.
+Wtyczka jest uruchamiana przez Composer PSR-4 i centralny rejestr modułów.
+Jawne zależności, migracje per moduł, capabilities i przełączniki awaryjne
+tworzą bezpieczny fundament pod AM Courses.
 
 AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępuje standardowe elementy interfejsu sklepu własnymi, spójnymi komponentami.
 
@@ -22,6 +22,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - shortcode `[am_account_menu]` z nawigacją zalogowanego klienta.
 - `AM Access Core` z idempotentnymi grantami, okresem ważności i obsługą wielu źródeł dostępu,
 - dziennik zdarzeń przygotowany dla postępu kursów, powiadomień i przyszłych automatyzacji.
+- wyłączony domyślnie moduł `Courses` z wersjonowanym modelem programu,
+  trwałymi UUID, migracjami katalogu i transakcyjnego stanu postępu.
 
 ## Wymagania
 

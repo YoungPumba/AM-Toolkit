@@ -1,5 +1,20 @@
 # Historia zmian AM Toolkit
 
+## Unreleased — AM Courses foundation
+
+- rejestracja modułu `Courses` zależnego od `Core` i `Access`, domyślnie
+  wyłączonego feature flagą,
+- jawny model domeny kursu, wersji programu, sekcji, lekcji, materiału,
+  spotkania, postępu i ukończenia,
+- publiczne kontrakty repozytoriów, polityki dostępu i oceny ukończenia bez
+  zależności od UI, Elementora i WooCommerce,
+- dwie wersjonowane migracje tworzące sześć tabel katalogu i dwie tabele stanu
+  transakcyjnego,
+- trwałe publiczne UUID, snapshot wymaganych lekcji oraz ograniczenia
+  unikalności chroniące przed duplikacją postępu i ukończeń,
+- testy migracji pustej bazy, ponownego uruchomienia, ograniczeń integralności
+  i podstawowych reguł domenowych.
+
 ## 0.11.5 — 2026-08-11
 
 - dodanie PHPUnit oraz analizy statycznej PHPStan dla kluczowych modułów wtyczki,

@@ -1,6 +1,6 @@
 # Architektura AM Toolkit
 
-Status: zaakceptowany kierunek rozwoju przed modułem AM Courses.
+Status: zaakceptowany kierunek rozwoju; fundament AM Courses wdrożony w VIA-29.
 
 ## Cel
 
@@ -62,8 +62,10 @@ Planowane moduły:
 ## Dane i migracje
 
 Treść redakcyjna, którą właścicielka ma edytować w WordPressie, może korzystać
-z typów wpisów i metadanych. Dane transakcyjne oraz często aktualizowany stan
-użytkownika korzystają z dedykowanych tabel.
+z typów wpisów i metadanych. Dla AM Courses wybrano jednak dedykowane tabele
+zarówno katalogu, jak i danych transakcyjnych, ponieważ wersjonowany program,
+porządek lekcji i snapshoty ukończenia wymagają jawnych ograniczeń unikalności.
+Panel WordPressa będzie klientem usług domenowych, nie alternatywnym magazynem.
 
 Każdy moduł otrzyma własny numer schematu i sekwencyjne migracje. Migracja:
 
@@ -146,6 +148,9 @@ filtrem `am_toolkit_feature_enabled` lub stałą w `wp-config.php`, np.
 `AM_TOOLKIT_DISABLE_ACCOUNT`. Stała `AM_TOOLKIT_SAFE_MODE` pozostawia aktywny
 tylko fundament `Core` i `Access`, dzięki czemu interfejsowe integracje można
 zatrzymać bez usuwania danych dostępu.
+
+Moduł `Courses` jest domyślnie wyłączony do czasu ukończenia kolejnych warstw
+MVP. Jego migracje nie usuwają danych, a sama flaga steruje wyłącznie bootem.
 
 ## Testy wymagane przed wydaniem
 

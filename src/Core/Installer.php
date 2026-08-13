@@ -5,6 +5,8 @@ namespace AMToolkit\Core;
 use AMToolkit\Modules\Access\AccessSchema;
 use AMToolkit\Modules\Access\Migrations\CreateAccessTables;
 use AMToolkit\Modules\Access\Migrations\UpgradeActivityEventContract;
+use AMToolkit\Modules\Courses\Migrations\CreateCoursesCatalogTables;
+use AMToolkit\Modules\Courses\Migrations\CreateCoursesProgressTables;
 
 defined('ABSPATH') || exit;
 
@@ -41,6 +43,10 @@ final class Installer
             $runner->run('access', [
                 1 => new CreateAccessTables(),
                 2 => new UpgradeActivityEventContract(),
+            ]);
+            $runner->run('courses', [
+                1 => new CreateCoursesCatalogTables(),
+                2 => new CreateCoursesProgressTables(),
             ]);
 
             Capabilities::install();
