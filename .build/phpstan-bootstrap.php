@@ -448,15 +448,6 @@ if (!function_exists('wc_get_cart_url')) {
     }
 }
 
-if (!class_exists('WC_Order_Query_Result')) {
-    class WC_Order_Query_Result
-    {
-        public mixed $orders = [];
-        public mixed $total = 0;
-        public mixed $max_num_pages = 1;
-    }
-}
-
 if (!function_exists('wc_get_orders')) {
     /**
      * WooCommerce changes the returned element type according to the
@@ -464,9 +455,9 @@ if (!function_exists('wc_get_orders')) {
      * elements mixed while retaining the array contract.
      *
      * @param array<string, mixed> $args
-     * @return array<int, mixed>|WC_Order_Query_Result
+     * @return array<int, mixed>|object
      */
-    function wc_get_orders(array $args = []): array|WC_Order_Query_Result
+    function wc_get_orders(array $args = []): array|object
     {
         return [];
     }

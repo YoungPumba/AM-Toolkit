@@ -25,7 +25,13 @@ final class WooCommercePaidPurchaseSource implements HistoricalPurchaseSource
             'return' => 'objects',
         ]);
 
-        if (!$result instanceof \WC_Order_Query_Result) {
+        if (
+            !is_object($result)
+            || !property_exists($result, 'orders')
+            || !is_array($result->orders)
+            || !property_exists($result, 'max_num_pages')
+            || !is_numeric($result->max_num_pages)
+        ) {
             return new \WP_Error(
                 'am_toolkit_course_backfill_query_failed',
                 __('WooCommerce nie zwrócił stronicowanego wyniku zamówień.', 'am-toolkit')
@@ -34,7 +40,7 @@ final class WooCommercePaidPurchaseSource implements HistoricalPurchaseSource
 
         $records = [];
 
-        foreach ((array) $result->orders as $order) {
+        foreach ($result->orders as $order) {
             if (!$order instanceof \WC_Order) {
                 continue;
             }
