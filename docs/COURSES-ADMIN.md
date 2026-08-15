@@ -16,7 +16,9 @@ Po włączeniu modułu `courses` WordPress udostępnia właścicielce pozycję
 - przeglądać uczestników oraz historię zdarzeń dostępu.
 
 Spotkania, prywatny odnośnik do Telegrama, odtwarzacz, postęp uczestnika oraz
-widoki konta klienta nie należą do VIA-30.
+widoki konta klienta nie należą do VIA-30, ale pozostają wymaganiami AM Courses
+MVP 0.12.0 realizowanymi odpowiednio w VIA-41–VIA-44. Pełne integracje API z
+Zoomem i Telegramem oraz komponenty Elementora nie są wymagane w 0.12.0.
 
 ## Włączenie modułu
 
