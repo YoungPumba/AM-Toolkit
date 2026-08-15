@@ -173,24 +173,24 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 - [x] zbudować niezależny moduł AM Courses bez wymaganej integracji z zewnętrznym LMS,
 - [x] rozdzielić encje „Kurs”, „Lekcja”, „Spotkanie” i „Dostęp uczestnika”,
-- [ ] umożliwić tworzenie kursu z tytułem, opisem, grafiką, uporządkowaną listą lekcji, materiałami dodatkowymi i prywatnym odnośnikiem do grupy Telegram,
-- [ ] umożliwić dodawanie, usuwanie i zmianę kolejności lekcji bez edycji plików wtyczki,
-- [ ] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,
-- [ ] umożliwić przypisanie do lekcji wielu plików do pobrania z własną nazwą, opisem i kolejnością,
+- [ ] umożliwić tworzenie kursu z tytułem, opisem, grafiką, uporządkowaną listą lekcji, materiałami dodatkowymi i ręcznie wpisywanym prywatnym odnośnikiem do grupy Telegram,
+- [x] umożliwić dodawanie, archiwizowanie i zmianę kolejności lekcji bez edycji plików wtyczki,
+- [x] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,
+- [x] umożliwić przypisanie do lekcji wielu plików do pobrania z własną nazwą, opisem i kolejnością,
 - [ ] wybrać i udokumentować sposób hostowania filmów oraz ochrony dostępu przed rozpoczęciem implementacji odtwarzacza,
-- [ ] zachować prosty model: jeden kurs, wspólna treść i spotkania oraz wielu niezależnie przypisanych uczestników,
-- [ ] określić zasadę rozbudowy programu tak, aby dodanie nowej lekcji nie odbierało statusu ukończenia osobom, które wcześniej ukończyły kurs,
+- [x] zachować prosty model: jeden kurs, wspólna treść i wielu niezależnie przypisanych uczestników; spotkania pozostają osobnym etapem,
+- [x] określić zasadę rozbudowy programu tak, aby dodanie nowej lekcji nie odbierało statusu ukończenia osobom, które wcześniej ukończyły kurs,
 - [ ] dodać właścicielce prosty panel zarządzania kursem, lekcjami, uczestnikami, spotkaniami i stanem publikacji,
 - [ ] zapisywać wszystkie daty z jednoznaczną strefą czasową i prezentować je klientowi w strefie `Europe/Warsaw`.
 
 ### Spotkania przypisane do kursu
 
 - [ ] pozwolić dodać do kursu dowolną liczbę spotkań,
-- [ ] dla spotkania zapisywać tytuł, datę, godzinę rozpoczęcia i zakończenia, miejsce lub platformę, link Zoom, opis oraz opcjonalny link do nagrania,
+- [ ] dla spotkania zapisywać tytuł, datę, godzinę rozpoczęcia i zakończenia, miejsce lub platformę, ręcznie wpisywany link do spotkania (np. Zoom), opis oraz opcjonalny link do nagrania,
 - [ ] umożliwić właścicielce edycję daty, miejsca i linków bez ingerencji w kod,
-- [ ] pokazywać uczestnikowi najbliższe spotkanie na stronie kursu oraz na panelu głównym konta,
-- [ ] chronić link Zoom i nagranie przed użytkownikami bez aktywnego dostępu do danego kursu,
-- [ ] przygotować wiadomości przypominające o spotkaniu i plik kalendarza `.ics`,
+- [ ] wyróżniać uczestnikowi najbliższe przyszłe spotkanie na stronie kursu oraz na panelu głównym konta, wraz z datą, godziną, strefą i odnośnikiem,
+- [ ] chronić link do spotkania i nagranie przed użytkownikami bez aktywnego dostępu do danego kursu,
+- [x] ograniczyć MVP 0.12.0 do ręcznie zarządzanych danych i odnośników; integracje API z Zoomem i Telegramem, automatyczne przypomnienia oraz pliki `.ics` odłożyć na późniejszy etap,
 - [ ] obsłużyć stan bez zaplanowanego spotkania oraz zmianę lub odwołanie terminu.
 
 ### Dostęp po zakupie i dostęp ręczny
@@ -230,7 +230,7 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 - [ ] przetestować brak dostępu, zakup nowy, zakup historyczny, ręczne przyznanie, odebranie, zwrot i wygaśnięcie,
 - [ ] przetestować wielu użytkowników przypisanych do tego samego kursu oraz jednego użytkownika przypisanego do kilku kursów,
-- [ ] przetestować zmianę terminu, linku Zoom i linku Telegram oraz brak możliwości ich odczytania przez osobę bez dostępu,
+- [ ] przetestować zmianę terminu, ręcznie wprowadzonych linków spotkania i Telegrama oraz brak możliwości ich odczytania przez osobę bez dostępu,
 - [ ] przetestować postęp, wznowienie nauki i ukończenie na komputerze oraz telefonie,
 - [ ] przetestować dodanie nowej lekcji bez odebrania zapisanego statusu ukończenia dotychczasowym absolwentom.
 
@@ -282,6 +282,10 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [ ] dokumentacja administratora strony.
 
 ## v1.1.0 — widżety AM Toolkit dla Elementora
+
+Zakres jest zapisany również jako backlogowe zadanie Linear VIA-69. Nie blokuje
+MVP 0.12.0 i powinien ruszyć dopiero po ustabilizowaniu publicznych usług oraz
+modeli widoku modułów AM Toolkit.
 
 - [ ] dodać w Elementorze osobną kategorię widżetów „AM Toolkit”,
 - [ ] umożliwić budowanie panelu konta z pojedynczych widżetów bez edycji plików wtyczki,

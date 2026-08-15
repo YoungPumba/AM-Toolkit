@@ -26,6 +26,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
   trwałymi UUID, migracjami katalogu i transakcyjnego stanu postępu.
 - mapowanie produktów na kursy, idempotentny dostęp po płatności, opcjonalny
   adapter subskrypcji i wznawialna migracja zakupów historycznych.
+- responsywny panel właścicielki do redakcji wersjonowanego programu kursu,
+  materiałów, mapowań produktów, uczestników i ręcznego dostępu.
 
 ## Wymagania
 
@@ -86,6 +88,7 @@ jeśli nadal istnieje inny aktywny grant.
 - [Architektura AM Toolkit](docs/ARCHITECTURE.md)
 - [Model domeny AM Courses](docs/COURSES-DOMAIN.md)
 - [Cykl życia dostępu AM Courses](docs/COURSES-ACCESS.md)
+- [Panel administracyjny AM Courses](docs/COURSES-ADMIN.md)
 - [Diagnostyka AM Courses](docs/COURSES-DIAGNOSTICS.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)

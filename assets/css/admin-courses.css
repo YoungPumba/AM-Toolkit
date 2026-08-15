@@ -1,0 +1,243 @@
+.amt-courses-admin {
+    --amt-ink: #18212f;
+    --amt-muted: #637083;
+    --amt-line: #dce2e9;
+    --amt-surface: #fff;
+    --amt-soft: #f5f7fa;
+    --amt-accent: #6f3df4;
+    color: var(--amt-ink);
+    max-width: 1480px;
+}
+
+.amt-courses-header,
+.amt-courses-card__heading,
+.amt-courses-header__actions,
+.amt-course-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.amt-courses-header {
+    margin: 24px 0;
+}
+
+.amt-courses-header h1,
+.amt-courses-card h2 {
+    margin: 0;
+}
+
+.amt-courses-header p,
+.amt-courses-card p {
+    color: var(--amt-muted);
+}
+
+.amt-courses-eyebrow {
+    color: var(--amt-accent) !important;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+}
+
+.amt-courses-version,
+.amt-status {
+    background: #eee9ff;
+    border-radius: 999px;
+    color: #4c25b9;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 10px;
+}
+
+.amt-status--archived {
+    background: #eceff3;
+    color: #566171;
+}
+
+.amt-status--published {
+    background: #e1f6e8;
+    color: #16713a;
+}
+
+.amt-courses-layout {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+}
+
+.amt-courses-main,
+.amt-courses-side {
+    display: grid;
+    gap: 20px;
+}
+
+.amt-courses-side {
+    align-content: start;
+}
+
+.amt-courses-card {
+    background: var(--amt-surface);
+    border: 1px solid var(--amt-line);
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(24, 33, 47, .04);
+    margin-bottom: 20px;
+    padding: 22px;
+}
+
+.amt-courses-card__heading {
+    margin-bottom: 18px;
+}
+
+.amt-courses-card__heading p {
+    margin-bottom: 0;
+}
+
+.amt-courses-form {
+    display: grid;
+    gap: 16px;
+}
+
+.amt-courses-form label > span,
+.amt-block {
+    display: block;
+}
+
+.amt-courses-form label > span {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.amt-courses-form input[type="text"],
+.amt-courses-form input[type="number"],
+.amt-courses-form input:not([type]),
+.amt-courses-form textarea,
+.amt-courses-form select {
+    box-sizing: border-box;
+    max-width: none;
+    width: 100%;
+}
+
+.amt-courses-form__row {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.amt-courses-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.amt-archive-form {
+    margin-top: 12px;
+    text-align: right;
+}
+
+.amt-editor {
+    border: 1px solid var(--amt-line);
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.amt-editor > summary {
+    align-items: center;
+    background: var(--amt-soft);
+    cursor: pointer;
+    display: flex;
+    font-weight: 650;
+    justify-content: space-between;
+    padding: 13px 15px;
+}
+
+.amt-editor > summary small {
+    color: var(--amt-muted);
+    font-weight: 400;
+}
+
+.amt-editor > form {
+    padding: 16px;
+}
+
+.amt-editor > .amt-archive-form {
+    padding: 0 16px 16px;
+}
+
+.amt-check {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.amt-check > span {
+    display: inline !important;
+    margin: 0 !important;
+}
+
+.amt-product-checklist {
+    background: var(--amt-soft);
+    border-radius: 10px;
+    display: grid;
+    gap: 8px;
+    max-height: 280px;
+    overflow: auto;
+    padding: 12px;
+}
+
+.amt-course-row {
+    border-top: 1px solid var(--amt-line);
+    color: var(--amt-ink);
+    padding: 15px 4px;
+    text-decoration: none;
+}
+
+.amt-course-row:first-child {
+    border-top: 0;
+}
+
+.amt-course-row small,
+.amt-activity-list small {
+    color: var(--amt-muted);
+    display: block;
+    margin-top: 3px;
+}
+
+.amt-table-scroll {
+    margin-top: 18px;
+    overflow-x: auto;
+}
+
+.amt-activity-list > div {
+    border-top: 1px solid var(--amt-line);
+    padding: 10px 0;
+}
+
+.amt-activity-list > div:first-child {
+    border-top: 0;
+}
+
+@media (max-width: 960px) {
+    .amt-courses-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .amt-courses-header,
+    .amt-courses-card__heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .amt-courses-card {
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    .amt-courses-form__row {
+        grid-template-columns: 1fr;
+    }
+}

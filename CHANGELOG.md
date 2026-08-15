@@ -23,6 +23,13 @@
 - stronicowana, wznawialna migracja opłaconych zamówień historycznych,
 - osobna flaga awaryjna automatyzacji dostępu oraz wspólny `request_id` dla
   grantów utworzonych przez jedno zdarzenie.
+- panel **Kursy** do tworzenia, publikowania i bezpiecznej archiwizacji kursów,
+  sekcji, lekcji oraz materiałów bez fizycznego usuwania historii,
+- niezmienne snapshoty opublikowanego programu i automatyczne tworzenie
+  kolejnej wersji roboczej,
+- edycja mapowań produktów, ręczny dostęp przez `AM Access Core` oraz widok
+  uczestników i historii zdarzeń,
+- osobne capability, nonce, walidacja danych i responsywny układ panelu.
 
 ## 0.11.5 — 2026-08-11
 

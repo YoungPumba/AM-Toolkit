@@ -1,7 +1,7 @@
 # Architektura AM Toolkit
 
-Status: zaakceptowany kierunek rozwoju; fundament i cykl dostępu AM Courses
-wdrożone w VIA-29 oraz VIA-39.
+Status: zaakceptowany kierunek rozwoju; fundament, cykl dostępu i panel
+redakcyjny AM Courses wdrożone w VIA-29, VIA-39 oraz VIA-30.
 
 ## Cel
 
@@ -66,7 +66,8 @@ Treść redakcyjna, którą właścicielka ma edytować w WordPressie, może kor
 z typów wpisów i metadanych. Dla AM Courses wybrano jednak dedykowane tabele
 zarówno katalogu, jak i danych transakcyjnych, ponieważ wersjonowany program,
 porządek lekcji i snapshoty ukończenia wymagają jawnych ograniczeń unikalności.
-Panel WordPressa będzie klientem usług domenowych, nie alternatywnym magazynem.
+Panel WordPressa jest klientem `CourseAdminService` oraz kontraktów magazynów,
+nie alternatywnym magazynem i nie miejscem na bezpośrednie zapytania SQL.
 
 Każdy moduł otrzyma własny numer schematu i sekwencyjne migracje. Migracja:
 

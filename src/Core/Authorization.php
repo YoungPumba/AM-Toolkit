@@ -28,4 +28,16 @@ final class Authorization
             $allowed
         );
     }
+
+    public static function canManageCourses(): bool
+    {
+        $allowed = current_user_can(Capabilities::MANAGE_COURSES)
+            || current_user_can('manage_woocommerce')
+            || current_user_can('manage_options');
+
+        return (bool) apply_filters(
+            'am_toolkit_can_manage_courses',
+            $allowed
+        );
+    }
 }

@@ -12,4 +12,7 @@ interface ProductCourseMappingStore
 
     /** @param list<int> $productIds @return list<int>|\WP_Error */
     public function courseIdsForProducts(array $productIds): array|\WP_Error;
+
+    /** @return list<int>|\WP_Error */
+    public function productIdsForCourse(int $courseId): array|\WP_Error;
 }
