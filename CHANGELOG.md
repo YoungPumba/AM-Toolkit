@@ -32,12 +32,16 @@
 - osobne capability, nonce, walidacja danych i responsywny układ panelu.
 - endpoint `/moje-konto/kursy/`, pozycja nawigacji i rozszerzenie kafelka
   szybkiego dostępu dostępne wyłącznie przy aktywnym module Courses,
+- sekcja „Twoje kursy” przeznaczona nad kafelkami szybkiego dostępu,
+  dostępna jako `[am_courses_dashboard]` i przez standardowy dashboard WooCommerce,
 - bezpieczny hub aktywnych, ukończonych, zaplanowanych i wygasłych kursów
   wynikających wyłącznie z własnej historii grantów klientki,
 - chroniony widok opublikowanego programu, który ponownie sprawdza aktywny
   dostęp w AM Access Core przed odczytem opisu, sekcji i lekcji,
 - responsywne stany puste i błędne oraz odtwarzalny test integracyjny
   z syntetycznymi danymi i transakcyjnym `ROLLBACK`.
+- wygląd części uczestniczki zgodny z systemem „Moje konto”: Buffalo, Poppins,
+  akcent `#F176A4`, ciepłe tło, białe powierzchnie i promień 25 px.
 
 ## 0.11.5 — 2026-08-11
 

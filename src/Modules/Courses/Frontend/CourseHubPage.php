@@ -164,9 +164,17 @@ final class CourseHubPage
 
     public function enqueueAssets(bool $force = false): void
     {
+        $isCoursesEndpoint = function_exists('is_wc_endpoint_url')
+            && is_wc_endpoint_url(self::ENDPOINT);
+        $isAccountDashboard = function_exists('is_account_page')
+            && is_account_page()
+            && function_exists('is_wc_endpoint_url')
+            && !is_wc_endpoint_url();
+
         if (
             !$force &&
-            (!function_exists('is_wc_endpoint_url') || !is_wc_endpoint_url(self::ENDPOINT))
+            !$isCoursesEndpoint &&
+            !$isAccountDashboard
         ) {
             return;
         }
@@ -184,12 +192,32 @@ final class CourseHubPage
 
     public function maybeFlushRewriteRules(): void
     {
-        if (get_option('amt_courses_hub_rewrite_version') === self::REWRITE_VERSION) {
+        if (
+            get_option('amt_courses_hub_rewrite_version') === self::REWRITE_VERSION &&
+            $this->hasEndpointRewriteRule()
+        ) {
             return;
         }
 
         flush_rewrite_rules(false);
         update_option('amt_courses_hub_rewrite_version', self::REWRITE_VERSION, false);
+    }
+
+    private function hasEndpointRewriteRule(): bool
+    {
+        $rules = get_option('rewrite_rules', []);
+
+        if (!is_array($rules)) {
+            return false;
+        }
+
+        foreach (array_keys($rules) as $rule) {
+            if (is_string($rule) && str_contains($rule, self::ENDPOINT)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function endpointValue(): string

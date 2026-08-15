@@ -207,6 +207,7 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 - [x] dodać endpoint `/moje-konto/kursy/` z listą aktywnych, ukończonych i wygasłych kursów,
 - [x] dodać kafelek „Kursy” do szybkiego dostępu i pozycję do menu konta, gdy endpoint będzie gotowy,
+- [x] dodać nad szybkimi kafelkami sekcję „Twoje kursy”, która prowadzi do aktywnego programu i pełnego huba,
 - [x] dodać chroniony widok pojedynczego kursu z opublikowanym programem,
 - [ ] rozszerzyć widok kursu o postęp, najbliższe spotkanie i przycisk „Kontynuuj” w zadaniach VIA-43/VIA-44,
 - [ ] pokazywać w widoku kursu przycisk prowadzący do grupy Telegram wyłącznie uczestnikom z aktywnym dostępem,

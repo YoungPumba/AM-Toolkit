@@ -39,12 +39,38 @@ Gdy moduł Courses jest aktywny:
 
 - WooCommerce otrzymuje pozycję menu **Kursy**,
 - shortcode `[am_account_menu]` otrzymuje tę samą pozycję przez publiczny filtr,
+- `[am_courses_dashboard]` renderuje skrócony blok „Twoje kursy” z maksymalnie
+  trzema najważniejszymi kursami i odnośnikiem do pełnego huba,
 - `[am_account_shortcut type="courses"]` renderuje działający kafelek,
 - shortcode `[am_courses_hub]` pozwala osadzić hub w kontrolowanym układzie.
 
+Sekcja dashboardu jest też podpięta do standardowego hooka
+`woocommerce_account_dashboard` z priorytetem `5`. Na klaudiasocials.pl,
+gdzie główny panel jest osobnym szablonem ShopEngine/Elementor, shortcode
+`[am_courses_dashboard]` należy umieścić bezpośrednio przed nagłówkiem
+**Szybki dostęp**. Dzięki temu klientka najpierw widzi najważniejszy kurs,
+a dopiero potem ogólne skróty konta. Zabezpieczenie w rendererze nie pozwala
+wyrenderować sekcji dwukrotnie w jednym żądaniu.
+
+## Kontrakt UX/UI
+
+Widoki uczestniczki AM Courses rozwijają język wizualny istniejącego modułu
+„Moje konto”, zamiast wprowadzać osobny motyw. Obowiązują:
+
+- Poppins dla tekstu i elementów sterujących,
+- `"buffalo-regular"` / Buffalo dla głównych tytułów,
+- akcent `#F176A4` i ciemniejszy wariant `#D85F8D`,
+- ciepłe tło `#F8F4F2`, białe powierzchnie i podstawowy promień `25px`,
+- czytelny focus klawiatury, semantyczne nagłówki i brak martwych odnośników,
+- siatka przechodząca z trzech kolumn do jednej bez poziomego przewijania.
+
+Ten kontrakt obejmuje również kolejne widoki: lekcję, odtwarzacz, materiały,
+spotkania i postęp. Panel administracyjny pozostaje zgodny z konwencjami
+WordPressa — nie udaje strony klientki w zapleczu.
+
 Po wyłączeniu modułu hooki nie są rejestrowane, dlatego Account nie pozostawia
 martwych odnośników. Arkusz `assets/css/courses.css` ładuje się tylko dla
-endpointu lub świadomego użycia shortcode'u.
+dashboardu konta, endpointu Courses lub świadomego użycia shortcode'u.
 
 ## Zakres kolejnych zadań
 

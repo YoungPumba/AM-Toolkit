@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use AMToolkit\Modules\Access\AccessSchema;
 use AMToolkit\Modules\Courses\CoursesSchema;
+use AMToolkit\Modules\Courses\Frontend\CourseDashboardSection;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseAccessPolicy;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use AMToolkit\Modules\Courses\WpdbCourseViewStore;
@@ -46,13 +47,22 @@ $value = static function (mixed $result, string $operation): mixed {
 };
 
 $now = current_time('mysql', true);
-$userId = 2000000041;
+$userId = 0;
 $otherUserId = 2000000042;
 $courseUuid = wp_generate_uuid4();
 $expiredCourseUuid = wp_generate_uuid4();
 $wpdb->query('START TRANSACTION');
 
 try {
+    $userId = (int) $value(
+        wp_insert_user([
+            'user_login' => 'via41-local-' . wp_generate_password(8, false),
+            'user_pass' => wp_generate_password(24, true, true),
+            'user_email' => 'via41-' . wp_generate_uuid4() . '@example.test',
+            'role' => 'customer',
+        ]),
+        'create synthetic customer'
+    );
     $courseId = $insert(CoursesSchema::coursesTable(), [
         'public_id' => $courseUuid,
         'title' => 'VIA-41 aktywny kurs QA',
@@ -204,6 +214,13 @@ try {
     $expect(count($course['program']['sections'] ?? []) === 1, 'Published section is missing.');
     $expect(count($course['program']['sections'][0]['lessons'] ?? []) === 1, 'Draft lesson leaked or published lesson is missing.');
     $expect(($course['program']['sections'][0]['lessons'][0]['title'] ?? '') === 'Lekcja opublikowana', 'Unexpected lesson in participant program.');
+
+    wp_set_current_user($userId);
+    $dashboard = (new CourseDashboardSection($service))->render();
+    $expect(str_contains($dashboard, 'am-courses-dashboard'), 'The account course section did not render.');
+    $expect(str_contains($dashboard, 'VIA-41 aktywny kurs QA'), 'The active course is missing from the account preview.');
+    $expect(!str_contains($dashboard, 'VIA-41 wygasły kurs QA'), 'An expired course leaked into the account preview.');
+    $expect(str_contains($dashboard, '/kursy/'), 'The account preview does not link to the course hub.');
 
     $expired = $service->courseForUser($userId, $expiredCourseUuid);
     $expect(is_wp_error($expired) && $expired->get_error_code() === 'am_toolkit_course_not_available', 'Expired access exposed the private program.');
