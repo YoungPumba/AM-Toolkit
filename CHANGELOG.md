@@ -42,6 +42,8 @@
   z syntetycznymi danymi i transakcyjnym `ROLLBACK`.
 - wygląd części uczestniczki zgodny z systemem „Moje konto”: Buffalo, Poppins,
   akcent `#F176A4`, ciepłe tło, białe powierzchnie i promień 25 px.
+- nazwy konkretnych kursów w Poppins z pełną obsługą polskich znaków oraz
+  przerywane separatory porządkujące grupy kursów według statusu.
 
 ## 0.11.5 — 2026-08-11
 

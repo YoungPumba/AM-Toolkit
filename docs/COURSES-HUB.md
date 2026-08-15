@@ -58,9 +58,12 @@ Widoki uczestniczki AM Courses rozwijają język wizualny istniejącego modułu
 „Moje konto”, zamiast wprowadzać osobny motyw. Obowiązują:
 
 - Poppins dla tekstu i elementów sterujących,
-- `"buffalo-regular"` / Buffalo dla głównych tytułów,
+- `"buffalo-regular"` / Buffalo dla tytułów ogólnych, takich jak „Moje kursy”
+  i „Twoje kursy”; nazwy konkretnych kursów używają Poppins, ponieważ Buffalo
+  nie zapewnia poprawnej obsługi polskich znaków,
 - akcent `#F176A4` i ciemniejszy wariant `#D85F8D`,
 - ciepłe tło `#F8F4F2`, białe powierzchnie i podstawowy promień `25px`,
+- subtelne separatory między wprowadzeniem oraz grupami kursów według statusu,
 - czytelny focus klawiatury, semantyczne nagłówki i brak martwych odnośników,
 - siatka przechodząca z trzech kolumn do jednej bez poziomego przewijania.
 
