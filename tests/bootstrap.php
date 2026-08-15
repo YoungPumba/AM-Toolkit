@@ -39,6 +39,13 @@ function sanitize_text_field(string $value): string
     return trim(strip_tags($value));
 }
 
+function sanitize_file_name(string $value): string
+{
+    $value = preg_replace('/[^A-Za-z0-9._-]+/', '-', $value) ?? '';
+
+    return trim($value, '-');
+}
+
 function absint(mixed $value): int
 {
     return abs((int) $value);
@@ -67,6 +74,21 @@ function wp_salt(string $scheme = 'auth'): string
 function __(string $text, string $domain = 'default'): string
 {
     return $text;
+}
+
+function esc_url(string $url): string
+{
+    return htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function wp_enqueue_style(string $handle): void
+{
+    $GLOBALS['amt_test_enqueued_styles'][] = $handle;
+}
+
+function wp_enqueue_script(string $handle): void
+{
+    $GLOBALS['amt_test_enqueued_scripts'][] = $handle;
 }
 
 /** @param string|array<int, string> $queries */

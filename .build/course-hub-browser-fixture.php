@@ -11,15 +11,17 @@ use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
 use AMToolkit\Modules\Courses\WpdbCourseAdminStore;
 use AMToolkit\Modules\Courses\WpdbProductCourseMappingStore;
+use AMToolkit\Modules\Courses\WpPrivateCourseAssetStore;
 
 $mode = $argv[1] ?? '';
 $wpLoad = $argv[2] ?? '';
 $databaseHost = $argv[3] ?? '';
 $username = $argv[4] ?? '';
 $password = $argv[5] ?? '';
+$videoFile = $argv[6] ?? '';
 
 if (!in_array($mode, ['setup', 'cleanup'], true) || $wpLoad === '' || !is_file($wpLoad) || $databaseHost === '') {
-    fwrite(STDERR, "Usage: php .build/course-hub-browser-fixture.php <setup|cleanup> <wp-load.php> <database-host:port> [username] [password]\n");
+    fwrite(STDERR, "Usage: php .build/course-hub-browser-fixture.php <setup|cleanup> <wp-load.php> <database-host:port> [username] [password] [video.mp4]\n");
     exit(2);
 }
 
@@ -33,7 +35,8 @@ restore_error_handler();
 global $wpdb;
 
 $fixtureOption = 'amt_via41_browser_fixture';
-$cleanup = static function () use ($wpdb, $fixtureOption): void {
+$assetStore = new WpPrivateCourseAssetStore();
+$cleanup = static function () use ($wpdb, $fixtureOption, $assetStore): void {
     $fixture = get_option($fixtureOption, []);
 
     if (!is_array($fixture)) {
@@ -81,6 +84,12 @@ $cleanup = static function () use ($wpdb, $fixtureOption): void {
         update_option('am_toolkit_feature_flags', $fixture['previous_flags'], false);
     }
 
+    foreach ((array) ($fixture['asset_references'] ?? []) as $reference) {
+        if (is_string($reference)) {
+            $assetStore->remove($reference);
+        }
+    }
+
     delete_option($fixtureOption);
 };
 
@@ -92,6 +101,11 @@ if ($mode === 'cleanup') {
 
 if ($username === '' || $password === '') {
     fwrite(STDERR, "Setup requires a temporary username and password.\n");
+    exit(2);
+}
+
+if ($videoFile !== '' && (!is_file($videoFile) || strtolower((string) pathinfo($videoFile, PATHINFO_EXTENSION)) !== 'mp4')) {
+    fwrite(STDERR, "The optional lesson video must be an existing MP4 file.\n");
     exit(2);
 }
 
@@ -117,6 +131,7 @@ $service = new CourseAdminService(
     new CourseAccessLifecycle($mappings, new AccessCoreCourseEntitlementGateway())
 );
 $courseIds = [];
+$assetReferences = [];
 $sourceId = 41100;
 
 $value = static function (mixed $result, string $operation): mixed {
@@ -143,16 +158,44 @@ try {
             'create section'
         );
 
+        $videoReference = null;
+        $materialReference = null;
+
+        if ($index === 0 && $videoFile !== '') {
+            $videoReference = 'videos/' . wp_generate_uuid4() . '.mp4';
+            $materialReference = 'materials/' . wp_generate_uuid4() . '.txt';
+            $videoDirectory = $assetStore->basePath() . DIRECTORY_SEPARATOR . 'videos';
+            $materialDirectory = $assetStore->basePath() . DIRECTORY_SEPARATOR . 'materials';
+
+            if (!wp_mkdir_p($videoDirectory) || !wp_mkdir_p($materialDirectory)) {
+                throw new RuntimeException('Could not create the private fixture storage.');
+            }
+
+            if (!copy($videoFile, $assetStore->basePath() . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $videoReference))) {
+                throw new RuntimeException('Could not copy the lesson video to private storage.');
+            }
+
+            if (file_put_contents(
+                $assetStore->basePath() . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $materialReference),
+                "Materiał testowy VIA-42.\n"
+            ) === false) {
+                throw new RuntimeException('Could not create the private fixture material.');
+            }
+
+            $assetReferences[] = $videoReference;
+            $assetReferences[] = $materialReference;
+        }
+
         foreach (['Ustal swój kierunek', 'Zbuduj prosty plan działania', 'Przygotuj pierwszą publikację'] as $position => $lessonTitle) {
-            $value(
+            $lessonId = (int) $value(
                 $service->saveLesson(
                     0,
                     $courseId,
                     $sectionId,
                     $lessonTitle,
                     '',
-                    null,
-                    null,
+                    $position === 0 && $videoReference !== null ? WpPrivateCourseAssetStore::PROVIDER : null,
+                    $position === 0 ? $videoReference : null,
                     360 + ($position * 180),
                     ['video_percent' => 90],
                     $position,
@@ -161,6 +204,22 @@ try {
                 ),
                 'create lesson'
             );
+
+            if ($position === 0 && $materialReference !== null) {
+                $value(
+                    $service->saveMaterial(
+                        0,
+                        $lessonId,
+                        'Lista kontrolna do lekcji',
+                        'Prywatny materiał testowy do pobrania.',
+                        WpPrivateCourseAssetStore::PROVIDER,
+                        $materialReference,
+                        0,
+                        PublicationStatus::PUBLISHED
+                    ),
+                    'create lesson material'
+                );
+            }
         }
 
         $value(
@@ -204,14 +263,16 @@ try {
         'course_ids' => $courseIds,
         'user_id' => (int) $userId,
         'previous_flags' => $previousFlags,
+        'asset_references' => $assetReferences,
     ], false);
     flush_rewrite_rules(false);
-    echo "VIA-41 browser fixture setup: OK\n";
+    echo "VIA-41/VIA-42 browser fixture setup: OK\n";
 } catch (Throwable $error) {
     update_option($fixtureOption, [
         'course_ids' => $courseIds,
         'user_id' => (int) $userId,
         'previous_flags' => $previousFlags,
+        'asset_references' => $assetReferences,
     ], false);
     $cleanup();
     throw $error;

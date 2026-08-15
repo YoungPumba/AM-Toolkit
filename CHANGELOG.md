@@ -44,6 +44,14 @@
   akcent `#F176A4`, ciepłe tło, białe powierzchnie i promień 25 px.
 - nazwy konkretnych kursów w Poppins z pełną obsługą polskich znaków oraz
   przerywane separatory porządkujące grupy kursów według statusu.
+- chroniony widok lekcji z odtwarzaczem MediaElement, opisem, spisem programu
+  oraz nawigacją do poprzedniej i następnej opublikowanej lekcji,
+- prywatny magazyn nagrań i materiałów poza publicznym katalogiem WordPressa
+  oraz kontrolowane pobieranie z ponowną weryfikacją aktywnego dostępu,
+- obsługa żądań HTTP Range, dzięki której chronione nagrania można przewijać
+  bez ujawniania ich fizycznego położenia,
+- przesyłanie plików MP4 i materiałów bezpośrednio z panelu właścicielki oraz
+  adaptery przygotowane pod przyszłą migrację do CDN lub podpisanych adresów.
 
 ## 0.11.5 — 2026-08-11
 

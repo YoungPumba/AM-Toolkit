@@ -50,6 +50,8 @@ $now = current_time('mysql', true);
 $userId = 0;
 $otherUserId = 2000000042;
 $courseUuid = wp_generate_uuid4();
+$lessonUuid = wp_generate_uuid4();
+$materialUuid = wp_generate_uuid4();
 $expiredCourseUuid = wp_generate_uuid4();
 $wpdb->query('START TRANSACTION');
 
@@ -102,13 +104,13 @@ try {
         'archived_at' => null,
     ]);
     $lessonId = $insert(CoursesSchema::lessonsTable(), [
-        'public_id' => wp_generate_uuid4(),
+        'public_id' => $lessonUuid,
         'course_id' => $courseId,
         'title' => 'Lekcja opublikowana',
         'description' => '',
         'status' => 'published',
-        'video_provider' => null,
-        'video_reference' => null,
+        'video_provider' => 'am-private',
+        'video_reference' => 'videos/11111111-1111-4111-8111-111111111111.mp4',
         'duration_seconds' => 420,
         'completion_requirements' => null,
         'content_version' => 1,
@@ -137,6 +139,19 @@ try {
         'section_id' => $sectionId,
         'position' => 0,
         'is_required' => 1,
+    ]);
+    $insert(CoursesSchema::materialsTable(), [
+        'public_id' => $materialUuid,
+        'lesson_id' => $lessonId,
+        'name' => 'Ćwiczenia do lekcji',
+        'description' => 'Prywatny materiał syntetyczny.',
+        'storage_provider' => 'am-private',
+        'storage_reference' => 'materials/22222222-2222-4222-8222-222222222222.pdf',
+        'position' => 0,
+        'status' => 'published',
+        'created_at' => $now,
+        'updated_at' => $now,
+        'archived_at' => null,
     ]);
     $insert(CoursesSchema::programLessonsTable(), [
         'program_version_id' => $programId,
@@ -215,6 +230,14 @@ try {
     $expect(count($course['program']['sections'][0]['lessons'] ?? []) === 1, 'Draft lesson leaked or published lesson is missing.');
     $expect(($course['program']['sections'][0]['lessons'][0]['title'] ?? '') === 'Lekcja opublikowana', 'Unexpected lesson in participant program.');
 
+    $lesson = $value($service->lessonForUser($userId, $courseUuid, $lessonUuid), 'read active lesson');
+    $expect(($lesson['title'] ?? '') === 'Lekcja opublikowana', 'Published lesson view is missing.');
+    $expect(count($lesson['materials'] ?? []) === 1, 'Published lesson material is missing.');
+    $video = $value($service->assetForUser($userId, $courseUuid, $lessonUuid, 'video'), 'authorize lesson video');
+    $expect(($video['provider'] ?? '') === 'am-private', 'Protected video provider is incorrect.');
+    $material = $value($service->assetForUser($userId, $courseUuid, $lessonUuid, 'material', $materialUuid), 'authorize lesson material');
+    $expect(($material['disposition'] ?? '') === 'attachment', 'Protected material disposition is incorrect.');
+
     wp_set_current_user($userId);
     $dashboard = (new CourseDashboardSection($service))->render();
     $expect(str_contains($dashboard, 'am-courses-dashboard'), 'The account course section did not render.');
@@ -226,10 +249,12 @@ try {
     $expect(is_wp_error($expired) && $expired->get_error_code() === 'am_toolkit_course_not_available', 'Expired access exposed the private program.');
     $foreign = $service->courseForUser($otherUserId, $courseUuid);
     $expect(is_wp_error($foreign) && $foreign->get_error_code() === 'am_toolkit_course_not_available', 'Another user could read the private program.');
+    $foreignAsset = $service->assetForUser($otherUserId, $courseUuid, $lessonUuid, 'video');
+    $expect(is_wp_error($foreignAsset) && $foreignAsset->get_error_code() === 'am_toolkit_course_not_available', 'Another user could authorize the private video.');
     $invalid = $service->courseForUser($userId, '../../invalid');
     $expect(is_wp_error($invalid) && $invalid->get_error_code() === 'am_toolkit_course_not_available', 'Invalid public ID did not return the safe state.');
 
-    echo "VIA-41 local integration: OK\n";
+    echo "VIA-41/VIA-42 local integration: OK\n";
 } finally {
     $wpdb->query('ROLLBACK');
 }

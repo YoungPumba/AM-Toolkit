@@ -4,12 +4,14 @@ namespace AMToolkit\Modules\Courses\Admin;
 
 use AMToolkit\Core\Authorization;
 use AMToolkit\Core\Capabilities;
+use AMToolkit\Modules\Courses\Contracts\CourseAssetStore;
 use AMToolkit\Modules\Courses\Domain\PublicationStatus;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
 use AMToolkit\Modules\Courses\WpdbCourseAdminStore;
 use AMToolkit\Modules\Courses\WpdbProductCourseMappingStore;
+use AMToolkit\Modules\Courses\WpPrivateCourseAssetStore;
 
 defined('ABSPATH') || exit;
 
@@ -20,9 +22,12 @@ final class CourseAdminPage
     private const NONCE_NAME = 'am_toolkit_courses_nonce';
 
     private CourseAdminService $courses;
+    private CourseAssetStore $assets;
 
-    public function __construct(?CourseAdminService $courses = null)
+    public function __construct(?CourseAdminService $courses = null, ?CourseAssetStore $assets = null)
     {
+        $this->assets = $assets ?? new WpPrivateCourseAssetStore();
+
         if ($courses !== null) {
             $this->courses = $courses;
             return;
@@ -117,14 +122,33 @@ final class CourseAdminPage
             case 'save_lesson':
                 $sectionId = $this->postInt('section_id');
                 $duration = $this->postOptionalInt('duration_seconds');
+                $videoProvider = $this->postKey('video_provider');
+                $videoReference = $this->postText('video_reference');
+                $previousVideoProvider = $videoProvider;
+                $previousVideoReference = $videoReference;
+                $uploadedReference = null;
+                $videoUpload = $this->uploadedFile('video_file');
+
+                if ($videoUpload !== null) {
+                    $uploadedReference = $this->assets->storeUpload($videoUpload, 'video');
+
+                    if (is_wp_error($uploadedReference)) {
+                        $result = $uploadedReference;
+                        break;
+                    }
+
+                    $videoProvider = $this->assets->provider();
+                    $videoReference = $uploadedReference;
+                }
+
                 $result = $this->courses->saveLesson(
                     $this->postInt('lesson_id'),
                     $courseId,
                     $sectionId > 0 ? $sectionId : null,
                     $this->postText('title'),
                     $this->postTextarea('description'),
-                    $this->postText('video_provider'),
-                    $this->postText('video_reference'),
+                    $videoProvider,
+                    $videoReference,
                     $duration,
                     [
                         'video_percent' => min(100, $this->postInt('video_percent')),
@@ -134,6 +158,18 @@ final class CourseAdminPage
                     $this->postBool('is_required'),
                     $this->postStatus()
                 );
+
+                if (is_wp_error($result) && is_string($uploadedReference)) {
+                    $this->assets->remove($uploadedReference);
+                } elseif (
+                    !is_wp_error($result)
+                    && is_string($uploadedReference)
+                    && $previousVideoProvider === $this->assets->provider()
+                    && $previousVideoReference !== ''
+                    && $previousVideoReference !== $uploadedReference
+                ) {
+                    $this->assets->remove($previousVideoReference);
+                }
                 break;
 
             case 'archive_lesson':
@@ -141,16 +177,47 @@ final class CourseAdminPage
                 break;
 
             case 'save_material':
+                $storageProvider = $this->postKey('storage_provider');
+                $storageReference = $this->postText('storage_reference');
+                $previousStorageProvider = $storageProvider;
+                $previousStorageReference = $storageReference;
+                $uploadedReference = null;
+                $materialUpload = $this->uploadedFile('material_file');
+
+                if ($materialUpload !== null) {
+                    $uploadedReference = $this->assets->storeUpload($materialUpload, 'material');
+
+                    if (is_wp_error($uploadedReference)) {
+                        $result = $uploadedReference;
+                        break;
+                    }
+
+                    $storageProvider = $this->assets->provider();
+                    $storageReference = $uploadedReference;
+                }
+
                 $result = $this->courses->saveMaterial(
                     $this->postInt('material_id'),
                     $this->postInt('lesson_id'),
                     $this->postText('name'),
                     $this->postTextarea('description'),
-                    $this->postKey('storage_provider'),
-                    $this->postText('storage_reference'),
+                    $storageProvider,
+                    $storageReference,
                     $this->postInt('position'),
                     $this->postStatus()
                 );
+
+                if (is_wp_error($result) && is_string($uploadedReference)) {
+                    $this->assets->remove($uploadedReference);
+                } elseif (
+                    !is_wp_error($result)
+                    && is_string($uploadedReference)
+                    && $previousStorageProvider === $this->assets->provider()
+                    && $previousStorageReference !== ''
+                    && $previousStorageReference !== $uploadedReference
+                ) {
+                    $this->assets->remove($previousStorageReference);
+                }
                 break;
 
             case 'archive_material':
@@ -403,12 +470,17 @@ final class CourseAdminPage
         ?>
         <details class="amt-editor" <?php echo $id === 0 ? 'open' : ''; ?>>
             <summary><span><?php echo esc_html($id > 0 ? (string) $lesson['title'] : __('Dodaj lekcję', 'am-toolkit')); ?></span><small><?php echo esc_html((string) ($lesson['section_title'] ?? __('Bez sekcji', 'am-toolkit'))); ?></small></summary>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
+            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
                 <?php $this->formBase('save_lesson', $courseId); ?><input type="hidden" name="lesson_id" value="<?php echo esc_attr((string) $id); ?>">
                 <label><span><?php esc_html_e('Nazwa lekcji', 'am-toolkit'); ?></span><input required name="title" value="<?php echo esc_attr((string) ($lesson['title'] ?? '')); ?>"></label>
                 <label><span><?php esc_html_e('Opis', 'am-toolkit'); ?></span><textarea name="description" rows="4"><?php echo esc_textarea((string) ($lesson['description'] ?? '')); ?></textarea></label>
                 <div class="amt-courses-form__row"><label><span><?php esc_html_e('Sekcja', 'am-toolkit'); ?></span><select name="section_id"><option value="0"><?php esc_html_e('Bez sekcji', 'am-toolkit'); ?></option><?php foreach ($sections as $section) : ?><option value="<?php echo esc_attr((string) $section['id']); ?>" <?php selected((int) ($lesson['section_id'] ?? 0), (int) $section['id']); ?>><?php echo esc_html((string) $section['title']); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e('Pozycja', 'am-toolkit'); ?></span><input type="number" min="0" name="position" value="<?php echo esc_attr((string) ($lesson['position'] ?? 0)); ?>"></label><label><span><?php esc_html_e('Stan', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions((string) ($lesson['status'] ?? PublicationStatus::DRAFT)); ?></select></label></div>
-                <div class="amt-courses-form__row"><label><span><?php esc_html_e('Dostawca wideo', 'am-toolkit'); ?></span><input name="video_provider" placeholder="wordpress" value="<?php echo esc_attr((string) ($lesson['video_provider'] ?? '')); ?>"></label><label><span><?php esc_html_e('Identyfikator wideo', 'am-toolkit'); ?></span><input name="video_reference" value="<?php echo esc_attr((string) ($lesson['video_reference'] ?? '')); ?>"></label><label><span><?php esc_html_e('Czas w sekundach', 'am-toolkit'); ?></span><input type="number" min="0" name="duration_seconds" value="<?php echo esc_attr((string) ($lesson['duration_seconds'] ?? '')); ?>"></label></div>
+                <input type="hidden" name="video_provider" value="<?php echo esc_attr((string) ($lesson['video_provider'] ?? '')); ?>">
+                <input type="hidden" name="video_reference" value="<?php echo esc_attr((string) ($lesson['video_reference'] ?? '')); ?>">
+                <div class="amt-courses-form__row">
+                    <label><span><?php esc_html_e('Nagranie MP4', 'am-toolkit'); ?></span><input type="file" name="video_file" accept="video/mp4,.mp4"><small><?php echo esc_html(!empty($lesson['video_reference']) ? __('Nagranie jest zapisane. Nowy plik zastąpi przypisanie.', 'am-toolkit') : sprintf(__('Maksymalny rozmiar wysyłania: %s.', 'am-toolkit'), size_format(wp_max_upload_size()))); ?></small></label>
+                    <label><span><?php esc_html_e('Czas w sekundach', 'am-toolkit'); ?></span><input type="number" min="0" name="duration_seconds" value="<?php echo esc_attr((string) ($lesson['duration_seconds'] ?? '')); ?>"></label>
+                </div>
                 <div class="amt-courses-form__row"><label><span><?php esc_html_e('Wymagany procent filmu', 'am-toolkit'); ?></span><input type="number" min="0" max="100" name="video_percent" value="<?php echo esc_attr((string) ($requirements['video_percent'] ?? 0)); ?>"></label><label class="amt-check"><input type="checkbox" name="task_required" value="1" <?php checked(!empty($requirements['task_required'])); ?>><span><?php esc_html_e('Zadanie wymagane', 'am-toolkit'); ?></span></label><label class="amt-check"><input type="checkbox" name="is_required" value="1" <?php checked(!isset($lesson['is_required']) || (int) $lesson['is_required'] === 1); ?>><span><?php esc_html_e('Lekcja wymagana w programie', 'am-toolkit'); ?></span></label></div>
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz lekcję', 'am-toolkit'); ?></button>
             </form>
@@ -437,12 +509,14 @@ final class CourseAdminPage
         ?>
         <details class="amt-editor" <?php echo $id === 0 ? 'open' : ''; ?>>
             <summary><span><?php echo esc_html($id > 0 ? (string) $material['name'] : __('Dodaj materiał', 'am-toolkit')); ?></span><small><?php echo esc_html((string) ($material['lesson_title'] ?? '')); ?></small></summary>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
+            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
                 <?php $this->formBase('save_material', $courseId); ?><input type="hidden" name="material_id" value="<?php echo esc_attr((string) $id); ?>">
                 <label><span><?php esc_html_e('Lekcja', 'am-toolkit'); ?></span><select name="lesson_id" required><option value=""><?php esc_html_e('Wybierz lekcję', 'am-toolkit'); ?></option><?php foreach ($lessons as $lesson) : ?><option value="<?php echo esc_attr((string) $lesson['id']); ?>" <?php selected((int) ($material['lesson_id'] ?? 0), (int) $lesson['id']); ?>><?php echo esc_html((string) $lesson['title']); ?></option><?php endforeach; ?></select></label>
                 <label><span><?php esc_html_e('Nazwa materiału', 'am-toolkit'); ?></span><input required name="name" value="<?php echo esc_attr((string) ($material['name'] ?? '')); ?>"></label>
                 <label><span><?php esc_html_e('Opis', 'am-toolkit'); ?></span><textarea name="description" rows="3"><?php echo esc_textarea((string) ($material['description'] ?? '')); ?></textarea></label>
-                <div class="amt-courses-form__row"><label><span><?php esc_html_e('Dostawca magazynu', 'am-toolkit'); ?></span><input required name="storage_provider" placeholder="wordpress" value="<?php echo esc_attr((string) ($material['storage_provider'] ?? '')); ?>"></label><label><span><?php esc_html_e('Bezpieczny identyfikator', 'am-toolkit'); ?></span><input required name="storage_reference" value="<?php echo esc_attr((string) ($material['storage_reference'] ?? '')); ?>"></label><label><span><?php esc_html_e('Pozycja', 'am-toolkit'); ?></span><input type="number" min="0" name="position" value="<?php echo esc_attr((string) ($material['position'] ?? 0)); ?>"></label><label><span><?php esc_html_e('Stan', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions((string) ($material['status'] ?? PublicationStatus::DRAFT)); ?></select></label></div>
+                <input type="hidden" name="storage_provider" value="<?php echo esc_attr((string) ($material['storage_provider'] ?? '')); ?>">
+                <input type="hidden" name="storage_reference" value="<?php echo esc_attr((string) ($material['storage_reference'] ?? '')); ?>">
+                <div class="amt-courses-form__row"><label><span><?php esc_html_e('Prywatny plik', 'am-toolkit'); ?></span><input type="file" name="material_file" <?php echo empty($material['storage_reference']) ? 'required' : ''; ?>><small><?php echo esc_html(!empty($material['storage_reference']) ? __('Plik jest zapisany. Nowy plik zastąpi przypisanie.', 'am-toolkit') : sprintf(__('Maksymalny rozmiar wysyłania: %s.', 'am-toolkit'), size_format(wp_max_upload_size()))); ?></small></label><label><span><?php esc_html_e('Pozycja', 'am-toolkit'); ?></span><input type="number" min="0" name="position" value="<?php echo esc_attr((string) ($material['position'] ?? 0)); ?>"></label><label><span><?php esc_html_e('Stan', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions((string) ($material['status'] ?? PublicationStatus::DRAFT)); ?></select></label></div>
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz materiał', 'am-toolkit'); ?></button>
             </form>
             <?php if ($id > 0 && ($material['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?><?php $this->archiveForm('archive_material', $courseId, $id, __('Archiwizuj materiał', 'am-toolkit'), 'material_id', ['lesson_id' => (int) $material['lesson_id']]); ?><?php endif; ?>
@@ -596,6 +670,20 @@ final class CourseAdminPage
         }
 
         return (string) wp_unslash($_POST[$key]);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function uploadedFile(string $key): ?array
+    {
+        if (!isset($_FILES[$key]) || !is_array($_FILES[$key])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            return null;
+        }
+
+        $upload = $_FILES[$key]; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+        return isset($upload['error']) && (int) $upload['error'] === UPLOAD_ERR_NO_FILE
+            ? null
+            : $upload;
     }
 
     private function queryValue(string $key): string
