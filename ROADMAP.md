@@ -205,14 +205,16 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 
 ### Hub kursów i lekcje
 
-- [ ] dodać endpoint `/moje-konto/kursy/` z listą aktywnych, ukończonych i wygasłych kursów,
-- [ ] dodać kafelek „Kursy” do szybkiego dostępu i pozycję do menu konta, gdy endpoint będzie gotowy,
-- [ ] dodać chroniony widok pojedynczego kursu z programem, postępem, najbliższym spotkaniem i przyciskiem „Kontynuuj”,
+- [x] dodać endpoint `/moje-konto/kursy/` z listą aktywnych, ukończonych i wygasłych kursów,
+- [x] dodać kafelek „Kursy” do szybkiego dostępu i pozycję do menu konta, gdy endpoint będzie gotowy,
+- [x] dodać chroniony widok pojedynczego kursu z opublikowanym programem,
+- [ ] rozszerzyć widok kursu o postęp, najbliższe spotkanie i przycisk „Kontynuuj” w zadaniach VIA-43/VIA-44,
 - [ ] pokazywać w widoku kursu przycisk prowadzący do grupy Telegram wyłącznie uczestnikom z aktywnym dostępem,
 - [ ] dodać chroniony widok lekcji z odtwarzaczem, opisem etapu, plikami do pobrania, nawigacją „Poprzednia/Następna” i spisem programu,
 - [ ] udostępniać pliki lekcji przez kontrolowany mechanizm pobierania sprawdzający aktywny dostęp, zamiast ujawniać publiczny adres pliku,
 - [ ] zapamiętywać ostatnio otwartą lekcję oraz opcjonalnie pozycję odtwarzania filmu,
-- [ ] przygotować czytelne puste widoki dla braku kursów, braku lekcji, niedostępnej lekcji i wygasłego dostępu,
+- [x] przygotować czytelne puste widoki dla braku kursów, pustego programu, niedostępnego kursu i wygasłego dostępu,
+- [ ] przygotować w VIA-42 pusty widok niedostępnej lekcji,
 - [ ] zapewnić responsywny i dostępny odtwarzacz, napisy lub transkrypcję oraz obsługę klawiatury.
 
 ### Postęp kursu

@@ -30,6 +30,14 @@
 - edycja mapowań produktów, ręczny dostęp przez `AM Access Core` oraz widok
   uczestników i historii zdarzeń,
 - osobne capability, nonce, walidacja danych i responsywny układ panelu.
+- endpoint `/moje-konto/kursy/`, pozycja nawigacji i rozszerzenie kafelka
+  szybkiego dostępu dostępne wyłącznie przy aktywnym module Courses,
+- bezpieczny hub aktywnych, ukończonych, zaplanowanych i wygasłych kursów
+  wynikających wyłącznie z własnej historii grantów klientki,
+- chroniony widok opublikowanego programu, który ponownie sprawdza aktywny
+  dostęp w AM Access Core przed odczytem opisu, sekcji i lekcji,
+- responsywne stany puste i błędne oraz odtwarzalny test integracyjny
+  z syntetycznymi danymi i transakcyjnym `ROLLBACK`.
 
 ## 0.11.5 — 2026-08-11
 

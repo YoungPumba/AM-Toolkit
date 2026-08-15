@@ -154,7 +154,7 @@ final class AccountNavigation
      */
     private function menuItems(string $accountUrl): array
     {
-        return [
+        $items = [
             [
                 'label'   => __('Panel główny', 'am-toolkit'),
                 'url'     => $accountUrl,
@@ -186,6 +186,32 @@ final class AccountNavigation
                 'current' => $this->isCurrentEndpoint('edit-address'),
             ],
         ];
+
+        /** @var mixed $filtered */
+        $filtered = apply_filters('am_toolkit_account_navigation_items', $items, $accountUrl);
+
+        if (!is_array($filtered)) {
+            return $items;
+        }
+
+        $validated = [];
+
+        foreach ($filtered as $item) {
+            if (
+                !is_array($item) ||
+                !isset($item['label'], $item['url'], $item['icon'], $item['current']) ||
+                !is_string($item['label']) ||
+                !is_string($item['url']) ||
+                !is_string($item['icon']) ||
+                !is_bool($item['current'])
+            ) {
+                continue;
+            }
+
+            $validated[] = $item;
+        }
+
+        return $validated;
     }
 
     private function isCurrentEndpoint(string $endpoint): bool
@@ -215,6 +241,7 @@ final class AccountNavigation
         $icons = [
             'dashboard' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>',
             'products'  => '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>',
+            'courses'   => '<svg viewBox="0 0 24 24" focusable="false"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22V5.5Z"/><path d="M4 18.5A3.5 3.5 0 0 1 7.5 15H20M9 7h6"/></svg>',
             'orders'    => '<svg viewBox="0 0 24 24" focusable="false"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg>',
             'details'   => '<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="7" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>',
             'address'   => '<svg viewBox="0 0 24 24" focusable="false"><path d="M12 21s7-5.2 7-12a7 7 0 1 0-14 0c0 6.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>',
