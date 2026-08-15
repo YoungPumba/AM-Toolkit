@@ -384,7 +384,8 @@ final class AccountDashboard
     /**
      * Renders one dashboard shortcut.
      *
-     * Supported types: products, orders, details and consultations.
+     * Core types: products, orders, details and consultations. Modules may
+     * add a type through am_toolkit_account_shortcut_configuration.
      *
      * @param array<string, mixed> $attributes Shortcode attributes.
      */
@@ -504,7 +505,26 @@ final class AccountDashboard
             ];
         }
 
-        return null;
+        /** @var mixed $configuration */
+        $configuration = apply_filters(
+            'am_toolkit_account_shortcut_configuration',
+            null,
+            $type,
+            $user,
+            $accountUrl
+        );
+
+        if (
+            !is_array($configuration) ||
+            !isset($configuration['title'], $configuration['description'], $configuration['url']) ||
+            !is_string($configuration['title']) ||
+            !is_string($configuration['description']) ||
+            !is_string($configuration['url'])
+        ) {
+            return null;
+        }
+
+        return $configuration;
     }
 
     private function purchasedProductCount(int $userId): int
@@ -641,6 +661,7 @@ final class AccountDashboard
             'orders' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M7 3h10v18l-2-1.5L12 21l-3-1.5L7 21V3Zm3 5h4m-4 4h4"/></svg>',
             'details' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 9a7 7 0 0 0-14 0"/></svg>',
             'consultations' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M5 5h14v11H9l-4 4V5Zm4 5h6"/></svg>',
+            'courses' => '<svg viewBox="0 0 24 24" focusable="false"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22V5.5Z"/><path d="M4 18.5A3.5 3.5 0 0 1 7.5 15H20M9 7h6"/></svg>',
         ];
 
         return $icons[$type] ?? '';
