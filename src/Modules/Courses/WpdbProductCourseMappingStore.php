@@ -100,4 +100,30 @@ final class WpdbProductCourseMappingStore implements ProductCourseMappingStore
 
         return array_values(array_map('intval', $courseIds));
     }
+
+    public function productIdsForCourse(int $courseId): array|\WP_Error
+    {
+        if ($courseId <= 0) {
+            return [];
+        }
+
+        $productIds = $this->database->get_col(
+            $this->database->prepare(
+                "SELECT product_id FROM {$this->table}
+                WHERE course_id = %d AND status = 'active'
+                ORDER BY product_id ASC",
+                $courseId
+            )
+        );
+
+        if ($this->database->last_error !== '') {
+            return new \WP_Error(
+                'am_toolkit_course_mapping_read_failed',
+                __('Nie udało się odczytać produktów przypisanych do kursu.', 'am-toolkit'),
+                ['database_error' => $this->database->last_error]
+            );
+        }
+
+        return array_values(array_map('intval', $productIds));
+    }
 }

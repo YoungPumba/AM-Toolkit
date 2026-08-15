@@ -174,12 +174,12 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [x] zbudować niezależny moduł AM Courses bez wymaganej integracji z zewnętrznym LMS,
 - [x] rozdzielić encje „Kurs”, „Lekcja”, „Spotkanie” i „Dostęp uczestnika”,
 - [ ] umożliwić tworzenie kursu z tytułem, opisem, grafiką, uporządkowaną listą lekcji, materiałami dodatkowymi i prywatnym odnośnikiem do grupy Telegram,
-- [ ] umożliwić dodawanie, usuwanie i zmianę kolejności lekcji bez edycji plików wtyczki,
-- [ ] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,
-- [ ] umożliwić przypisanie do lekcji wielu plików do pobrania z własną nazwą, opisem i kolejnością,
+- [x] umożliwić dodawanie, archiwizowanie i zmianę kolejności lekcji bez edycji plików wtyczki,
+- [x] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,
+- [x] umożliwić przypisanie do lekcji wielu plików do pobrania z własną nazwą, opisem i kolejnością,
 - [ ] wybrać i udokumentować sposób hostowania filmów oraz ochrony dostępu przed rozpoczęciem implementacji odtwarzacza,
-- [ ] zachować prosty model: jeden kurs, wspólna treść i spotkania oraz wielu niezależnie przypisanych uczestników,
-- [ ] określić zasadę rozbudowy programu tak, aby dodanie nowej lekcji nie odbierało statusu ukończenia osobom, które wcześniej ukończyły kurs,
+- [x] zachować prosty model: jeden kurs, wspólna treść i wielu niezależnie przypisanych uczestników; spotkania pozostają osobnym etapem,
+- [x] określić zasadę rozbudowy programu tak, aby dodanie nowej lekcji nie odbierało statusu ukończenia osobom, które wcześniej ukończyły kurs,
 - [ ] dodać właścicielce prosty panel zarządzania kursem, lekcjami, uczestnikami, spotkaniami i stanem publikacji,
 - [ ] zapisywać wszystkie daty z jednoznaczną strefą czasową i prezentować je klientowi w strefie `Europe/Warsaw`.
 

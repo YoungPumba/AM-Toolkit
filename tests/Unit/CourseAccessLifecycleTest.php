@@ -163,6 +163,24 @@ final class MemoryCourseMappingStore implements ProductCourseMappingStore
         }
         return array_values(array_unique($courses));
     }
+
+    public function productIdsForCourse(int $courseId): array|\WP_Error
+    {
+        if ($this->failure !== null) {
+            return $this->failure;
+        }
+
+        $products = [];
+        foreach ($this->map as $productId => $courseIds) {
+            if (in_array($courseId, $courseIds, true)) {
+                $products[] = $productId;
+            }
+        }
+
+        sort($products);
+
+        return $products;
+    }
 }
 
 final class MemoryCourseEntitlementGateway implements CourseEntitlementGateway

@@ -3,6 +3,7 @@
 namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Core\ModuleInterface;
+use AMToolkit\Modules\Courses\Admin\CourseAdminPage;
 
 defined('ABSPATH') || exit;
 
@@ -25,10 +26,8 @@ final class CoursesModule implements ModuleInterface
 
     public function boot(): void
     {
-        /**
-         * Fires only when the Courses feature flag and all dependencies allow
-         * the module to boot. No UI or provider integration belongs here.
-         */
+        (new CourseAdminPage())->boot();
+
         do_action('am_toolkit_courses_ready');
     }
 }
