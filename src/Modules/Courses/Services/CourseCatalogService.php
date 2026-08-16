@@ -12,7 +12,8 @@ final class CourseCatalogService
 {
     public function __construct(
         private CourseViewStore $store,
-        private CourseAccessPolicy $access
+        private CourseAccessPolicy $access,
+        private ?CourseNextActionService $nextAction = null
     ) {
     }
 
@@ -33,6 +34,25 @@ final class CourseCatalogService
             $course['access_state'] = $this->accessState($course);
             $course['can_open'] = !empty($course['has_active_access'])
                 && ($course['course_status'] ?? '') === 'published';
+
+            if (
+                $course['can_open']
+                && $this->nextAction !== null
+                && !empty($course['id'])
+                && !empty($course['current_program_version_id'])
+            ) {
+                $overview = $this->nextAction->overview(
+                    $userId,
+                    (int) $course['id'],
+                    (int) $course['current_program_version_id']
+                );
+
+                if (!is_wp_error($overview)) {
+                    $course['progress'] = $overview;
+                }
+            }
+
+            unset($course['id'], $course['current_program_version_id']);
         }
         unset($course);
 
@@ -55,6 +75,19 @@ final class CourseCatalogService
 
         if (is_wp_error($program)) {
             return $this->readError();
+        }
+
+        if ($this->nextAction !== null) {
+            $overview = $this->nextAction->overview(
+                $userId,
+                (int) $course['id'],
+                (int) $course['current_program_version_id']
+            );
+
+            if (!is_wp_error($overview)) {
+                $course['progress'] = $overview;
+                $this->applyLessonStatuses($program, (array) $overview['lesson_statuses']);
+            }
         }
 
         unset($course['id'], $course['current_program_version_id']);
@@ -205,6 +238,38 @@ final class CourseCatalogService
             'am_toolkit_course_view_read_failed',
             __('Nie udało się teraz wczytać kursów. Spróbuj ponownie później.', 'am-toolkit')
         );
+    }
+
+    /**
+     * @param array<string, mixed> $program
+     * @param array<string, string> $statuses
+     */
+    private function applyLessonStatuses(array &$program, array $statuses): void
+    {
+        if (isset($program['sections']) && is_array($program['sections'])) {
+            foreach ($program['sections'] as &$section) {
+                if (!is_array($section) || !isset($section['lessons']) || !is_array($section['lessons'])) {
+                    continue;
+                }
+
+                foreach ($section['lessons'] as &$lesson) {
+                    if (is_array($lesson)) {
+                        $lesson['progress_status'] = $statuses[(string) ($lesson['public_id'] ?? '')] ?? 'no_record';
+                    }
+                }
+                unset($lesson);
+            }
+            unset($section);
+        }
+
+        if (isset($program['lessons']) && is_array($program['lessons'])) {
+            foreach ($program['lessons'] as &$lesson) {
+                if (is_array($lesson)) {
+                    $lesson['progress_status'] = $statuses[(string) ($lesson['public_id'] ?? '')] ?? 'no_record';
+                }
+            }
+            unset($lesson);
+        }
     }
 
     /** @return array<string, mixed>|\WP_Error */

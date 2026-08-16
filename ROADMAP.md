@@ -165,7 +165,7 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [x] nadać kursom, sekcjom i lekcjom trwałe identyfikatory niezależne od ich kolejności,
 - [x] wersjonować program i zapisywać zestaw wymaganych lekcji przy ukończeniu, aby późniejsza rozbudowa kursu nie cofała absolwentom statusu 100%,
 - [ ] rejestrować ustandaryzowane zdarzenia kursu, postępu, lekcji, materiałów i spotkań,
-- [ ] wyznaczać jedno „następne najlepsze działanie” używane wspólnie w hubie kursów, panelu konta i sekcji „Wymaga Twojej uwagi”,
+- [x] wyznaczać jedno „następne najlepsze działanie” używane wspólnie w hubie i widoku kursu; panel konta oraz „Wymaga Twojej uwagi” podepną tę samą usługę,
 - [ ] przygotować role i możliwości uczestnika, właścicielki oraz przyszłego mentora lub moderatora bez udostępniania niegotowych paneli,
 - [ ] udostępnić hooki i stabilne API dla przyszłych notatek, zadań, dyskusji kontekstowych, ogłoszeń i powiadomień.
 
@@ -209,24 +209,24 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [x] dodać kafelek „Kursy” do szybkiego dostępu i pozycję do menu konta, gdy endpoint będzie gotowy,
 - [x] dodać nad szybkimi kafelkami sekcję „Twoje kursy”, która prowadzi do aktywnego programu i pełnego huba,
 - [x] dodać chroniony widok pojedynczego kursu z opublikowanym programem,
-- [ ] rozszerzyć widok kursu o postęp, najbliższe spotkanie i przycisk „Kontynuuj” w zadaniach VIA-43/VIA-44,
+- [ ] rozszerzyć widok kursu o postęp, najbliższe spotkanie i przycisk „Kontynuuj” w zadaniach VIA-43/VIA-44 (postęp i „Kontynuuj” gotowe; pozostaje spotkanie),
 - [ ] pokazywać w widoku kursu przycisk prowadzący do grupy Telegram wyłącznie uczestnikom z aktywnym dostępem,
 - [x] dodać chroniony widok lekcji z odtwarzaczem, opisem etapu, plikami do pobrania, nawigacją „Poprzednia/Następna” i spisem programu,
 - [x] udostępniać pliki lekcji przez kontrolowany mechanizm pobierania sprawdzający aktywny dostęp, zamiast ujawniać publiczny adres pliku,
-- [ ] zapamiętywać ostatnio otwartą lekcję oraz opcjonalnie pozycję odtwarzania filmu,
+- [x] zapamiętywać ostatnią rozpoczętą lekcję i wybierać ją dla „Kontynuuj”; dokładna pozycja odtwarzania pozostaje opcjonalnym rozszerzeniem,
 - [x] przygotować czytelne puste widoki dla braku kursów, pustego programu, niedostępnego kursu i wygasłego dostępu,
 - [x] przygotować w VIA-42 pusty widok niedostępnej lekcji,
 - [ ] zapewnić responsywny i dostępny odtwarzacz oraz obsługę klawiatury; napisy lub transkrypcję dodać po zdefiniowaniu sposobu ich redagowania i publikacji.
 
 ### Postęp kursu
 
-- [ ] liczyć postęp jako stosunek ukończonych wymaganych lekcji do wszystkich wymaganych lekcji kursu,
-- [ ] nie uznawać samego otwarcia strony lekcji za jej obejrzenie,
-- [ ] dla wspieranego odtwarzacza automatycznie oznaczać lekcję po osiągnięciu ustalonego progu, np. `90%`, a w pozostałych przypadkach udostępnić przycisk „Oznacz jako ukończoną”,
-- [ ] przechowywać postęp osobno dla każdego uczestnika i każdego kursu,
-- [ ] obsłużyć stany: nierozpoczęty, w trakcie, ukończony oraz wygasły,
-- [ ] po ukończeniu ostatniej wymaganej lekcji trwale zapisać ukończenie kursu,
-- [ ] pokazywać procent, liczbę ukończonych lekcji, ostatnią lekcję i przycisk „Kontynuuj” w hubie oraz panelu głównym,
+- [x] liczyć postęp jako stosunek ukończonych wymaganych lekcji do wszystkich wymaganych lekcji kursu,
+- [x] nie uznawać samego otwarcia strony lekcji za jej obejrzenie,
+- [x] dla wspieranego odtwarzacza automatycznie oznaczać lekcję po osiągnięciu ustalonego progu, np. `90%`, a w pozostałych przypadkach udostępnić przycisk „Oznacz jako ukończoną”,
+- [x] przechowywać postęp osobno dla każdego uczestnika i każdego kursu,
+- [x] obsłużyć stany: nierozpoczęty, w trakcie, ukończony oraz wygasły,
+- [x] po ukończeniu ostatniej wymaganej lekcji trwale zapisać ukończenie kursu,
+- [ ] pokazywać procent, liczbę ukończonych lekcji, ostatnią lekcję i przycisk „Kontynuuj” w hubie oraz panelu głównym (hub i kurs gotowe; pozostaje skrócony panel konta),
 - [ ] dodać do „Wymaga Twojej uwagi” wyłącznie rzeczywiste zdarzenia, np. zbliżające się spotkanie lub wymagany etap, bez reklamowych przypomnień.
 
 ### Testy akceptacyjne

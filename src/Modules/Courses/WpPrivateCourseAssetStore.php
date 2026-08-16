@@ -155,6 +155,32 @@ final class WpPrivateCourseAssetStore implements CourseAssetStore
         return new ProtectedAsset($path, $mimeType, $safeName, (int) $size);
     }
 
+    public function videoDurationSeconds(string $reference): int|\WP_Error
+    {
+        $asset = $this->locate($reference, 'video.mp4');
+
+        if (is_wp_error($asset)) {
+            return $asset;
+        }
+
+        if (!function_exists('wp_read_video_metadata')) {
+            $mediaFile = ABSPATH . 'wp-admin/includes/media.php';
+
+            if (!is_file($mediaFile)) {
+                return $this->metadataError();
+            }
+
+            require_once $mediaFile;
+        }
+
+        $metadata = wp_read_video_metadata($asset->path());
+        $duration = is_array($metadata) && is_numeric($metadata['length'] ?? null)
+            ? (int) round((float) $metadata['length'])
+            : 0;
+
+        return $duration > 0 ? $duration : $this->metadataError();
+    }
+
     public function remove(string $reference): bool
     {
         $asset = $this->locate($reference, 'asset');
@@ -167,6 +193,14 @@ final class WpPrivateCourseAssetStore implements CourseAssetStore
         return new \WP_Error(
             'am_toolkit_course_asset_not_found',
             __('Plik kursu jest niedostępny.', 'am-toolkit')
+        );
+    }
+
+    private function metadataError(): \WP_Error
+    {
+        return new \WP_Error(
+            'am_toolkit_course_video_metadata_unavailable',
+            __('Nie udało się odczytać czasu nagrania.', 'am-toolkit')
         );
     }
 }

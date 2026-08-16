@@ -26,7 +26,8 @@ final class WpdbCourseViewStore implements CourseViewStore
         $completions = CoursesSchema::completionsTable();
         $rows = $this->database->get_results(
             $this->database->prepare(
-                "SELECT c.id, c.public_id, c.title, c.image_attachment_id, c.status AS course_status,
+                "SELECT c.id, c.public_id, c.title, c.image_attachment_id,
+                    c.current_program_version_id, c.status AS course_status,
                     MAX(CASE WHEN g.status = 'active'
                         AND (g.starts_at IS NULL OR g.starts_at <= %s)
                         AND (g.expires_at IS NULL OR g.expires_at > %s)
@@ -43,7 +44,8 @@ final class WpdbCourseViewStore implements CourseViewStore
                 WHERE g.user_id = %d
                     AND g.resource_type = 'course'
                     AND c.status IN ('published', 'archived')
-                GROUP BY c.id, c.public_id, c.title, c.image_attachment_id, c.status
+                GROUP BY c.id, c.public_id, c.title, c.image_attachment_id,
+                    c.current_program_version_id, c.status
                 ORDER BY MAX(g.updated_at) DESC, c.id DESC",
                 $at,
                 $at,

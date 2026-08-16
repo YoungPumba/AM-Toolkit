@@ -95,6 +95,7 @@ jeśli nadal istnieje inny aktywny grant.
 - [Diagnostyka AM Courses](docs/COURSES-DIAGNOSTICS.md)
 - [Hub kursów AM Courses](docs/COURSES-HUB.md)
 - [Lekcje, odtwarzacz i prywatne materiały AM Courses](docs/COURSES-LESSONS.md)
+- [Postęp i ukończenie AM Courses](docs/COURSES-PROGRESS.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
 

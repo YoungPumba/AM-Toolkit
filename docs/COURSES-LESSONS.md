@@ -26,6 +26,11 @@ publikuje stabilne zdarzenia `play`, `pause`, `ended` i `error` jako
 `amtoolkit:course-player`. Nie emituje surowego `timeupdate`, aby przyszły zapis
 postępu nie wysyłał lawiny żądań.
 
+Od VIA-44 odtwarzacz lokalnie scala faktycznie obejrzane przedziały i wysyła
+idempotentny checkpoint co około 15 sekund oraz po pauzie, zakończeniu lub
+opuszczeniu strony. Skok po osi czasu nie jest zaliczany. Szczegółowy kontrakt
+opisuje [Postęp i ukończenie AM Courses](COURSES-PROGRESS.md).
+
 ## UX odtwarzacza i nawigacji — VIA-71
 
 MediaElement pozostaje silnikiem i źródłem semantyki kontrolek. AM Toolkit

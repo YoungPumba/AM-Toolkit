@@ -160,6 +160,33 @@
     line-height: 1.35;
 }
 
+.am-course-card__progress,
+.am-course__progress-bar {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eadfe3;
+}
+
+.am-course-card__progress {
+    margin-top: 12px;
+}
+
+.am-course-card__progress > span,
+.am-course__progress-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--am-courses-pink);
+}
+
+.am-course-card__body > small {
+    display: block;
+    margin-top: 5px;
+    color: var(--am-courses-muted);
+    font-size: 11px;
+}
+
 .am-course-card__action,
 .am-course__back,
 .am-courses__error a {
@@ -268,6 +295,52 @@
     box-shadow: 0 14px 36px rgb(66 36 49 / 7%);
 }
 
+.am-course__progress {
+    display: grid;
+    grid-template-columns: minmax(150px, auto) minmax(160px, 1fr) auto;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 28px;
+    padding: 20px 22px;
+    border: 1px solid #eadfe3;
+    border-radius: 18px;
+    background: #fffafb;
+}
+
+.am-course__progress strong,
+.am-course__progress span {
+    display: block;
+}
+
+.am-course__progress strong {
+    color: var(--am-courses-ink);
+    font-size: 15px;
+}
+
+.am-course__progress div > span {
+    margin-top: 3px;
+    color: var(--am-courses-muted);
+    font-size: 12px;
+}
+
+.am-course__progress > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 17px;
+    border-radius: 999px;
+    background: var(--am-courses-pink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.am-course__progress > a:hover {
+    background: var(--am-courses-pink-dark);
+    color: #fff;
+}
+
 .am-course__program-header {
     margin-bottom: 28px;
 }
@@ -338,6 +411,15 @@
     color: #9b4c6a;
     font-size: 13px;
     font-weight: 700;
+}
+
+.am-course-lesson--completed .am-course-lesson__number {
+    background: #dcefe3;
+    color: #287044;
+}
+
+.am-course-lesson--started .am-course-lesson__number {
+    box-shadow: 0 0 0 3px rgb(241 118 164 / 20%);
 }
 
 .am-course-lesson__copy {
@@ -783,6 +865,145 @@
     border-top: 1px dashed #d7d2cf;
 }
 
+.am-lesson-progress {
+    display: grid;
+    gap: 20px;
+    margin: 32px 0;
+    padding: clamp(22px, 4vw, 30px);
+    border: 1px solid #eadfe3;
+    border-radius: 20px;
+    background: #fffafb;
+}
+
+.am-lesson-progress__header,
+.am-lesson-progress__row,
+.am-lesson-progress__task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.am-lesson-progress__header h2 {
+    margin: 0;
+    color: var(--am-courses-ink);
+    font-family: Poppins, sans-serif;
+    font-size: clamp(20px, 3vw, 25px);
+    line-height: 1.3;
+}
+
+.am-lesson-progress__badge {
+    display: grid;
+    flex: 0 0 50px;
+    width: 50px;
+    height: 50px;
+    place-items: center;
+    border-radius: 50%;
+    background: #f8dce8;
+    color: #9b4c6a;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.am-lesson-progress__requirement {
+    padding-top: 18px;
+    border-top: 1px dashed #d7d2cf;
+}
+
+.am-lesson-progress__row strong,
+.am-lesson-progress__task strong {
+    color: var(--am-courses-ink);
+    font-size: 14px;
+}
+
+.am-lesson-progress__row > span,
+.am-lesson-progress__task p {
+    color: var(--am-courses-muted);
+    font-size: 12px;
+}
+
+.am-lesson-progress__task p {
+    margin: 4px 0 0;
+}
+
+.am-lesson-progress__bar {
+    height: 9px;
+    margin-top: 11px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eadfe3;
+}
+
+.am-lesson-progress__bar > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--am-courses-pink);
+    transition: width 200ms ease;
+}
+
+.am-lesson-progress button {
+    min-height: 44px;
+    padding: 10px 17px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--am-courses-pink);
+    color: #fff;
+    cursor: pointer;
+    font-family: Poppins, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.am-lesson-progress button:hover:not(:disabled) {
+    background: var(--am-courses-pink-dark);
+}
+
+.am-lesson-progress button:disabled {
+    background: #e3d8dc;
+    color: #766b70;
+    cursor: default;
+}
+
+.am-lesson-progress__complete {
+    justify-self: start;
+}
+
+.am-lesson-progress__message,
+.am-lesson-progress__notice {
+    margin: 0;
+    color: #287044;
+    font-size: 12px;
+}
+
+.am-lesson-progress__message:empty {
+    display: none;
+}
+
+.am-lesson-progress__message.is-error,
+.am-lesson-progress__notice {
+    color: #8e334e;
+}
+
+.am-lesson-progress__notice {
+    margin: 24px 0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fff1f5;
+}
+
+.am-lesson-progress--completed {
+    border-color: #b9d8c5;
+    background: #f6fcf8;
+}
+
+.am-lesson-progress--completed .am-lesson-progress__badge {
+    background: #dcefe3;
+    color: #287044;
+    font-size: 22px;
+}
+
 .am-lesson__materials ul {
     display: grid;
     gap: 12px;
@@ -1189,6 +1410,15 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
         padding: 20px 14px;
     }
 
+    .am-course__progress {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .am-course__progress > a {
+        justify-content: center;
+    }
+
     .am-course-lesson {
         align-items: flex-start;
     }
@@ -1203,6 +1433,16 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
     .am-lesson__materials li {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .am-lesson-progress__task {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .am-lesson-progress__task button,
+    .am-lesson-progress__complete {
+        width: 100%;
     }
 
     .am-lesson__materials a {

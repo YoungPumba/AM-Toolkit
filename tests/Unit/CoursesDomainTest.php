@@ -8,7 +8,9 @@ use AMToolkit\Modules\Courses\Domain\CourseCompletion;
 use AMToolkit\Modules\Courses\Domain\CourseMeeting;
 use AMToolkit\Modules\Courses\Domain\CourseProgramVersion;
 use AMToolkit\Modules\Courses\Domain\Identifier;
+use AMToolkit\Modules\Courses\Domain\LessonCompletionRequirements;
 use AMToolkit\Modules\Courses\Domain\PublicationStatus;
+use AMToolkit\Modules\Courses\Domain\VideoIntervalSet;
 use AMToolkit\Modules\Courses\Services\RequiredLessonCompletionEvaluator;
 use PHPUnit\Framework\TestCase;
 
@@ -62,6 +64,38 @@ final class CoursesDomainTest extends TestCase
 
         self::assertFalse($evaluator->isComplete($program, [10, 11]));
         self::assertTrue($evaluator->isComplete($program, [12, 10, 999, 10]));
+    }
+
+    public function testVideoIntervalsAreClampedMergedAndCountedOnlyOnce(): void
+    {
+        $firstDevice = new VideoIntervalSet([
+            [-4, 10],
+            [8, 20],
+            [90, 120],
+        ], 100);
+        $secondDevice = new VideoIntervalSet([
+            [15, 30],
+            [40, 40],
+            [50, 60],
+        ], 100);
+        $combined = VideoIntervalSet::combine([$firstDevice, $secondDevice], 100);
+
+        self::assertSame([[0.0, 30.0], [50.0, 60.0], [90.0, 100.0]], $combined->intervals());
+        self::assertSame(50.0, $combined->coveredSeconds());
+        self::assertSame(50.0, $combined->percentage(100));
+    }
+
+    public function testLessonRequirementsNeedBothConfiguredSignals(): void
+    {
+        $requirements = LessonCompletionRequirements::fromArray([
+            'video_percent' => 80,
+            'task_required' => true,
+        ]);
+
+        self::assertFalse($requirements->isSatisfied(79.99, true));
+        self::assertFalse($requirements->isSatisfied(90, false));
+        self::assertTrue($requirements->isSatisfied(80, true));
+        self::assertTrue(LessonCompletionRequirements::fromArray([])->hasAutomaticRequirements() === false);
     }
 
     public function testMeetingNormalizesDatesToUtc(): void

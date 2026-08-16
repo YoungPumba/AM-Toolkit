@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 final class CoursesSchema
 {
-    public const VERSION = 3;
+    public const VERSION = 4;
 
     public static function coursesTable(): string
     {
@@ -62,6 +62,20 @@ final class CoursesSchema
         global $wpdb;
 
         return $wpdb->prefix . 'amt_course_completions';
+    }
+
+    public static function videoCheckpointsTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_lesson_video_checkpoints';
+    }
+
+    public static function requirementCompletionsTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_lesson_requirement_completions';
     }
 
     public static function productMappingsTable(): string
@@ -211,6 +225,7 @@ final class CoursesSchema
                 lesson_id bigint(20) unsigned NOT NULL,
                 status varchar(24) NOT NULL DEFAULT 'started',
                 completion_source varchar(64) NULL DEFAULT NULL,
+                request_id varchar(32) NULL DEFAULT NULL,
                 content_version int(10) unsigned NOT NULL DEFAULT 1,
                 completed_at datetime NULL DEFAULT NULL,
                 created_at datetime NOT NULL,
@@ -228,12 +243,52 @@ final class CoursesSchema
                 required_lesson_ids longtext NOT NULL,
                 requirements_hash char(64) NOT NULL,
                 completion_source varchar(64) NOT NULL,
+                request_id varchar(32) NULL DEFAULT NULL,
                 completed_at datetime NOT NULL,
                 created_at datetime NOT NULL,
                 PRIMARY KEY  (id),
                 UNIQUE KEY user_course_program (user_id, course_id, program_version_id),
                 KEY course_completions (course_id, completed_at),
                 KEY user_completions (user_id, completed_at)
+            ) {$charsetCollate};",
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function progressSourceDefinitions(string $charsetCollate): array
+    {
+        $checkpoints = self::videoCheckpointsTable();
+        $requirements = self::requirementCompletionsTable();
+
+        return [
+            $checkpoints => "CREATE TABLE {$checkpoints} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                user_id bigint(20) unsigned NOT NULL,
+                course_id bigint(20) unsigned NOT NULL,
+                lesson_id bigint(20) unsigned NOT NULL,
+                content_version int(10) unsigned NOT NULL,
+                request_id varchar(32) NOT NULL,
+                intervals longtext NOT NULL,
+                duration_seconds int(10) unsigned NOT NULL,
+                covered_seconds decimal(12,3) unsigned NOT NULL DEFAULT 0,
+                occurred_at datetime NOT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY user_lesson_request (user_id, lesson_id, request_id),
+                KEY lesson_checkpoint_source (user_id, course_id, lesson_id, content_version)
+            ) {$charsetCollate};",
+            $requirements => "CREATE TABLE {$requirements} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                user_id bigint(20) unsigned NOT NULL,
+                course_id bigint(20) unsigned NOT NULL,
+                lesson_id bigint(20) unsigned NOT NULL,
+                content_version int(10) unsigned NOT NULL,
+                requirement_key varchar(64) NOT NULL,
+                completion_source varchar(64) NOT NULL,
+                request_id varchar(32) NOT NULL,
+                completed_at datetime NOT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY user_lesson_requirement (user_id, lesson_id, content_version, requirement_key),
+                KEY course_requirement_source (user_id, course_id, content_version)
             ) {$charsetCollate};",
         ];
     }
