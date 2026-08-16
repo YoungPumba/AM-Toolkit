@@ -2,6 +2,10 @@
 
 Status: implementacja VIA-41, moduł pozostaje domyślnie wyłączony feature flagą.
 
+VIA-44 rozszerza hub i program o procent ukończenia, stany lekcji oraz wspólny
+przycisk „Kontynuuj”. Decyzję o następnej lekcji podejmuje
+`CourseNextActionService`; widok nie odtwarza tej reguły samodzielnie.
+
 ## Zakres
 
 Po włączeniu modułu `courses` WooCommerce rejestruje endpoint

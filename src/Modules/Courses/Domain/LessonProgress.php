@@ -14,7 +14,8 @@ final class LessonProgress
         private string $status,
         private int $contentVersion,
         private ?string $completionSource = null,
-        private ?string $completedAt = null
+        private ?string $completedAt = null,
+        private ?string $requestId = null
     ) {
         if ($id < 0 || $userId <= 0 || $courseId <= 0 || $lessonId <= 0 || $contentVersion <= 0) {
             throw new \InvalidArgumentException('Lesson progress identifiers and version are invalid.');
@@ -69,5 +70,10 @@ final class LessonProgress
     public function completedAt(): ?string
     {
         return $this->completedAt;
+    }
+
+    public function requestId(): ?string
+    {
+        return $this->requestId;
     }
 }

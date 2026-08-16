@@ -15,6 +15,7 @@ final class FeatureFlags
         'woocommerce' => true,
         'account' => true,
         'courses' => false,
+        'courses-progress' => true,
         'courses-access-automation' => false,
     ];
 

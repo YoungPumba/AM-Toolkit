@@ -17,7 +17,8 @@ final class CourseCompletion
         private int $programVersionId,
         array $requiredLessonIds,
         private string $completionSource,
-        private string $completedAt
+        private string $completedAt,
+        private ?string $requestId = null
     ) {
         if ($id < 0 || $userId <= 0 || $courseId <= 0 || $programVersionId <= 0) {
             throw new \InvalidArgumentException('Course completion identifiers are invalid.');
@@ -80,5 +81,10 @@ final class CourseCompletion
     public function completedAt(): string
     {
         return $this->completedAt;
+    }
+
+    public function requestId(): ?string
+    {
+        return $this->requestId;
     }
 }

@@ -26,7 +26,7 @@ zdarzeń domenowych.
 ## Identyfikator żądania
 
 Każda operacja zmieniająca stan otrzymuje `request_id`, np.
-`AM-20260806-7F3C91`. Ten sam identyfikator trafia do:
+`AM-20260806-7F3C91A42D0B`. Ten sam identyfikator trafia do:
 
 - odpowiedzi API lub bezpiecznego komunikatu błędu,
 - zdarzenia domenowego,
@@ -132,4 +132,3 @@ do rozbieżności. To tylko zamalowałoby kontrolkę na desce rozdzielczej.
 - eksport nie zawiera sekretów ani danych spoza wybranego użytkownika,
 - użytkownik bez capability nie odczyta ani nie uruchomi diagnostyki,
 - wyłączenie funkcji flagą awaryjną nie usuwa istniejących danych.
-

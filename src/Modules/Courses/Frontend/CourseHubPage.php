@@ -4,6 +4,7 @@ namespace AMToolkit\Modules\Courses\Frontend;
 
 use AMToolkit\Modules\Courses\Contracts\CourseVideoRenderer;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
+use AMToolkit\Modules\Courses\Services\CourseProgressService;
 use WP_User;
 
 defined('ABSPATH') || exit;
@@ -16,7 +17,9 @@ final class CourseHubPage
     public function __construct(
         private CourseCatalogService $courses,
         private CourseAssetController $assets,
-        private CourseVideoRenderer $videoRenderer
+        private CourseVideoRenderer $videoRenderer,
+        private ?CourseProgressService $progress = null,
+        private ?CourseProgressController $progressController = null
     ) {
     }
 
@@ -215,6 +218,21 @@ final class CourseHubPage
             file_exists($absoluteScriptPath) ? (string) filemtime($absoluteScriptPath) : AM_TOOLKIT_VERSION,
             true
         );
+
+        if ($this->progressController !== null) {
+            wp_localize_script('am-toolkit-course-player', 'amToolkitCourseProgress', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'action' => CourseProgressController::ACTION,
+                'nonce' => $this->progressController->nonce(),
+                'checkpointSeconds' => 15,
+                'messages' => [
+                    'saving' => __('Zapisywanie postępu…', 'am-toolkit'),
+                    'saved' => __('Postęp zapisany.', 'am-toolkit'),
+                    'error' => __('Nie udało się zapisać postępu. Spróbujemy ponownie.', 'am-toolkit'),
+                    'completed' => __('Lekcja ukończona!', 'am-toolkit'),
+                ],
+            ]);
+        }
     }
 
     public function maybeFlushRewriteRules(): void
@@ -340,7 +358,14 @@ final class CourseHubPage
     {
         $state = isset($course['access_state']) ? (string) $course['access_state'] : 'expired';
         $canOpen = !empty($course['can_open']);
-        $url = $canOpen ? $this->courseUrl((string) ($course['public_id'] ?? '')) : '';
+        $coursePublicId = (string) ($course['public_id'] ?? '');
+        $progress = isset($course['progress']) && is_array($course['progress']) ? $course['progress'] : [];
+        $nextLesson = (string) ($progress['next_lesson_public_id'] ?? '');
+        $url = $canOpen
+            ? ($nextLesson !== ''
+                ? $this->lessonUrl($coursePublicId, $nextLesson)
+                : $this->courseUrl($coursePublicId))
+            : '';
         $labels = [
             'active' => __('Aktywny', 'am-toolkit'),
             'completed' => __('Ukończony', 'am-toolkit'),
@@ -358,9 +383,19 @@ final class CourseHubPage
             <div class="am-course-card__body">
                 <span class="am-course-card__status"><?php echo esc_html($labels[$state] ?? $labels['expired']); ?></span>
                 <h3><?php echo esc_html((string) ($course['title'] ?? '')); ?></h3>
+                <?php if ($canOpen && isset($progress['progress_percent'])) : ?>
+                    <div class="am-course-card__progress" aria-label="<?php echo esc_attr__('Postęp kursu', 'am-toolkit'); ?>">
+                        <span style="width: <?php echo esc_attr((string) (int) $progress['progress_percent']); ?>%"></span>
+                    </div>
+                    <small><?php echo esc_html(sprintf(__('Ukończono: %d%%', 'am-toolkit'), (int) $progress['progress_percent'])); ?></small>
+                <?php endif; ?>
                 <?php if ($url !== '') : ?>
                     <a class="am-course-card__action" href="<?php echo esc_url($url); ?>">
-                        <?php echo esc_html__('Zobacz program', 'am-toolkit'); ?>
+                        <?php echo esc_html(($progress['next_action'] ?? '') === 'continue'
+                            ? __('Kontynuuj', 'am-toolkit')
+                            : (($progress['next_action'] ?? '') === 'start'
+                                ? __('Rozpocznij kurs', 'am-toolkit')
+                                : __('Zobacz program', 'am-toolkit'))); ?>
                         <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     </a>
                 <?php else : ?>
@@ -392,6 +427,8 @@ final class CourseHubPage
             : ['sections' => [], 'lessons' => []];
         $sections = isset($program['sections']) && is_array($program['sections']) ? $program['sections'] : [];
         $lessons = isset($program['lessons']) && is_array($program['lessons']) ? $program['lessons'] : [];
+        $progress = isset($course['progress']) && is_array($course['progress']) ? $course['progress'] : [];
+        $nextLesson = (string) ($progress['next_lesson_public_id'] ?? '');
 
         ob_start();
         ?>
@@ -412,6 +449,26 @@ final class CourseHubPage
                     <?php echo $this->courseImage((int) ($course['image_attachment_id'] ?? 0), (string) ($course['title'] ?? '')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </div>
             </header>
+
+            <?php if ($progress !== []) : ?>
+                <section class="am-course__progress" aria-label="<?php echo esc_attr__('Postęp kursu', 'am-toolkit'); ?>">
+                    <div>
+                        <strong><?php echo esc_html(!empty($progress['course_completed']) ? __('Kurs ukończony', 'am-toolkit') : __('Twój postęp', 'am-toolkit')); ?></strong>
+                        <span><?php echo esc_html(sprintf(
+                            __('%1$d z %2$d wymaganych lekcji', 'am-toolkit'),
+                            (int) ($progress['required_completed'] ?? 0),
+                            (int) ($progress['required_total'] ?? 0)
+                        )); ?></span>
+                    </div>
+                    <div class="am-course__progress-bar"><span style="width: <?php echo esc_attr((string) (int) ($progress['progress_percent'] ?? 0)); ?>%"></span></div>
+                    <?php if ($nextLesson !== '') : ?>
+                        <a href="<?php echo esc_url($this->lessonUrl($publicId, $nextLesson)); ?>">
+                            <?php echo esc_html(($progress['next_action'] ?? '') === 'continue' ? __('Kontynuuj naukę', 'am-toolkit') : __('Rozpocznij kurs', 'am-toolkit')); ?>
+                            <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        </a>
+                    <?php endif; ?>
+                </section>
+            <?php endif; ?>
 
             <section class="am-course__program" aria-labelledby="am-course-program-title">
                 <header class="am-course__program-header">
@@ -475,9 +532,10 @@ final class CourseHubPage
         <?php else : ?>
             <ol class="am-course-lessons">
                 <?php foreach ($lessons as $index => $lesson) : ?>
+                    <?php $lessonStatus = (string) ($lesson['progress_status'] ?? 'no_record'); ?>
                     <li>
-                        <a class="am-course-lesson" href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) ($lesson['public_id'] ?? ''))); ?>">
-                            <span class="am-course-lesson__number" aria-hidden="true"><?php echo esc_html((string) ($index + 1)); ?></span>
+                        <a class="am-course-lesson am-course-lesson--<?php echo esc_attr($lessonStatus); ?>" href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) ($lesson['public_id'] ?? ''))); ?>">
+                            <span class="am-course-lesson__number" aria-hidden="true"><?php echo esc_html($lessonStatus === 'completed' ? '✓' : (string) ($index + 1)); ?></span>
                             <span class="am-course-lesson__copy">
                                 <strong><?php echo esc_html((string) ($lesson['title'] ?? '')); ?></strong>
                                 <span><?php echo esc_html($this->lessonMeta($lesson)); ?></span>
@@ -573,6 +631,9 @@ final class CourseHubPage
         $poster = !empty($course['image_attachment_id'])
             ? (string) wp_get_attachment_image_url((int) $course['image_attachment_id'], 'large')
             : '';
+        $progress = $this->progress !== null
+            ? $this->progress->lessonState($userId, $coursePublicId, $lessonPublicId)
+            : null;
 
         ob_start();
         ?>
@@ -592,6 +653,11 @@ final class CourseHubPage
                     </header>
 
                     <?php echo $this->renderLessonVideo($lesson, $coursePublicId, $lessonPublicId, $poster); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php if (is_array($progress)) : ?>
+                        <?php echo $this->renderProgressPanel($progress, $coursePublicId, $lessonPublicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php elseif (is_wp_error($progress)) : ?>
+                        <p class="am-lesson-progress__notice" role="status"><?php echo esc_html__('Postęp jest chwilowo niedostępny, ale możesz korzystać z lekcji.', 'am-toolkit'); ?></p>
+                    <?php endif; ?>
 
                     <?php if (!empty($lesson['description'])) : ?>
                         <section class="am-lesson__content" aria-labelledby="am-lesson-content-title">
@@ -682,6 +748,78 @@ final class CourseHubPage
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    /** @param array<string, mixed> $progress */
+    private function renderProgressPanel(array $progress, string $coursePublicId, string $lessonPublicId): string
+    {
+        $completed = !empty($progress['lesson_completed']);
+        $watched = min(100, max(0, (float) ($progress['watched_percent'] ?? 0)));
+        $videoRequired = min(100, max(0, (int) ($progress['video_percent_required'] ?? 0)));
+        $taskRequired = !empty($progress['task_required']);
+        $taskCompleted = !empty($progress['task_completed']);
+
+        ob_start();
+        ?>
+        <section
+            class="am-lesson-progress<?php echo $completed ? ' am-lesson-progress--completed' : ''; ?>"
+            data-am-course-progress
+            data-course="<?php echo esc_attr($coursePublicId); ?>"
+            data-lesson="<?php echo esc_attr($lessonPublicId); ?>"
+            aria-labelledby="am-lesson-progress-title"
+        >
+            <header class="am-lesson-progress__header">
+                <div>
+                    <span class="am-courses__eyebrow"><?php echo esc_html__('Twój postęp', 'am-toolkit'); ?></span>
+                    <h2 id="am-lesson-progress-title" data-am-progress-title>
+                        <?php echo esc_html($completed ? __('Lekcja ukończona', 'am-toolkit') : __('Ukończ wymagania lekcji', 'am-toolkit')); ?>
+                    </h2>
+                </div>
+                <span class="am-lesson-progress__badge" data-am-progress-badge>
+                    <?php echo esc_html($completed ? '✓' : (string) ((int) ($progress['course_progress_percent'] ?? 0)) . '%'); ?>
+                </span>
+            </header>
+
+            <?php if ($videoRequired > 0) : ?>
+                <div class="am-lesson-progress__requirement" data-am-video-requirement>
+                    <div class="am-lesson-progress__row">
+                        <strong><?php echo esc_html__('Obejrzyj nagranie', 'am-toolkit'); ?></strong>
+                        <span data-am-watched-label><?php echo esc_html(sprintf('%1$s%% / %2$d%%', $this->formatPercent($watched), $videoRequired)); ?></span>
+                    </div>
+                    <div class="am-lesson-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php echo esc_attr((string) $watched); ?>">
+                        <span data-am-watched-bar style="width: <?php echo esc_attr((string) $watched); ?>%"></span>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($taskRequired) : ?>
+                <div class="am-lesson-progress__requirement am-lesson-progress__task" data-am-task-requirement>
+                    <div>
+                        <strong><?php echo esc_html__('Wykonaj zadanie z lekcji', 'am-toolkit'); ?></strong>
+                        <p><?php echo esc_html__('Gdy zadanie jest gotowe, potwierdź jego wykonanie.', 'am-toolkit'); ?></p>
+                    </div>
+                    <button type="button" data-am-progress-action="acknowledge_task" <?php disabled($taskCompleted || $completed); ?>>
+                        <?php echo esc_html($taskCompleted || $completed ? __('Zadanie wykonane', 'am-toolkit') : __('Potwierdzam wykonanie', 'am-toolkit')); ?>
+                    </button>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($progress['manual_completion_available']) && !$completed) : ?>
+                <button class="am-lesson-progress__complete" type="button" data-am-progress-action="complete_manually">
+                    <?php echo esc_html__('Oznacz jako ukończoną', 'am-toolkit'); ?>
+                </button>
+            <?php endif; ?>
+
+            <p class="am-lesson-progress__message" data-am-progress-message role="status" aria-live="polite"></p>
+        </section>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function formatPercent(float $percent): string
+    {
+        return rtrim(rtrim(number_format($percent, 1, ',', ''), '0'), ',');
     }
 
     /** @param array<string, mixed> $lesson */

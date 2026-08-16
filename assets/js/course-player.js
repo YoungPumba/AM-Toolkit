@@ -290,6 +290,8 @@
             emit(wrapper, 'error');
         });
 
+        setupProgressTracking(wrapper, video);
+
         video.addEventListener('webkitbeginfullscreen', function () {
             wrapper.classList.add('is-native-fullscreen');
             updateControlStates(wrapper, video);
@@ -315,9 +317,288 @@
         });
     }
 
+    function requestId() {
+        var now = new Date();
+        var date = [
+            now.getUTCFullYear(),
+            String(now.getUTCMonth() + 1).padStart(2, '0'),
+            String(now.getUTCDate()).padStart(2, '0')
+        ].join('');
+        var bytes = new Uint8Array(6);
+
+        if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+            window.crypto.getRandomValues(bytes);
+        } else {
+            bytes.forEach(function (unused, index) {
+                bytes[index] = Math.floor(Math.random() * 256);
+            });
+        }
+
+        return 'AM-' + date + '-' + Array.from(bytes).map(function (byte) {
+            return byte.toString(16).padStart(2, '0');
+        }).join('').toUpperCase();
+    }
+
+    function mergeIntervals(intervals) {
+        var sorted = intervals.slice().sort(function (left, right) {
+            return left[0] - right[0];
+        });
+
+        return sorted.reduce(function (merged, interval) {
+            var last = merged[merged.length - 1];
+
+            if (!last || interval[0] > last[1] + 0.25) {
+                merged.push([interval[0], interval[1]]);
+            } else {
+                last[1] = Math.max(last[1], interval[1]);
+            }
+
+            return merged;
+        }, []);
+    }
+
+    function progressConfig() {
+        return window.amToolkitCourseProgress || null;
+    }
+
+    function progressRequest(operation, course, lesson, extra, keepalive) {
+        var config = progressConfig();
+
+        if (!config) {
+            return Promise.reject(new Error('Progress endpoint is unavailable.'));
+        }
+
+        var body = new URLSearchParams({
+            action: config.action,
+            nonce: config.nonce,
+            operation: operation,
+            course: course,
+            lesson: lesson,
+            request_id: extra.requestId || requestId()
+        });
+
+        if (extra.intervals) {
+            body.set('intervals', JSON.stringify(extra.intervals));
+        }
+
+        return window.fetch(config.ajaxUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+            body: body.toString(),
+            keepalive: Boolean(keepalive)
+        }).then(function (response) {
+            return response.json();
+        }).then(function (response) {
+            if (!response || !response.success || !response.data || !response.data.progress) {
+                var message = response && response.data && response.data.message
+                    ? response.data.message
+                    : 'Nie udało się zapisać postępu.';
+                throw new Error(message);
+            }
+
+            return response.data.progress;
+        });
+    }
+
+    function updateProgressPanel(panel, progress) {
+        if (!panel) {
+            return;
+        }
+
+        var watched = Math.max(0, Math.min(100, Number(progress.watched_percent) || 0));
+        var required = Number(progress.video_percent_required) || 0;
+        var watchedBar = panel.querySelector('[data-am-watched-bar]');
+        var watchedLabel = panel.querySelector('[data-am-watched-label]');
+        var progressBar = panel.querySelector('[role="progressbar"]');
+        var taskButton = panel.querySelector('[data-am-progress-action="acknowledge_task"]');
+        var manualButton = panel.querySelector('[data-am-progress-action="complete_manually"]');
+        var title = panel.querySelector('[data-am-progress-title]');
+        var badge = panel.querySelector('[data-am-progress-badge]');
+
+        if (watchedBar) {
+            watchedBar.style.width = watched + '%';
+        }
+
+        if (watchedLabel) {
+            watchedLabel.textContent = watched.toLocaleString('pl-PL', {maximumFractionDigits: 1}) + '% / ' + required + '%';
+        }
+
+        if (progressBar) {
+            progressBar.setAttribute('aria-valuenow', watched);
+        }
+
+        if (progress.task_completed && taskButton) {
+            taskButton.disabled = true;
+            taskButton.textContent = 'Zadanie wykonane';
+        }
+
+        if (progress.lesson_completed) {
+            panel.classList.add('am-lesson-progress--completed');
+
+            if (title) {
+                title.textContent = 'Lekcja ukończona';
+            }
+
+            if (badge) {
+                badge.textContent = '✓';
+            }
+
+            if (taskButton) {
+                taskButton.disabled = true;
+                taskButton.textContent = 'Zadanie wykonane';
+            }
+
+            if (manualButton) {
+                manualButton.remove();
+            }
+        } else if (badge) {
+            badge.textContent = (Number(progress.course_progress_percent) || 0) + '%';
+        }
+    }
+
+    function panelMessage(panel, message, isError) {
+        var element = panel && panel.querySelector('[data-am-progress-message]');
+
+        if (!element) {
+            return;
+        }
+
+        element.textContent = message;
+        element.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function setupProgressActions(panel) {
+        var config = progressConfig();
+
+        if (!panel || !config || panel.dataset.amProgressActionsReady === 'true') {
+            return;
+        }
+
+        panel.dataset.amProgressActionsReady = 'true';
+        panel.querySelectorAll('[data-am-progress-action]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var operation = button.dataset.amProgressAction;
+
+                button.disabled = true;
+                panelMessage(panel, config.messages.saving, false);
+                progressRequest(operation, panel.dataset.course, panel.dataset.lesson, {}).then(function (progress) {
+                    updateProgressPanel(panel, progress);
+                    panelMessage(panel, progress.lesson_completed ? config.messages.completed : config.messages.saved, false);
+
+                    if (!progress.lesson_completed && !progress.task_completed) {
+                        button.disabled = false;
+                    }
+                }).catch(function (error) {
+                    button.disabled = false;
+                    panelMessage(panel, error.message || config.messages.error, true);
+                });
+            });
+        });
+    }
+
+    function setupProgressTracking(wrapper, video) {
+        var config = progressConfig();
+        var panel = document.querySelector('[data-am-course-progress][data-course="' + wrapper.dataset.course
+            + '"][data-lesson="' + wrapper.dataset.lesson + '"]');
+
+        setupProgressActions(panel);
+
+        if (!config || !panel || wrapper.dataset.amProgressTrackingReady === 'true') {
+            return;
+        }
+
+        wrapper.dataset.amProgressTrackingReady = 'true';
+        var pending = [];
+        var queue = [];
+        var sending = false;
+        var previousTime = null;
+        var accumulated = 0;
+
+        function enqueue(keepalive) {
+            if (!pending.length) {
+                return;
+            }
+
+            queue.push({
+                intervals: mergeIntervals(pending),
+                requestId: requestId()
+            });
+            pending = [];
+            accumulated = 0;
+            pump(keepalive);
+        }
+
+        function pump(keepalive) {
+            if (sending || !queue.length) {
+                return;
+            }
+
+            sending = true;
+            var batch = queue[0];
+
+            progressRequest('video_checkpoint', wrapper.dataset.course, wrapper.dataset.lesson, batch, keepalive).then(function (progress) {
+                queue.shift();
+                updateProgressPanel(panel, progress);
+                panelMessage(panel, progress.lesson_completed ? config.messages.completed : '', false);
+            }).catch(function () {
+                panelMessage(panel, config.messages.error, true);
+            }).finally(function () {
+                sending = false;
+            });
+        }
+
+        video.addEventListener('playing', function () {
+            previousTime = video.currentTime;
+            pump();
+        });
+
+        video.addEventListener('timeupdate', function () {
+            var current = video.currentTime;
+
+            if (
+                previousTime !== null
+                && !video.paused
+                && !video.seeking
+                && current > previousTime
+                && current - previousTime <= 2.5
+            ) {
+                pending.push([previousTime, current]);
+                accumulated += current - previousTime;
+
+                if (accumulated >= (Number(config.checkpointSeconds) || 15)) {
+                    enqueue();
+                }
+            }
+
+            previousTime = current;
+        });
+
+        video.addEventListener('seeking', function () {
+            previousTime = null;
+        });
+
+        video.addEventListener('seeked', function () {
+            previousTime = video.currentTime;
+        });
+
+        ['pause', 'ended'].forEach(function (eventName) {
+            video.addEventListener(eventName, enqueue);
+        });
+
+        window.addEventListener('pagehide', function () {
+            enqueue(true);
+
+            if (!sending) {
+                pump(true);
+            }
+        });
+    }
+
     function boot() {
         setupStickyOffset();
         document.querySelectorAll('[data-am-course-player]').forEach(init);
+        document.querySelectorAll('[data-am-course-progress]').forEach(setupProgressActions);
     }
 
     if (document.readyState === 'loading') {

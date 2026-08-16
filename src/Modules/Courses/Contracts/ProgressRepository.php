@@ -14,4 +14,10 @@ interface ProgressRepository
      * Persists current state idempotently for the unique user/course/lesson tuple.
      */
     public function save(LessonProgress $progress): bool;
+
+    /**
+     * @param list<int> $lessonIds
+     * @return list<int>
+     */
+    public function completedLessonIds(int $userId, int $courseId, array $lessonIds): array;
 }

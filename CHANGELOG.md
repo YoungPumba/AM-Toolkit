@@ -60,6 +60,14 @@
 - wspólny zestaw ikon SVG dla nawigacji i materiałów oraz best-effort
   przełączenie fullscreen do orientacji poziomej na wspieranych telefonach.
 - komunikaty błędów kursów wymuszają krój Poppins obsługujący polskie znaki.
+- postęp lekcji liczony z unikalnych, faktycznie obejrzanych przedziałów filmu
+  oraz idempotentnych checkpointów odpornych na kilka kart i urządzeń,
+- edytowalne wymagania ukończenia: próg filmu, potwierdzenie zadania albo jawne
+  ręczne ukończenie lekcji bez automatycznych warunków,
+- trwała migawka ukończenia wersji programu, zdarzenia domenowe z `request_id`
+  i możliwość odbudowy agregatu ze źródeł,
+- procent, stany lekcji i wspólna akcja „Kontynuuj” w hubie, programie i widoku
+  lekcji oraz osobna flaga awaryjna `courses-progress`.
 
 ## 0.11.5 — 2026-08-11
 
