@@ -69,6 +69,12 @@ wybranej lekcji. Widok kursu pokazuje liczbę ukończonych wymaganych lekcji,
 pasek postępu, wspólną akcję i stany pozycji programu. Widok lekcji aktualizuje
 pokrycie filmu oraz wymagania bez przeładowania strony.
 
+Procent widoczny w odznace lekcji dotyczy wyłącznie wymagań bieżącej lekcji.
+Każdy skonfigurowany warunek ma równy udział: film wnosi postęp proporcjonalnie
+do osiągnięcia wymaganego progu, a zadanie wartość `0%` albo `100%`. Lekcja bez
+automatycznych wymagań pokazuje `0%` do ręcznego ukończenia. Ukończona lekcja
+zawsze ma `100%`. Ukończenie innych lekcji nie zmienia tej wartości.
+
 Procent kursu jest stosunkiem ukończonych wymaganych lekcji do wszystkich
 wymaganych lekcji aktualnego programu. Historyczny rekord ukończenia pozostaje
 trwałym faktem biznesowym.

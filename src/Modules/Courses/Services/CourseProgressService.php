@@ -509,6 +509,13 @@ final class CourseProgressService
             return $resumeAt;
         }
 
+        $lessonProgressPercent = $this->lessonProgressPercent(
+            $requirements,
+            $watched,
+            $taskCompleted,
+            $lessonCompleted
+        );
+
         return [
             'status' => $lessonCompleted
                 ? ProgressStatus::COMPLETED
@@ -520,11 +527,40 @@ final class CourseProgressService
             'task_completed' => $taskCompleted,
             'manual_completion_available' => !$requirements->hasAutomaticRequirements(),
             'resume_at_seconds' => min((float) $duration, max(0.0, $resumeAt)),
+            'lesson_progress_percent' => $lessonProgressPercent,
             'course_completed' => $courseCompleted,
             'course_progress_percent' => $courseCompleted || $requiredIds === []
                 ? 100
                 : (int) floor((count(array_intersect($requiredIds, $completedIds)) / count($requiredIds)) * 100),
         ];
+    }
+
+    private function lessonProgressPercent(
+        LessonCompletionRequirements $requirements,
+        float $watchedPercent,
+        bool $taskCompleted,
+        bool $lessonCompleted
+    ): int {
+        if ($lessonCompleted) {
+            return 100;
+        }
+
+        $requirementProgress = [];
+        $videoPercent = $requirements->videoPercent();
+
+        if ($videoPercent > 0) {
+            $requirementProgress[] = min(1.0, max(0.0, $watchedPercent) / $videoPercent);
+        }
+
+        if ($requirements->taskRequired()) {
+            $requirementProgress[] = $taskCompleted ? 1.0 : 0.0;
+        }
+
+        if ($requirementProgress === []) {
+            return 0;
+        }
+
+        return (int) floor((array_sum($requirementProgress) / count($requirementProgress)) * 100);
     }
 
     /** @param array<string, mixed> $context */
