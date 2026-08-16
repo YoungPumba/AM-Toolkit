@@ -3,6 +3,7 @@
 namespace AMToolkit\Modules\Courses\Services;
 
 use AMToolkit\Modules\Courses\Contracts\CourseAdminStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Contracts\ProductCourseMappingStore;
 use AMToolkit\Modules\Courses\Domain\PublicationStatus;
 
@@ -56,6 +57,20 @@ final class CourseAdminService
         return $courseId > 0
             ? $this->catalog->archiveCourse($courseId)
             : $this->invalidIdentifier();
+    }
+
+    public function deleteDraft(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        if (
+            !in_array($resourceType, ['course', 'section', 'lesson', 'material'], true)
+            || $courseId <= 0
+            || ($resourceType !== 'course' && $resourceId <= 0)
+            || !$this->catalog instanceof DraftCourseResourceDeletionStore
+        ) {
+            return $this->invalidIdentifier();
+        }
+
+        return $this->catalog->deleteDraftResource($resourceType, $resourceId, $courseId);
     }
 
     public function saveSection(

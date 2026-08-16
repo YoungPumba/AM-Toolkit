@@ -82,6 +82,14 @@
   lekcji i automatyczny postęp liczony wyłącznie z wymaganych czynności,
 - migracja Courses 7 oraz flaga awaryjna `courses-tasks`; wyłączenie funkcji nie
   usuwa definicji checklist ani zapisanego postępu.
+- siedmiostopniowa instrukcja konfiguracji w panelu właścicielki, kontrola
+  brakujących elementów i objaśnienia pól oraz stanów publikacji,
+- nonce’owany podgląd bieżącego szkicu w docelowym UI uczestniczki, bez nadania
+  dostępu i bez udostępnienia endpointu zapisu postępu,
+- rozdzielenie archiwizacji od konserwatywnego trwałego usuwania świeżych,
+  niewykorzystanych szkiców z ponowną kontrolą zależności po stronie serwera,
+- archiwizacja spotkań i jawne potwierdzenia opisujące obiekt oraz skutek
+  operacji destrukcyjnej.
 
 ## 0.11.5 — 2026-08-11
 

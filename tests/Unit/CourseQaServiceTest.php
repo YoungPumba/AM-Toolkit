@@ -8,6 +8,7 @@ use AMToolkit\Core\Diagnostics\ActivityEventQuery;
 use AMToolkit\Core\Diagnostics\DomainEvent;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CourseQaStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Services\CourseQaService;
 use PHPUnit\Framework\TestCase;
 
@@ -65,15 +66,29 @@ final class CourseQaServiceTest extends TestCase
         self::assertSame([[41, 5]], $store->archives);
         self::assertSame(['qa_entry_id' => 41], $events->events[0]->toRecord()['payload']);
     }
+
+    public function testUnusedDraftCanBeDeletedWithExplicitAuditReason(): void
+    {
+        $store = new QaMemoryStore();
+        $events = new QaEventStore();
+        $service = new CourseQaService($store, $events);
+
+        self::assertTrue($service->deleteDraft(41, 5, 12));
+        self::assertSame([['qa', 41, 5]], $store->deleted);
+        self::assertSame('course.qa.deleted', $events->events[0]->toRecord()['event_type']);
+    }
 }
 
-final class QaMemoryStore implements CourseQaStore
+final class QaMemoryStore implements CourseQaStore, DraftCourseResourceDeletionStore
 {
     /** @var array<string, mixed> */
     public array $saved = [];
 
     /** @var list<array{0: int, 1: int}> */
     public array $archives = [];
+
+    /** @var list<array{0: string, 1: int, 2: int}> */
+    public array $deleted = [];
 
     public function entriesForCourse(int $courseId): array|\WP_Error { return []; }
 
@@ -88,6 +103,12 @@ final class QaMemoryStore implements CourseQaStore
     public function archiveEntry(int $entryId, int $courseId): bool|\WP_Error
     {
         $this->archives[] = [$entryId, $courseId];
+        return true;
+    }
+
+    public function deleteDraftResource(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        $this->deleted[] = [$resourceType, $resourceId, $courseId];
         return true;
     }
 }

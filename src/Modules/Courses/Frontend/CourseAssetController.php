@@ -2,10 +2,12 @@
 
 namespace AMToolkit\Modules\Courses\Frontend;
 
+use AMToolkit\Core\Authorization;
 use AMToolkit\Modules\Courses\Contracts\CourseAssetStore;
 use AMToolkit\Modules\Courses\Domain\HttpByteRange;
 use AMToolkit\Modules\Courses\Domain\ProtectedAsset;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
+use AMToolkit\Modules\Courses\Services\CoursePreviewService;
 
 defined('ABSPATH') || exit;
 
@@ -18,7 +20,11 @@ final class CourseAssetController
     private array $stores = [];
 
     /** @param list<CourseAssetStore> $stores */
-    public function __construct(private CourseCatalogService $courses, array $stores)
+    public function __construct(
+        private CourseCatalogService $courses,
+        array $stores,
+        private ?CoursePreviewService $preview = null
+    )
     {
         foreach ($stores as $store) {
             $this->stores[$store->provider()] = $store;
@@ -35,7 +41,8 @@ final class CourseAssetController
         string $coursePublicId,
         string $lessonPublicId,
         string $kind,
-        string $assetPublicId = ''
+        string $assetPublicId = '',
+        int $previewCourseId = 0
     ): string {
         $arguments = [
             'action' => self::ACTION,
@@ -44,12 +51,16 @@ final class CourseAssetController
             'kind' => $kind,
             'asset' => $assetPublicId,
         ];
+        if ($previewCourseId > 0) {
+            $arguments['preview'] = $previewCourseId;
+        }
         $arguments['_wpnonce'] = wp_create_nonce($this->nonceAction(
             get_current_user_id(),
             $coursePublicId,
             $lessonPublicId,
             $kind,
-            $assetPublicId
+            $assetPublicId,
+            $previewCourseId
         ));
 
         return add_query_arg($arguments, admin_url('admin-post.php'));
@@ -69,6 +80,7 @@ final class CourseAssetController
         $lessonPublicId = $this->requestValue('lesson');
         $kind = sanitize_key($this->requestValue('kind'));
         $assetPublicId = $this->requestValue('asset');
+        $previewCourseId = absint($this->requestValue('preview'));
         $nonce = $this->requestValue('_wpnonce');
         $userId = get_current_user_id();
 
@@ -76,19 +88,38 @@ final class CourseAssetController
             !in_array($kind, ['video', 'material'], true)
             || !wp_verify_nonce(
                 $nonce,
-                $this->nonceAction($userId, $coursePublicId, $lessonPublicId, $kind, $assetPublicId)
+                $this->nonceAction($userId, $coursePublicId, $lessonPublicId, $kind, $assetPublicId, $previewCourseId)
             )
         ) {
             $this->notFound();
         }
 
-        $assetData = $this->courses->assetForUser(
-            $userId,
-            $coursePublicId,
-            $lessonPublicId,
-            $kind,
-            $assetPublicId
-        );
+        if ($previewCourseId > 0) {
+            if ($this->preview === null || !Authorization::canManageCourses()) {
+                $this->notFound();
+            }
+            $previewCourse = $this->preview->course($previewCourseId);
+            if (
+                is_wp_error($previewCourse)
+                || (string) ($previewCourse['public_id'] ?? '') !== $coursePublicId
+            ) {
+                $this->notFound();
+            }
+            $assetData = $this->preview->asset(
+                $previewCourseId,
+                $lessonPublicId,
+                $kind,
+                $assetPublicId
+            );
+        } else {
+            $assetData = $this->courses->assetForUser(
+                $userId,
+                $coursePublicId,
+                $lessonPublicId,
+                $kind,
+                $assetPublicId
+            );
+        }
 
         if (is_wp_error($assetData)) {
             $this->notFound();
@@ -210,7 +241,8 @@ final class CourseAssetController
         string $coursePublicId,
         string $lessonPublicId,
         string $kind,
-        string $assetPublicId
+        string $assetPublicId,
+        int $previewCourseId = 0
     ): string {
         return implode(':', [
             self::ACTION,
@@ -219,6 +251,7 @@ final class CourseAssetController
             $lessonPublicId,
             $kind,
             $assetPublicId,
+            $previewCourseId,
         ]);
     }
 }

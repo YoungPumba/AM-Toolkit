@@ -3,11 +3,12 @@
 namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Modules\Courses\Contracts\CourseLessonTaskStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 
 defined('ABSPATH') || exit;
 
-final class WpdbCourseLessonTaskStore implements CourseLessonTaskStore
+final class WpdbCourseLessonTaskStore implements CourseLessonTaskStore, DraftCourseResourceDeletionStore
 {
     private \wpdb $database;
 
@@ -172,6 +173,37 @@ final class WpdbCourseLessonTaskStore implements CourseLessonTaskStore
         return $saved === false ? $this->databaseError() : true;
     }
 
+    public function deleteDraftResource(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        if ($resourceType !== 'lesson_task') {
+            return $this->deleteBlocked();
+        }
+
+        $tasks = CoursesSchema::lessonTasksTable();
+        $lessons = CoursesSchema::lessonsTable();
+        $progress = CoursesSchema::lessonTaskProgressTable();
+        $safe = $this->findId($this->database->prepare(
+            "SELECT t.id FROM {$tasks} t INNER JOIN {$lessons} l ON l.id = t.lesson_id"
+            . " WHERE t.id = %d AND l.course_id = %d AND t.status = 'draft'"
+            . ' AND t.created_at = t.updated_at'
+            . " AND NOT EXISTS (SELECT 1 FROM {$progress} tp WHERE tp.task_id = t.id) LIMIT 1",
+            $resourceId,
+            $courseId
+        ));
+
+        if (is_wp_error($safe)) {
+            return $safe;
+        }
+
+        if ($safe === null) {
+            return $this->deleteBlocked();
+        }
+
+        return $this->database->delete($tasks, ['id' => $resourceId], ['%d']) === 1
+            ? true
+            : $this->databaseError();
+    }
+
     public function completedTaskIds(int $userId, int $lessonId): array|\WP_Error
     {
         $values = $this->database->get_col(
@@ -271,6 +303,14 @@ final class WpdbCourseLessonTaskStore implements CourseLessonTaskStore
             'am_toolkit_lesson_task_database_failed',
             __('Nie udało się zapisać lub odczytać checklisty lekcji.', 'am-toolkit'),
             ['database_error' => $this->database->last_error]
+        );
+    }
+
+    private function deleteBlocked(): \WP_Error
+    {
+        return new \WP_Error(
+            'am_toolkit_course_draft_delete_blocked',
+            __('Tego zadania nie można usunąć trwale. Zostało zmienione, opublikowane albo ma zapisany postęp. Użyj archiwizacji.', 'am-toolkit')
         );
     }
 }

@@ -3,10 +3,11 @@
 namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Modules\Courses\Contracts\CourseQaStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 
 defined('ABSPATH') || exit;
 
-final class WpdbCourseQaStore implements CourseQaStore
+final class WpdbCourseQaStore implements CourseQaStore, DraftCourseResourceDeletionStore
 {
     private \wpdb $database;
 
@@ -154,6 +155,32 @@ final class WpdbCourseQaStore implements CourseQaStore
             : new \WP_Error('am_toolkit_course_qa_not_found', __('Nie znaleziono tego wpisu Q&A w kursie.', 'am-toolkit'));
     }
 
+    public function deleteDraftResource(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        if ($resourceType !== 'qa') {
+            return $this->deleteBlocked();
+        }
+
+        $table = CoursesSchema::qaEntriesTable();
+        $safe = $this->findId($this->database->prepare(
+            "SELECT id FROM {$table} WHERE id = %d AND course_id = %d AND status = 'draft'"
+            . ' AND created_at = updated_at LIMIT 1',
+            $resourceId,
+            $courseId
+        ));
+
+        if (is_wp_error($safe)) {
+            return $safe;
+        }
+        if ($safe === null) {
+            return $this->deleteBlocked();
+        }
+
+        return $this->database->delete($table, ['id' => $resourceId, 'course_id' => $courseId], ['%d', '%d']) === 1
+            ? true
+            : $this->databaseError();
+    }
+
     private function rowsOrError(mixed $rows): array|\WP_Error
     {
         if ($this->database->last_error !== '') {
@@ -176,6 +203,14 @@ final class WpdbCourseQaStore implements CourseQaStore
             'am_toolkit_course_qa_database_failed',
             __('Nie udało się zapisać lub odczytać sekcji Q&A.', 'am-toolkit'),
             ['database_error' => $this->database->last_error]
+        );
+    }
+
+    private function deleteBlocked(): \WP_Error
+    {
+        return new \WP_Error(
+            'am_toolkit_course_draft_delete_blocked',
+            __('Tego wpisu Q&A nie można usunąć trwale. Został zmieniony lub opublikowany. Użyj archiwizacji.', 'am-toolkit')
         );
     }
 }

@@ -6,6 +6,7 @@ use AMToolkit\Core\Diagnostics\DomainEvent;
 use AMToolkit\Core\Diagnostics\RequestId;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CourseLessonTaskStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 use AMToolkit\Modules\Courses\Domain\LessonTask;
 
@@ -91,6 +92,29 @@ final class CourseLessonTaskService
             $courseId,
             $actorId,
             ['task_id' => $taskId],
+            $requestId
+        );
+
+        return is_wp_error($recorded) ? $recorded : true;
+    }
+
+    public function deleteDraft(int $taskId, int $courseId, int $actorId, ?string $requestId = null): bool|\WP_Error
+    {
+        if ($taskId <= 0 || $courseId <= 0 || !$this->store instanceof DraftCourseResourceDeletionStore) {
+            return $this->invalid();
+        }
+
+        $deleted = $this->store->deleteDraftResource('lesson_task', $taskId, $courseId);
+        if (is_wp_error($deleted)) {
+            return $deleted;
+        }
+
+        $requestId = RequestId::normalize($requestId);
+        $recorded = $this->record(
+            'course.lesson_task.deleted',
+            $courseId,
+            $actorId,
+            ['task_id' => $taskId, 'deletion' => 'permanent_unused_draft'],
             $requestId
         );
 

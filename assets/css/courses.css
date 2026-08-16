@@ -4,6 +4,61 @@
     background: #f8f4f2;
 }
 
+.am-course-preview-banner {
+    position: sticky;
+    top: var(--am-course-sticky-top, 24px);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 1180px;
+    margin: 0 auto 24px;
+    padding: 14px 18px;
+    border: 1px solid #e0b423;
+    border-radius: 14px;
+    background: #fff8d8;
+    box-shadow: 0 10px 30px rgba(54, 39, 0, .12);
+    color: #332800;
+    font-family: Poppins, sans-serif;
+}
+
+.am-course-preview-banner div {
+    display: grid;
+    gap: 2px;
+}
+
+.am-course-preview-banner span {
+    font-size: 13px;
+}
+
+.am-course-preview-banner a {
+    flex: none;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #332800;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.am-lesson-preview-tasks input[disabled] {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+@media (max-width: 640px) {
+    .am-course-preview-banner {
+        position: static;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .am-course-preview-banner a {
+        text-align: center;
+    }
+}
+
 .am-courses-page__inner {
     width: min(1360px, 100%);
     margin-inline: auto;
