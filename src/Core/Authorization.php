@@ -40,4 +40,26 @@ final class Authorization
             $allowed
         );
     }
+
+    public static function canViewDiagnostics(): bool
+    {
+        $allowed = current_user_can(Capabilities::VIEW_DIAGNOSTICS)
+            || current_user_can('manage_options');
+
+        return (bool) apply_filters(
+            'am_toolkit_can_view_diagnostics',
+            $allowed
+        );
+    }
+
+    public static function canRepairCourses(): bool
+    {
+        $allowed = current_user_can(Capabilities::REPAIR_COURSES)
+            || current_user_can('manage_options');
+
+        return (bool) apply_filters(
+            'am_toolkit_can_repair_courses',
+            $allowed
+        );
+    }
 }

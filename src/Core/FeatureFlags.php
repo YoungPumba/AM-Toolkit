@@ -19,6 +19,7 @@ final class FeatureFlags
         'courses-meetings' => true,
         'courses-qa' => true,
         'courses-tasks' => true,
+        'courses-repair-tools' => true,
         'courses-access-automation' => false,
     ];
 

@@ -1,6 +1,7 @@
 # Diagnostyka AM Courses
 
-Status: wymagania obowiązujące od pierwszej wersji modułu kursów.
+Status: kontrakt wdrożony w VIA-46; diagnostyka pozostaje rozwijana razem z
+modułem kursów.
 
 ## Cel
 
@@ -44,8 +45,8 @@ Identyfikator nie zawiera adresu e-mail, loginu ani innych danych osobowych.
 - `lesson.completed`,
 - `lesson.completion_rejected`,
 - `lesson.reopened`,
-- `progress.recalculated`,
-- `progress.repair_applied`,
+- `course.progress.recalculated`,
+- `course.progress.recalculation_failed`,
 - `meeting.updated`,
 - `access.granted`,
 - `access.revoked`,
@@ -74,6 +75,12 @@ capability widzi:
 
 Panel domyślnie działa tylko do odczytu.
 
+Wdrożony ekran znajduje się w **Kursy → Diagnostyka**. Odczyt wymaga
+`view_am_toolkit_diagnostics`. Administrator otrzymuje osobne
+`repair_am_toolkit_courses`; rola kierownika sklepu może diagnozować, ale nie
+uruchamia przeliczenia. Dzięki temu możliwość zobaczenia problemu nie oznacza
+automatycznie prawa do zmiany danych.
+
 ## Bezpieczne działania właścicielki
 
 ### Sprawdź integralność
@@ -83,14 +90,39 @@ zwracając listę rozbieżności bez modyfikowania danych.
 
 ### Przelicz postęp
 
-Operacja idempotentna. Odbudowuje agregat z ukończonych wymaganych lekcji i
-zapisuje zdarzenie `progress.recalculated`.
+Operacja idempotentna. Ponownie ocenia każdą opublikowaną lekcję na podstawie
+checkpointów nagrania, potwierdzeń i checklist, a następnie odbudowuje agregaty
+lekcji i ukończenie kursu. Wymaga aktywnego dostępu uczestniczki, osobnej
+capability, nonce oraz wpisania `PRZELICZ`. Wynik zapisuje zdarzenie
+`course.progress.recalculated`.
+
+Przed potwierdzeniem panel pokazuje liczbę lekcji, których źródła zostaną
+ponownie ocenione. Awaria w połowie nie ukrywa błędu: zwraca `request_id`,
+zapisuje bezpieczny log i pozostawia operację gotową do ponowienia. Ponowne
+przeliczenie poprawnego stanu nie zmienia wyniku.
 
 ### Eksport diagnostyczny
 
 Tworzy plik tekstowy lub JSON bez sekretów, surowych linków Zoom, nonce,
 tokenów, haseł i zbędnych danych osobowych. Eksport zawiera wersje, stany,
 identyfikatory techniczne i powiązane `request_id`.
+
+Użytkownik jest oznaczony skrótem HMAC `user_ref`. Eksport celowo pomija adres
+e-mail, login, identyfikator źródła zakupu, treści redakcyjne, payloady zdarzeń
+i komunikaty mogące zawierać nazwy lekcji. Zdarzenia są ograniczone do typu,
+obiektu, czasu i `request_id`.
+
+## Kontrola schematu
+
+Ekran sprawdza wersję migracji, obecność tabel kursów i dostępu oraz osierocone
+lub sprzeczne relacje pomiędzy programem, lekcjami, agregatami, checklistami,
+spotkaniami i grantami. Kontrola nie wykonuje napraw SQL. Taka naprawa wymaga
+osobnego, przetestowanego scenariusza serwisowego — przycisk „napraw wszystko”
+to nie diagnostyka, tylko loteria z ładniejszą etykietą.
+
+Narzędzia zapisujące można natychmiast wyłączyć flagą
+`courses-repair-tools` albo stałą `AM_TOOLKIT_DISABLE_COURSES_REPAIR_TOOLS`.
+Diagnostyka tylko do odczytu pozostaje wtedy dostępna.
 
 ## Tryb serwisowy
 
@@ -136,3 +168,16 @@ do rozbieżności. To tylko zamalowałoby kontrolkę na desce rozdzielczej.
 - eksport nie zawiera sekretów ani danych spoza wybranego użytkownika,
 - użytkownik bez capability nie odczyta ani nie uruchomi diagnostyki,
 - wyłączenie funkcji flagą awaryjną nie usuwa istniejących danych.
+
+Pełny zestaw testów jednostkowych i statycznych uruchamia `composer check`.
+Kontrolę tylko do odczytu na lokalnym WordPressie wykonuje:
+
+```powershell
+php .build/test-course-diagnostics-local.php `
+  "C:\sciezka\do\WordPressa\wp-load.php" `
+  "127.0.0.1:PORT_BAZY"
+```
+
+Skrypt sprawdza schemat, wybiera ostatni aktywny grant kursu, odczytuje
+diagnostykę oraz weryfikuje pseudonimizację eksportu. Nie uruchamia naprawy i
+nie zmienia danych lokalnej uczestniczki.

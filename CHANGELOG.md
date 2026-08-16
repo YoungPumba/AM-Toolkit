@@ -90,6 +90,12 @@
   niewykorzystanych szkiców z ponowną kontrolą zależności po stronie serwera,
 - archiwizacja spotkań i jawne potwierdzenia opisujące obiekt oraz skutek
   operacji destrukcyjnej.
+- panel **Kursy → Diagnostyka** z kontrolą wersji schematu, brakujących tabel,
+  osieroconych relacji, dostępu oraz agregatów postępu wybranego użytkownika,
+- pseudonimizowany eksport JSON bez danych osobowych, tokenów, prywatnych
+  odnośników i payloadów zdarzeń,
+- osobne uprawnienie administratora, jawne potwierdzenie i flaga awaryjna dla
+  idempotentnego przeliczenia postępu ze źródeł wraz z audytem `request_id`.
 
 ## 0.11.5 — 2026-08-11
 

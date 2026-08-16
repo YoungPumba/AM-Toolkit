@@ -8,6 +8,7 @@ use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CompletionRepository;
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
 use AMToolkit\Modules\Courses\Contracts\CourseLessonTaskStore;
+use AMToolkit\Modules\Courses\Contracts\CourseProgressDiagnostics;
 use AMToolkit\Modules\Courses\Contracts\CourseProgressSourceStore;
 use AMToolkit\Modules\Courses\Contracts\ProgressRepository;
 use AMToolkit\Modules\Courses\Domain\CourseCompletion;
@@ -19,7 +20,7 @@ use AMToolkit\Modules\Courses\Domain\VideoIntervalSet;
 
 defined('ABSPATH') || exit;
 
-final class CourseProgressService
+final class CourseProgressService implements CourseProgressDiagnostics
 {
     private const TASK_KEY = 'task_acknowledged';
 

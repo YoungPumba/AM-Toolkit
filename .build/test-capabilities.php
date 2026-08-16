@@ -67,4 +67,8 @@ foreach ([
     }
 }
 
+if ($shopManager->has_cap(Capabilities::REPAIR_COURSES)) {
+    throw new RuntimeException('Shop manager must not receive the course repair capability.');
+}
+
 echo "OK: capabilities\n";

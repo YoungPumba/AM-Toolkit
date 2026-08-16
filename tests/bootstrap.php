@@ -71,6 +71,11 @@ function wp_salt(string $scheme = 'auth'): string
     return 'am-toolkit-tests-' . $scheme;
 }
 
+function get_current_user_id(): int
+{
+    return 1;
+}
+
 function __(string $text, string $domain = 'default'): string
 {
     return $text;
