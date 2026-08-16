@@ -6,6 +6,7 @@ use AMToolkit\Core\Diagnostics\DomainEvent;
 use AMToolkit\Core\Diagnostics\RequestId;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CourseQaStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Domain\CourseQaEntry;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 
@@ -88,6 +89,29 @@ final class CourseQaService
 
         $requestId = RequestId::normalize($requestId);
         $recorded = $this->record('course.qa.archived', $courseId, $actorId, ['qa_entry_id' => $entryId], $requestId);
+
+        return is_wp_error($recorded) ? $recorded : true;
+    }
+
+    public function deleteDraft(int $entryId, int $courseId, int $actorId, ?string $requestId = null): bool|\WP_Error
+    {
+        if ($entryId <= 0 || $courseId <= 0 || !$this->store instanceof DraftCourseResourceDeletionStore) {
+            return $this->invalid();
+        }
+
+        $deleted = $this->store->deleteDraftResource('qa', $entryId, $courseId);
+        if (is_wp_error($deleted)) {
+            return $deleted;
+        }
+
+        $requestId = RequestId::normalize($requestId);
+        $recorded = $this->record(
+            'course.qa.deleted',
+            $courseId,
+            $actorId,
+            ['qa_entry_id' => $entryId, 'deletion' => 'permanent_unused_draft'],
+            $requestId
+        );
 
         return is_wp_error($recorded) ? $recorded : true;
     }

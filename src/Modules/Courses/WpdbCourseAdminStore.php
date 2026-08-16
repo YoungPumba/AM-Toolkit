@@ -4,11 +4,12 @@ namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Modules\Access\AccessSchema;
 use AMToolkit\Modules\Courses\Contracts\CourseAdminStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Domain\PublicationStatus;
 
 defined('ABSPATH') || exit;
 
-final class WpdbCourseAdminStore implements CourseAdminStore
+final class WpdbCourseAdminStore implements CourseAdminStore, DraftCourseResourceDeletionStore
 {
     private \wpdb $database;
 
@@ -169,6 +170,17 @@ final class WpdbCourseAdminStore implements CourseAdminStore
         return $result === false
             ? $this->databaseError('am_toolkit_course_admin_write_failed')
             : true;
+    }
+
+    public function deleteDraftResource(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        return match ($resourceType) {
+            'course' => $this->deleteDraftCourse($courseId),
+            'section' => $this->deleteDraftSection($resourceId, $courseId),
+            'lesson' => $this->deleteDraftLesson($resourceId, $courseId),
+            'material' => $this->deleteDraftMaterial($resourceId, $courseId),
+            default => $this->unsafeDelete(),
+        };
     }
 
     public function sectionsForCourse(int $courseId): array|\WP_Error
@@ -595,6 +607,177 @@ final class WpdbCourseAdminStore implements CourseAdminStore
         );
 
         return $this->rowsOrError($rows, 'am_toolkit_course_admin_read_failed');
+    }
+
+    private function deleteDraftCourse(int $courseId): bool|\WP_Error
+    {
+        $courses = CoursesSchema::coursesTable();
+        $programs = CoursesSchema::programVersionsTable();
+        $row = $this->database->get_row(
+            $this->database->prepare(
+                "SELECT id FROM {$courses} WHERE id = %d AND status = 'draft'"
+                . ' AND created_at = updated_at LIMIT 1',
+                $courseId
+            ),
+            ARRAY_A
+        );
+
+        if ($this->database->last_error !== '') {
+            return $this->databaseError('am_toolkit_course_admin_delete_failed');
+        }
+
+        if (!is_array($row) || $this->courseHasDeletionDependencies($courseId)) {
+            return $this->unsafeDelete();
+        }
+
+        $this->begin();
+        $deletedPrograms = $this->database->query($this->database->prepare(
+            "DELETE FROM {$programs} WHERE course_id = %d AND status = 'draft'",
+            $courseId
+        ));
+        $deletedCourse = $this->database->delete($courses, ['id' => $courseId], ['%d']);
+
+        if ($deletedPrograms === false || $deletedCourse !== 1) {
+            return $this->rollbackError('am_toolkit_course_admin_delete_failed');
+        }
+
+        $this->commit();
+        return true;
+    }
+
+    private function deleteDraftSection(int $sectionId, int $courseId): bool|\WP_Error
+    {
+        $programId = $this->draftProgramId($courseId);
+        if (is_wp_error($programId)) {
+            return $programId;
+        }
+
+        $sections = CoursesSchema::sectionsTable();
+        $assignments = CoursesSchema::programLessonsTable();
+        $safe = $this->database->get_var($this->database->prepare(
+            "SELECT s.id FROM {$sections} s"
+            . " WHERE s.id = %d AND s.program_version_id = %d AND s.status = 'draft'"
+            . ' AND s.created_at = s.updated_at'
+            . " AND NOT EXISTS (SELECT 1 FROM {$assignments} pl WHERE pl.section_id = s.id)"
+            . ' LIMIT 1',
+            $sectionId,
+            $programId
+        ));
+
+        if ($this->database->last_error !== '') {
+            return $this->databaseError('am_toolkit_course_admin_delete_failed');
+        }
+
+        if ($safe === null) {
+            return $this->unsafeDelete();
+        }
+
+        return $this->database->delete($sections, ['id' => $sectionId], ['%d']) === 1
+            ? true
+            : $this->databaseError('am_toolkit_course_admin_delete_failed');
+    }
+
+    private function deleteDraftLesson(int $lessonId, int $courseId): bool|\WP_Error
+    {
+        $lessons = CoursesSchema::lessonsTable();
+        $programs = CoursesSchema::programVersionsTable();
+        $assignments = CoursesSchema::programLessonsTable();
+        $safe = $this->database->get_var($this->database->prepare(
+            "SELECT l.id FROM {$lessons} l"
+            . " WHERE l.id = %d AND l.course_id = %d AND l.status = 'draft'"
+            . ' AND l.created_at = l.updated_at'
+            . " AND NOT EXISTS (SELECT 1 FROM {$assignments} published_assignment"
+            . " INNER JOIN {$programs} published_program ON published_program.id = published_assignment.program_version_id"
+            . " WHERE published_assignment.lesson_id = l.id AND published_program.status = 'published')"
+            . ' AND NOT EXISTS (SELECT 1 FROM ' . CoursesSchema::materialsTable() . ' m WHERE m.lesson_id = l.id)'
+            . ' AND NOT EXISTS (SELECT 1 FROM ' . CoursesSchema::lessonTasksTable() . ' t WHERE t.lesson_id = l.id)'
+            . ' AND NOT EXISTS (SELECT 1 FROM ' . CoursesSchema::qaEntriesTable() . ' q WHERE q.lesson_id = l.id)'
+            . ' AND NOT EXISTS (SELECT 1 FROM ' . CoursesSchema::progressTable() . ' lp WHERE lp.lesson_id = l.id)'
+            . ' LIMIT 1',
+            $lessonId,
+            $courseId
+        ));
+
+        if ($this->database->last_error !== '') {
+            return $this->databaseError('am_toolkit_course_admin_delete_failed');
+        }
+
+        if ($safe === null) {
+            return $this->unsafeDelete();
+        }
+
+        $this->begin();
+        $deletedAssignments = $this->database->query($this->database->prepare(
+            "DELETE pl FROM {$assignments} pl INNER JOIN {$programs} p ON p.id = pl.program_version_id"
+            . " WHERE pl.lesson_id = %d AND p.course_id = %d AND p.status = 'draft'",
+            $lessonId,
+            $courseId
+        ));
+        $deletedLesson = $this->database->delete($lessons, ['id' => $lessonId, 'course_id' => $courseId], ['%d', '%d']);
+
+        if ($deletedAssignments === false || $deletedLesson !== 1) {
+            return $this->rollbackError('am_toolkit_course_admin_delete_failed');
+        }
+
+        $this->commit();
+        return true;
+    }
+
+    private function deleteDraftMaterial(int $materialId, int $courseId): bool|\WP_Error
+    {
+        $materials = CoursesSchema::materialsTable();
+        $lessons = CoursesSchema::lessonsTable();
+        $safe = $this->database->get_var($this->database->prepare(
+            "SELECT m.id FROM {$materials} m INNER JOIN {$lessons} l ON l.id = m.lesson_id"
+            . " WHERE m.id = %d AND l.course_id = %d AND m.status = 'draft'"
+            . ' AND m.created_at = m.updated_at LIMIT 1',
+            $materialId,
+            $courseId
+        ));
+
+        if ($this->database->last_error !== '') {
+            return $this->databaseError('am_toolkit_course_admin_delete_failed');
+        }
+
+        if ($safe === null) {
+            return $this->unsafeDelete();
+        }
+
+        return $this->database->delete($materials, ['id' => $materialId], ['%d']) === 1
+            ? true
+            : $this->databaseError('am_toolkit_course_admin_delete_failed');
+    }
+
+    private function courseHasDeletionDependencies(int $courseId): bool
+    {
+        $checks = [
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::programVersionsTable() . " WHERE course_id = %d AND status = 'published'", $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::sectionsTable() . ' s INNER JOIN ' . CoursesSchema::programVersionsTable() . ' p ON p.id = s.program_version_id WHERE p.course_id = %d', $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::lessonsTable() . ' WHERE course_id = %d', $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::productMappingsTable() . ' WHERE course_id = %d', $courseId],
+            ['SELECT COUNT(*) FROM ' . AccessSchema::grantsTable() . " WHERE resource_type = 'course' AND resource_id = %d", $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::progressTable() . ' WHERE course_id = %d', $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::completionsTable() . ' WHERE course_id = %d', $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::meetingsTable() . ' WHERE course_id = %d', $courseId],
+            ['SELECT COUNT(*) FROM ' . CoursesSchema::qaEntriesTable() . ' WHERE course_id = %d', $courseId],
+        ];
+
+        foreach ($checks as [$sql, $id]) {
+            $count = $this->database->get_var($this->database->prepare($sql, $id));
+            if ($this->database->last_error !== '' || (int) $count > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function unsafeDelete(): \WP_Error
+    {
+        return new \WP_Error(
+            'am_toolkit_course_draft_delete_blocked',
+            __('Tego elementu nie można usunąć trwale. Został zmieniony, opublikowany albo ma powiązaną historię. Użyj archiwizacji.', 'am-toolkit')
+        );
     }
 
     private function publishDraft(int $courseId, string $now): bool|\WP_Error

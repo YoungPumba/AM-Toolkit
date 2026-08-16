@@ -3,10 +3,11 @@
 namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Modules\Courses\Contracts\CourseMeetingStore;
+use AMToolkit\Modules\Courses\Contracts\CourseResourceArchiveStore;
 
 defined('ABSPATH') || exit;
 
-final class WpdbCourseMeetingStore implements CourseMeetingStore
+final class WpdbCourseMeetingStore implements CourseMeetingStore, CourseResourceArchiveStore
 {
     private \wpdb $database;
 
@@ -148,6 +149,28 @@ final class WpdbCourseMeetingStore implements CourseMeetingStore
         );
 
         return $result === false ? $this->databaseError() : true;
+    }
+
+    public function archiveCourseResource(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        if ($resourceType !== 'meeting' || $resourceId <= 0 || $courseId <= 0) {
+            return new \WP_Error('am_toolkit_course_meeting_invalid', __('Dane spotkania są nieprawidłowe.', 'am-toolkit'));
+        }
+
+        $now = current_time('mysql', true);
+        $result = $this->database->update(
+            CoursesSchema::meetingsTable(),
+            ['status' => 'cancelled', 'archived_at' => $now, 'updated_at' => $now],
+            ['id' => $resourceId, 'course_id' => $courseId]
+        );
+
+        if ($result === false) {
+            return $this->databaseError();
+        }
+
+        return $result === 1
+            ? true
+            : new \WP_Error('am_toolkit_course_meeting_not_found', __('Nie znaleziono spotkania w tym kursie.', 'am-toolkit'));
     }
 
     public function nearestMeetings(array $courseIds, string $atUtc): array|\WP_Error

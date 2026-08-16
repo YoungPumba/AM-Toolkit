@@ -2,8 +2,10 @@
 
 namespace AMToolkit\Modules\Courses\Frontend;
 
+use AMToolkit\Core\Authorization;
 use AMToolkit\Modules\Courses\Contracts\CourseVideoRenderer;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
+use AMToolkit\Modules\Courses\Services\CoursePreviewService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
 use WP_User;
 
@@ -13,13 +15,16 @@ final class CourseHubPage
 {
     private const ENDPOINT = 'kursy';
     private const REWRITE_VERSION = '1';
+    private int $previewCourseId = 0;
+    private bool $previewMode = false;
 
     public function __construct(
         private CourseCatalogService $courses,
         private CourseAssetController $assets,
         private CourseVideoRenderer $videoRenderer,
         private ?CourseProgressService $progress = null,
-        private ?CourseProgressController $progressController = null
+        private ?CourseProgressController $progressController = null,
+        private ?CoursePreviewService $preview = null
     ) {
     }
 
@@ -161,6 +166,12 @@ final class CourseHubPage
             return '';
         }
 
+        $previewError = $this->initializePreview();
+        if ($previewError !== null) {
+            status_header(404);
+            return $this->renderError($previewError);
+        }
+
         $this->enqueueAssets(true);
         $segments = $this->endpointSegments();
         $userId = get_current_user_id();
@@ -170,11 +181,13 @@ final class CourseHubPage
         }
 
         if (count($segments) === 1) {
-            return $this->renderCourse($userId, $segments[0]);
+            $content = $this->renderCourse($userId, $segments[0]);
+            return $this->previewMode ? $this->renderPreviewBanner() . $content : $content;
         }
 
         if (count($segments) === 3 && $segments[1] === 'lekcja') {
-            return $this->renderLesson($userId, $segments[0], $segments[2]);
+            $content = $this->renderLesson($userId, $segments[0], $segments[2]);
+            return $this->previewMode ? $this->renderPreviewBanner() . $content : $content;
         }
 
         status_header(404);
@@ -219,7 +232,7 @@ final class CourseHubPage
             true
         );
 
-        if ($this->progressController !== null) {
+        if ($this->progressController !== null && !$this->previewMode) {
             wp_localize_script('am-toolkit-course-player', 'amToolkitCourseProgress', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'action' => CourseProgressController::ACTION,
@@ -420,12 +433,19 @@ final class CourseHubPage
 
     private function renderCourse(int $userId, string $publicId): string
     {
-        $course = $this->courses->courseForUser($userId, $publicId);
+        $course = $this->previewMode && $this->preview !== null
+            ? $this->preview->course($this->previewCourseId)
+            : $this->courses->courseForUser($userId, $publicId);
 
         if (is_wp_error($course)) {
             status_header($course->get_error_code() === 'am_toolkit_course_not_available' ? 404 : 503);
 
             return $this->renderError($course->get_error_message());
+        }
+
+        if ($this->previewMode && (string) ($course['public_id'] ?? '') !== $publicId) {
+            status_header(404);
+            return $this->renderError(__('Ten adres podglądu nie pasuje do wybranego kursu.', 'am-toolkit'));
         }
 
         $program = isset($course['program']) && is_array($course['program'])
@@ -760,24 +780,29 @@ final class CourseHubPage
 
     private function courseUrl(string $publicId): string
     {
-        return wc_get_endpoint_url(self::ENDPOINT, rawurlencode($publicId), wc_get_page_permalink('myaccount'));
+        $url = wc_get_endpoint_url(self::ENDPOINT, rawurlencode($publicId), wc_get_page_permalink('myaccount'));
+        return $this->previewUrl($url);
     }
 
     private function lessonUrl(string $coursePublicId, string $lessonPublicId): string
     {
         $value = rawurlencode($coursePublicId) . '/lekcja/' . rawurlencode($lessonPublicId);
 
-        return wc_get_endpoint_url(self::ENDPOINT, $value, wc_get_page_permalink('myaccount'));
+        $url = wc_get_endpoint_url(self::ENDPOINT, $value, wc_get_page_permalink('myaccount'));
+        return $this->previewUrl($url);
     }
 
     private function renderLesson(int $userId, string $coursePublicId, string $lessonPublicId): string
     {
-        $lesson = $this->courses->lessonForUser($userId, $coursePublicId, $lessonPublicId);
+        $lesson = $this->previewMode && $this->preview !== null
+            ? $this->preview->lesson($this->previewCourseId, $lessonPublicId)
+            : $this->courses->lessonForUser($userId, $coursePublicId, $lessonPublicId);
 
         if (is_wp_error($lesson)) {
             $notFoundCodes = [
                 'am_toolkit_course_not_available',
                 'am_toolkit_course_lesson_not_available',
+                'am_toolkit_course_preview_lesson_not_found',
             ];
             status_header(in_array($lesson->get_error_code(), $notFoundCodes, true) ? 404 : 503);
 
@@ -789,6 +814,11 @@ final class CourseHubPage
         }
 
         $course = isset($lesson['course']) && is_array($lesson['course']) ? $lesson['course'] : [];
+        if ($this->previewMode && (string) ($course['public_id'] ?? '') !== $coursePublicId) {
+            status_header(404);
+            return $this->renderError(__('Nie znaleziono lekcji w tym kursie.', 'am-toolkit'));
+        }
+
         $materials = isset($lesson['materials']) && is_array($lesson['materials']) ? $lesson['materials'] : [];
         $navigation = isset($lesson['program_lessons']) && is_array($lesson['program_lessons'])
             ? $lesson['program_lessons']
@@ -796,7 +826,7 @@ final class CourseHubPage
         $poster = !empty($course['image_attachment_id'])
             ? (string) wp_get_attachment_image_url((int) $course['image_attachment_id'], 'large')
             : '';
-        $progress = $this->progress !== null
+        $progress = !$this->previewMode && $this->progress !== null
             ? $this->progress->lessonState($userId, $coursePublicId, $lessonPublicId)
             : null;
 
@@ -818,6 +848,9 @@ final class CourseHubPage
                     </header>
 
                     <?php echo $this->renderLessonVideo($lesson, $coursePublicId, $lessonPublicId, $poster); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php if ($this->previewMode && !empty($lesson['preview_tasks']) && is_array($lesson['preview_tasks'])) : ?>
+                        <?php echo $this->renderPreviewTasks($lesson['preview_tasks']); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php endif; ?>
                     <?php if (is_array($progress)) : ?>
                         <?php echo $this->renderProgressPanel($progress, $coursePublicId, $lessonPublicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php elseif (is_wp_error($progress)) : ?>
@@ -863,7 +896,7 @@ final class CourseHubPage
             );
         }
 
-        $sourceUrl = $this->assets->url($coursePublicId, $lessonPublicId, 'video');
+        $sourceUrl = $this->assets->url($coursePublicId, $lessonPublicId, 'video', '', $this->previewCourseId);
         $player = $this->videoRenderer->render($sourceUrl, ['poster' => $poster]);
 
         if (is_wp_error($player)) {
@@ -902,7 +935,7 @@ final class CourseHubPage
                             <strong><?php echo esc_html((string) ($material['name'] ?? '')); ?></strong>
                             <?php if (!empty($material['description'])) : ?><p><?php echo esc_html((string) $material['description']); ?></p><?php endif; ?>
                         </div>
-                        <a href="<?php echo esc_url($this->assets->url($coursePublicId, $lessonPublicId, 'material', (string) ($material['public_id'] ?? ''))); ?>">
+                        <a href="<?php echo esc_url($this->assets->url($coursePublicId, $lessonPublicId, 'material', (string) ($material['public_id'] ?? ''), $this->previewCourseId)); ?>">
                             <?php echo esc_html__('Pobierz', 'am-toolkit'); ?>
                             <?php echo CourseIcon::render(CourseIcon::DOWNLOAD); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </a>
@@ -1070,6 +1103,93 @@ final class CourseHubPage
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    /** @param list<array<string, mixed>> $tasks */
+    private function renderPreviewTasks(array $tasks): string
+    {
+        ob_start();
+        ?>
+        <section class="am-lesson-progress am-lesson-preview-tasks" aria-labelledby="am-preview-tasks-title">
+            <span class="am-courses__eyebrow"><?php esc_html_e('Tryb podglądu', 'am-toolkit'); ?></span>
+            <h2 id="am-preview-tasks-title"><?php esc_html_e('Zadania tej lekcji', 'am-toolkit'); ?></h2>
+            <p><?php esc_html_e('Checkboxy są wyłączone, ponieważ podgląd nie zapisuje postępu.', 'am-toolkit'); ?></p>
+            <ul class="am-lesson-checklist__items">
+                <?php foreach ($tasks as $task) : ?>
+                    <li class="am-lesson-checklist__item">
+                        <label>
+                            <input type="checkbox" disabled>
+                            <span class="am-lesson-checklist__content">
+                                <strong><?php echo esc_html((string) ($task['title'] ?? '')); ?></strong>
+                                <?php if (!empty($task['description'])) : ?><small><?php echo esc_html((string) $task['description']); ?></small><?php endif; ?>
+                            </span>
+                        </label>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+        <?php
+        return (string) ob_get_clean();
+    }
+
+    private function initializePreview(): ?string
+    {
+        $this->previewCourseId = absint($this->requestValue(CoursePreviewService::QUERY_COURSE));
+        $this->previewMode = $this->previewCourseId > 0;
+
+        if (!$this->previewMode) {
+            return null;
+        }
+
+        $nonce = $this->requestValue(CoursePreviewService::QUERY_NONCE);
+        if (
+            $this->preview === null
+            || !Authorization::canManageCourses()
+            || !wp_verify_nonce($nonce, CoursePreviewService::nonceAction($this->previewCourseId))
+        ) {
+            $this->previewMode = false;
+            $this->previewCourseId = 0;
+            return __('Ten podgląd wygasł albo nie masz uprawnień do jego otwarcia.', 'am-toolkit');
+        }
+
+        return null;
+    }
+
+    private function renderPreviewBanner(): string
+    {
+        $editUrl = add_query_arg(
+            ['page' => 'am-toolkit-courses', 'course_id' => $this->previewCourseId],
+            admin_url('admin.php')
+        );
+
+        return sprintf(
+            '<aside class="am-course-preview-banner" role="status"><div><strong>%1$s</strong><span>%2$s</span></div><a href="%3$s">%4$s</a></aside>',
+            esc_html__('Tryb podglądu — kurs nie jest opublikowany', 'am-toolkit'),
+            esc_html__('Widzisz bieżący szkic. Dostęp i postęp uczestniczki nie są zapisywane.', 'am-toolkit'),
+            esc_url($editUrl),
+            esc_html__('Wróć do edycji', 'am-toolkit')
+        );
+    }
+
+    private function previewUrl(string $url): string
+    {
+        if (!$this->previewMode || $this->previewCourseId <= 0) {
+            return $url;
+        }
+
+        return add_query_arg([
+            CoursePreviewService::QUERY_COURSE => $this->previewCourseId,
+            CoursePreviewService::QUERY_NONCE => wp_create_nonce(CoursePreviewService::nonceAction($this->previewCourseId)),
+        ], $url);
+    }
+
+    private function requestValue(string $key): string
+    {
+        if (!isset($_GET[$key]) || !is_scalar($_GET[$key])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            return '';
+        }
+
+        return sanitize_text_field((string) wp_unslash($_GET[$key])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
     private function lessonState(string $title, string $message): string

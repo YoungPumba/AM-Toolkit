@@ -11,6 +11,7 @@ use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
 use AMToolkit\Modules\Courses\Services\CourseLessonTaskService;
 use AMToolkit\Modules\Courses\Services\CourseMeetingService;
+use AMToolkit\Modules\Courses\Services\CoursePreviewService;
 use AMToolkit\Modules\Courses\Services\CourseQaService;
 use AMToolkit\Modules\Courses\Domain\MeetingStatus;
 use AMToolkit\Modules\Courses\WpdbCourseAdminStore;
@@ -92,6 +93,13 @@ final class CourseAdminPage
             [],
             AM_TOOLKIT_VERSION
         );
+        wp_enqueue_script(
+            'am-toolkit-courses-admin',
+            AM_TOOLKIT_URL . 'assets/js/admin-courses.js',
+            [],
+            AM_TOOLKIT_VERSION,
+            true
+        );
     }
 
     public function handle(): void
@@ -120,6 +128,13 @@ final class CourseAdminPage
                 $result = $this->courses->archiveCourse($courseId);
                 break;
 
+            case 'delete_draft_course':
+                $result = $this->courses->deleteDraft('course', 0, $courseId);
+                if (!is_wp_error($result)) {
+                    $courseId = 0;
+                }
+                break;
+
             case 'save_section':
                 $result = $this->courses->saveSection(
                     $this->postInt('section_id'),
@@ -133,6 +148,10 @@ final class CourseAdminPage
 
             case 'archive_section':
                 $result = $this->courses->archiveSection($this->postInt('section_id'), $courseId);
+                break;
+
+            case 'delete_draft_section':
+                $result = $this->courses->deleteDraft('section', $this->postInt('section_id'), $courseId);
                 break;
 
             case 'save_lesson':
@@ -200,6 +219,15 @@ final class CourseAdminPage
                 $result = $this->courses->archiveLesson($this->postInt('lesson_id'), $courseId);
                 break;
 
+            case 'delete_draft_lesson':
+                $lessonId = $this->postInt('lesson_id');
+                $lessonAsset = $this->assetReference($this->courses->lessons($courseId), $lessonId, 'video_provider', 'video_reference');
+                $result = $this->courses->deleteDraft('lesson', $lessonId, $courseId);
+                if (!is_wp_error($result) && $lessonAsset !== null) {
+                    $this->assets->remove($lessonAsset);
+                }
+                break;
+
             case 'save_material':
                 $storageProvider = $this->postKey('storage_provider');
                 $storageReference = $this->postText('storage_reference');
@@ -251,6 +279,15 @@ final class CourseAdminPage
                 );
                 break;
 
+            case 'delete_draft_material':
+                $materialId = $this->postInt('material_id');
+                $materialAsset = $this->assetReference($this->courses->materials($courseId), $materialId, 'storage_provider', 'storage_reference');
+                $result = $this->courses->deleteDraft('material', $materialId, $courseId);
+                if (!is_wp_error($result) && $materialAsset !== null) {
+                    $this->assets->remove($materialAsset);
+                }
+                break;
+
             case 'save_lesson_task':
                 $result = $this->tasks !== null
                     ? $this->tasks->save([
@@ -270,6 +307,16 @@ final class CourseAdminPage
             case 'archive_lesson_task':
                 $result = $this->tasks !== null
                     ? $this->tasks->archive(
+                        $this->postInt('task_id'),
+                        $courseId,
+                        get_current_user_id()
+                    )
+                    : new \WP_Error('am_toolkit_lesson_tasks_disabled', __('Checklisty lekcji są wyłączone.', 'am-toolkit'));
+                break;
+
+            case 'delete_draft_lesson_task':
+                $result = $this->tasks !== null
+                    ? $this->tasks->deleteDraft(
                         $this->postInt('task_id'),
                         $courseId,
                         get_current_user_id()
@@ -317,6 +364,16 @@ final class CourseAdminPage
                     : new \WP_Error('am_toolkit_course_meetings_disabled', __('Informacje organizacyjne są wyłączone.', 'am-toolkit'));
                 break;
 
+            case 'archive_meeting':
+                $result = $this->meetings !== null
+                    ? $this->meetings->archive(
+                        $this->postInt('meeting_id'),
+                        $courseId,
+                        get_current_user_id()
+                    )
+                    : new \WP_Error('am_toolkit_course_meetings_disabled', __('Informacje organizacyjne są wyłączone.', 'am-toolkit'));
+                break;
+
             case 'save_qa':
                 $result = $this->qa !== null
                     ? $this->qa->save([
@@ -335,6 +392,16 @@ final class CourseAdminPage
             case 'archive_qa':
                 $result = $this->qa !== null
                     ? $this->qa->archive(
+                        $this->postInt('qa_entry_id'),
+                        $courseId,
+                        get_current_user_id()
+                    )
+                    : new \WP_Error('am_toolkit_course_qa_disabled', __('Sekcja Q&A jest wyłączona.', 'am-toolkit'));
+                break;
+
+            case 'delete_draft_qa':
+                $result = $this->qa !== null
+                    ? $this->qa->deleteDraft(
                         $this->postInt('qa_entry_id'),
                         $courseId,
                         get_current_user_id()
@@ -406,6 +473,16 @@ final class CourseAdminPage
         $qaEntries = $this->qa !== null ? $this->valueOrEmpty($this->qa->entries($courseId)) : [];
         $lessonTasks = $this->tasks !== null ? $this->valueOrEmpty($this->tasks->entries($courseId)) : [];
 
+        $this->renderReadiness(
+            $course,
+            $sections,
+            $lessons,
+            $materials,
+            $lessonTasks,
+            $qaEntries,
+            $meetings,
+            $productIds
+        );
         echo '<div class="amt-courses-layout">';
         echo '<main class="amt-courses-main">';
         $this->renderCourseForm($course);
@@ -422,6 +499,7 @@ final class CourseAdminPage
             $this->renderMeetings($courseId, $meetings, $meetingSettings);
         }
         echo '</main><aside class="amt-courses-side">';
+        $this->renderGuide();
         $this->renderMappings($courseId, $productIds);
         $this->renderAccess($courseId, $participants, $activity);
         echo '</aside></div></div>';
@@ -443,11 +521,96 @@ final class CourseAdminPage
                 </div>
                 <div class="amt-courses-header__actions">
                     <?php if ($courseId > 0) : ?>
+                        <?php $previewUrl = $this->previewUrl($course); ?>
+                        <?php if ($previewUrl !== '') : ?>
+                            <a class="button button-primary" href="<?php echo esc_url($previewUrl); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Podgląd jako uczestniczka', 'am-toolkit'); ?></a>
+                        <?php endif; ?>
                         <a class="button" href="<?php echo esc_url($this->pageUrl()); ?>"><?php esc_html_e('Wszystkie kursy', 'am-toolkit'); ?></a>
                     <?php endif; ?>
                     <span class="amt-courses-version">v<?php echo esc_html(AM_TOOLKIT_VERSION); ?></span>
                 </div>
             </header>
+        <?php
+    }
+
+    /**
+     * @param array<string, mixed> $course
+     * @param list<array<string, mixed>> $sections
+     * @param list<array<string, mixed>> $lessons
+     * @param list<array<string, mixed>> $materials
+     * @param list<array<string, mixed>> $tasks
+     * @param list<array<string, mixed>> $qa
+     * @param list<array<string, mixed>> $meetings
+     * @param list<int> $productIds
+     */
+    private function renderReadiness(
+        array $course,
+        array $sections,
+        array $lessons,
+        array $materials,
+        array $tasks,
+        array $qa,
+        array $meetings,
+        array $productIds
+    ): void {
+        $available = static fn (array $rows): array => array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ($row['status'] ?? '') !== PublicationStatus::ARCHIVED
+        ));
+        $checks = [
+            [trim((string) ($course['title'] ?? '')) !== '', __('Nazwa i opis kursu', 'am-toolkit'), '#course-details'],
+            [$available($sections) !== [], __('Co najmniej jedna sekcja programu', 'am-toolkit'), '#course-sections'],
+            [$available($lessons) !== [], __('Co najmniej jedna lekcja programu', 'am-toolkit'), '#course-lessons'],
+            [$materials !== [] || $tasks !== [] || $qa !== [], __('Materiały, zadania lub Q&A', 'am-toolkit'), '#course-lesson-tasks'],
+            [$meetings !== [], __('Termin spotkania i odnośnik organizacyjny', 'am-toolkit'), '#course-meetings'],
+            [$productIds !== [], __('Produkt nadający dostęp do kursu', 'am-toolkit'), '#course-products'],
+        ];
+        $ready = count(array_filter($checks, static fn (array $check): bool => $check[0])) === count($checks);
+        ?>
+        <section class="amt-courses-readiness <?php echo $ready ? 'is-ready' : 'needs-attention'; ?>" aria-labelledby="amt-readiness-title">
+            <div>
+                <p class="amt-courses-eyebrow"><?php esc_html_e('Kontrola przed publikacją', 'am-toolkit'); ?></p>
+                <h2 id="amt-readiness-title"><?php echo esc_html($ready ? __('Kurs ma komplet podstawowej konfiguracji', 'am-toolkit') : __('Uzupełnij brakujące elementy kursu', 'am-toolkit')); ?></h2>
+                <p><?php esc_html_e('To lista pomocnicza. Podgląd pokaże dokładnie to, co zobaczy uczestniczka, ale nie przyzna dostępu i nie zapisze postępu.', 'am-toolkit'); ?></p>
+            </div>
+            <ul>
+                <?php foreach ($checks as [$complete, $label, $anchor]) : ?>
+                    <li class="<?php echo $complete ? 'is-complete' : 'is-missing'; ?>">
+                        <span aria-hidden="true"><?php echo $complete ? '✓' : '!'; ?></span>
+                        <a href="<?php echo esc_attr($anchor); ?>"><?php echo esc_html($label); ?></a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+        <?php
+    }
+
+    private function renderGuide(): void
+    {
+        $steps = [
+            ['course-details', __('1. Kurs', 'am-toolkit'), __('Dodaj nazwę, opis i grafikę. Zapisz szkic, dopóki program nie jest gotowy.', 'am-toolkit')],
+            ['course-sections', __('2. Sekcje', 'am-toolkit'), __('Uporządkuj moduły kursu. Pozycja 0 pojawia się jako pierwsza.', 'am-toolkit')],
+            ['course-lessons', __('3. Lekcje i nagrania', 'am-toolkit'), __('Przypisz lekcję do sekcji, dodaj MP4 i ustaw realny próg obejrzenia.', 'am-toolkit')],
+            ['course-lesson-tasks', __('4. Zadania, materiały i Q&A', 'am-toolkit'), __('Dodaj czynności do zaznaczenia, pliki do pobrania i redakcyjne odpowiedzi.', 'am-toolkit')],
+            ['course-meetings', __('5. Spotkania i odnośniki', 'am-toolkit'), __('Uzupełnij termin, Zoom i prywatną grupę Telegram.', 'am-toolkit')],
+            ['course-products', __('6. Produkt i dostęp', 'am-toolkit'), __('Zaznacz produkty WooCommerce, które mają automatycznie nadawać kurs.', 'am-toolkit')],
+            ['course-access', __('7. Publikacja i test', 'am-toolkit'), __('Otwórz podgląd, opublikuj kurs i sprawdź przepływ na osobnym koncie testowym.', 'am-toolkit')],
+        ];
+        ?>
+        <section class="amt-courses-card amt-courses-guide">
+            <p class="amt-courses-eyebrow"><?php esc_html_e('Instrukcja właścicielki', 'am-toolkit'); ?></p>
+            <h2><?php esc_html_e('Jak przygotować i opublikować kurs', 'am-toolkit'); ?></h2>
+            <p><?php esc_html_e('Przejdź po kolei przez siedem kroków. Każdy odnośnik prowadzi do właściwej sekcji formularza.', 'am-toolkit'); ?></p>
+            <ol>
+                <?php foreach ($steps as [$anchor, $title, $description]) : ?>
+                    <li><a href="#<?php echo esc_attr($anchor); ?>"><strong><?php echo esc_html($title); ?></strong><span><?php echo esc_html($description); ?></span></a></li>
+                <?php endforeach; ?>
+            </ol>
+            <div class="amt-courses-guide__note">
+                <strong><?php esc_html_e('Szkic, publikacja czy archiwum?', 'am-toolkit'); ?></strong>
+                <p><?php esc_html_e('Szkic jest roboczy. Publikacja tworzy wersję widoczną dla uprawnionych uczestniczek. Archiwum ukrywa element bez niszczenia historii.', 'am-toolkit'); ?></p>
+            </div>
+        </section>
         <?php
     }
 
@@ -460,9 +623,13 @@ final class CourseAdminPage
         }
 
         $success = $notice === 'saved';
+        $messages = [
+            'am_toolkit_course_draft_delete_blocked' => __('Nie usunięto elementu. Ma już historię, zależności albo zapisany postęp — użyj archiwizacji.', 'am-toolkit'),
+            'am_toolkit_course_preview_read_failed' => __('Nie udało się przygotować podglądu. Sprawdź konfigurację kursu.', 'am-toolkit'),
+        ];
         $message = $success
             ? __('Zmiany zostały zapisane.', 'am-toolkit')
-            : __('Nie udało się zapisać zmian. Sprawdź dane i spróbuj ponownie.', 'am-toolkit');
+            : ($messages[$notice] ?? __('Nie udało się zapisać zmian. Sprawdź dane i spróbuj ponownie.', 'am-toolkit'));
         if ($success) {
             printf('<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html($message));
             return;
@@ -520,16 +687,19 @@ final class CourseAdminPage
             </div>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
                 <?php $this->formBase('save_course', $courseId); ?>
-                <label><span><?php esc_html_e('Nazwa kursu', 'am-toolkit'); ?></span><input type="text" name="title" required maxlength="240" value="<?php echo esc_attr((string) ($course['title'] ?? '')); ?>"></label>
-                <label><span><?php esc_html_e('Opis', 'am-toolkit'); ?></span><textarea name="description" rows="5"><?php echo esc_textarea((string) ($course['description'] ?? '')); ?></textarea></label>
+                <label><span><?php esc_html_e('Nazwa kursu', 'am-toolkit'); ?></span><input type="text" name="title" required maxlength="240" placeholder="Np. Social media od podstaw" value="<?php echo esc_attr((string) ($course['title'] ?? '')); ?>"><small><?php esc_html_e('Ta nazwa pojawi się w panelu uczestniczki i w nagłówku programu.', 'am-toolkit'); ?></small></label>
+                <label><span><?php esc_html_e('Opis', 'am-toolkit'); ?></span><textarea name="description" rows="5" placeholder="Krótko wyjaśnij, czego uczestniczka nauczy się w kursie."><?php echo esc_textarea((string) ($course['description'] ?? '')); ?></textarea><small><?php esc_html_e('Najlepiej 1–3 zdania napisane językiem korzyści.', 'am-toolkit'); ?></small></label>
                 <div class="amt-courses-form__row">
-                    <label><span><?php esc_html_e('ID grafiki w Media Library', 'am-toolkit'); ?></span><input type="number" min="0" name="image_attachment_id" value="<?php echo esc_attr((string) ($course['image_attachment_id'] ?? 0)); ?>"></label>
-                    <label><span><?php esc_html_e('Operacja publikacji', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions($selectedOperation); ?></select></label>
+                    <label><span><?php esc_html_e('ID grafiki w Media Library', 'am-toolkit'); ?></span><input type="number" min="0" name="image_attachment_id" value="<?php echo esc_attr((string) ($course['image_attachment_id'] ?? 0)); ?>"><small><?php esc_html_e('Numer znajdziesz w adresie edycji pliku w Bibliotece mediów, np. post=123.', 'am-toolkit'); ?></small></label>
+                    <label><span><?php esc_html_e('Operacja publikacji', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions($selectedOperation); ?></select><small><?php esc_html_e('Najpierw zapisz szkic i użyj podglądu. Publikuj dopiero gotowy program.', 'am-toolkit'); ?></small></label>
                 </div>
                 <div class="amt-courses-actions"><button class="button button-primary" type="submit"><?php esc_html_e('Zapisz kurs', 'am-toolkit'); ?></button></div>
             </form>
             <?php if ($courseId > 0 && ($course['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?>
                 <?php $this->archiveForm('archive_course', $courseId, 0, __('Archiwizuj kurs', 'am-toolkit')); ?>
+            <?php endif; ?>
+            <?php if ($courseId > 0 && ($course['status'] ?? '') === PublicationStatus::DRAFT) : ?>
+                <?php $this->deleteForm('delete_draft_course', $courseId, 0, __('Usuń trwale niewykorzystany szkic', 'am-toolkit'), '', [], sprintf(__('Trwale usunąć kurs „%s”? Operacja powiedzie się tylko dla niezmienionego szkicu bez treści, publikacji, dostępu i historii. Nie można jej cofnąć.', 'am-toolkit'), (string) ($course['title'] ?? ''))); ?>
             <?php endif; ?>
         </section>
         <?php
@@ -538,7 +708,7 @@ final class CourseAdminPage
     /** @param list<array<string, mixed>> $sections */
     private function renderSections(int $courseId, array $sections): void
     {
-        echo '<section class="amt-courses-card"><div class="amt-courses-card__heading"><div><h2>'
+        echo '<section class="amt-courses-card" id="course-sections"><div class="amt-courses-card__heading"><div><h2>'
             . esc_html__('Sekcje programu', 'am-toolkit') . '</h2><p>'
             . esc_html__('Pozycja określa kolejność. Archiwizacja nie usuwa historii.', 'am-toolkit') . '</p></div></div>';
         foreach ($sections as $section) {
@@ -563,6 +733,7 @@ final class CourseAdminPage
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz sekcję', 'am-toolkit'); ?></button>
             </form>
             <?php if ($id > 0 && ($section['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?><?php $this->archiveForm('archive_section', $courseId, $id, __('Archiwizuj sekcję', 'am-toolkit'), 'section_id'); ?><?php endif; ?>
+            <?php if ($id > 0 && ($section['status'] ?? '') === PublicationStatus::DRAFT) : ?><?php $this->deleteForm('delete_draft_section', $courseId, $id, __('Usuń trwale szkic sekcji', 'am-toolkit'), 'section_id', [], sprintf(__('Trwale usunąć sekcję „%s”? Tylko pusty, niezmieniony szkic może zostać usunięty. Pozostałe sekcje należy archiwizować.', 'am-toolkit'), (string) ($section['title'] ?? ''))); ?><?php endif; ?>
         </details>
         <?php
     }
@@ -570,7 +741,7 @@ final class CourseAdminPage
     /** @param list<array<string, mixed>> $sections @param list<array<string, mixed>> $lessons */
     private function renderLessons(int $courseId, array $sections, array $lessons): void
     {
-        echo '<section class="amt-courses-card"><div class="amt-courses-card__heading"><div><h2>'
+        echo '<section class="amt-courses-card" id="course-lessons"><div class="amt-courses-card__heading"><div><h2>'
             . esc_html__('Lekcje', 'am-toolkit') . '</h2><p>'
             . esc_html__('Treść, wideo, wymagania ukończenia i miejsce w programie.', 'am-toolkit') . '</p></div></div>';
         foreach ($lessons as $lesson) {
@@ -603,6 +774,7 @@ final class CourseAdminPage
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz lekcję', 'am-toolkit'); ?></button>
             </form>
             <?php if ($id > 0 && ($lesson['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?><?php $this->archiveForm('archive_lesson', $courseId, $id, __('Archiwizuj lekcję', 'am-toolkit'), 'lesson_id'); ?><?php endif; ?>
+            <?php if ($id > 0 && ($lesson['status'] ?? '') === PublicationStatus::DRAFT) : ?><?php $this->deleteForm('delete_draft_lesson', $courseId, $id, __('Usuń trwale szkic lekcji', 'am-toolkit'), 'lesson_id', [], sprintf(__('Trwale usunąć lekcję „%s”? Serwer odmówi, jeśli lekcja była publikowana, ma materiały, zadania albo postęp.', 'am-toolkit'), (string) ($lesson['title'] ?? ''))); ?><?php endif; ?>
         </details>
         <?php
     }
@@ -666,6 +838,9 @@ final class CourseAdminPage
             <?php if ($id > 0 && ($task['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?>
                 <?php $this->archiveForm('archive_lesson_task', $courseId, $id, __('Archiwizuj zadanie', 'am-toolkit'), 'task_id'); ?>
             <?php endif; ?>
+            <?php if ($id > 0 && ($task['status'] ?? '') === PublicationStatus::DRAFT) : ?>
+                <?php $this->deleteForm('delete_draft_lesson_task', $courseId, $id, __('Usuń trwale szkic zadania', 'am-toolkit'), 'task_id', [], sprintf(__('Trwale usunąć zadanie „%s”? Operacja jest możliwa tylko przed publikacją i zanim powstanie postęp uczestniczki.', 'am-toolkit'), (string) ($task['title'] ?? ''))); ?>
+            <?php endif; ?>
         </details>
         <?php
     }
@@ -715,6 +890,9 @@ final class CourseAdminPage
             <?php if ($id > 0 && ($entry['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?>
                 <?php $this->archiveForm('archive_qa', $courseId, $id, __('Archiwizuj Q&A', 'am-toolkit'), 'qa_entry_id'); ?>
             <?php endif; ?>
+            <?php if ($id > 0 && ($entry['status'] ?? '') === PublicationStatus::DRAFT) : ?>
+                <?php $this->deleteForm('delete_draft_qa', $courseId, $id, __('Usuń trwale szkic Q&A', 'am-toolkit'), 'qa_entry_id', [], sprintf(__('Trwale usunąć pytanie „%s”? Zmienione lub wcześniej opublikowane wpisy należy archiwizować.', 'am-toolkit'), (string) ($entry['question'] ?? ''))); ?>
+            <?php endif; ?>
         </details>
         <?php
     }
@@ -722,7 +900,7 @@ final class CourseAdminPage
     /** @param list<array<string, mixed>> $lessons @param list<array<string, mixed>> $materials */
     private function renderMaterials(int $courseId, array $lessons, array $materials): void
     {
-        echo '<section class="amt-courses-card"><div class="amt-courses-card__heading"><div><h2>'
+        echo '<section class="amt-courses-card" id="course-materials"><div class="amt-courses-card__heading"><div><h2>'
             . esc_html__('Materiały', 'am-toolkit') . '</h2><p>'
             . esc_html__('Zapisuj identyfikator magazynu, nigdy publiczny URL jako kontrakt.', 'am-toolkit') . '</p></div></div>';
         foreach ($materials as $material) {
@@ -750,6 +928,7 @@ final class CourseAdminPage
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz materiał', 'am-toolkit'); ?></button>
             </form>
             <?php if ($id > 0 && ($material['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?><?php $this->archiveForm('archive_material', $courseId, $id, __('Archiwizuj materiał', 'am-toolkit'), 'material_id', ['lesson_id' => (int) $material['lesson_id']]); ?><?php endif; ?>
+            <?php if ($id > 0 && ($material['status'] ?? '') === PublicationStatus::DRAFT) : ?><?php $this->deleteForm('delete_draft_material', $courseId, $id, __('Usuń trwale szkic materiału', 'am-toolkit'), 'material_id', ['lesson_id' => (int) $material['lesson_id']], sprintf(__('Trwale usunąć materiał „%s”? Zmienione lub wcześniej opublikowane materiały należy archiwizować.', 'am-toolkit'), (string) ($material['name'] ?? ''))); ?><?php endif; ?>
         </details>
         <?php
     }
@@ -815,6 +994,9 @@ final class CourseAdminPage
                 </div>
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz spotkanie', 'am-toolkit'); ?></button>
             </form>
+            <?php if ($id > 0) : ?>
+                <?php $this->archiveForm('archive_meeting', $courseId, $id, __('Archiwizuj spotkanie', 'am-toolkit'), 'meeting_id'); ?>
+            <?php endif; ?>
         </details>
         <?php
     }
@@ -863,7 +1045,7 @@ final class CourseAdminPage
             ? wc_get_products(['status' => ['publish', 'draft'], 'limit' => -1, 'orderby' => 'name', 'order' => 'ASC'])
             : [];
         ?>
-        <section class="amt-courses-card">
+        <section class="amt-courses-card" id="course-products">
             <h2><?php esc_html_e('Produkty WooCommerce', 'am-toolkit'); ?></h2>
             <p><?php esc_html_e('Mapowanie wskazuje ofertę, ale samo nie jest grantem dostępu.', 'am-toolkit'); ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
@@ -885,7 +1067,7 @@ final class CourseAdminPage
     {
         $users = get_users(['fields' => ['ID', 'display_name', 'user_login'], 'orderby' => 'display_name']);
         ?>
-        <section class="amt-courses-card">
+        <section class="amt-courses-card" id="course-access">
             <h2><?php esc_html_e('Uczestnicy i dostęp', 'am-toolkit'); ?></h2>
             <?php if (Authorization::canManageAccess()) : ?>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
@@ -920,7 +1102,11 @@ final class CourseAdminPage
     /** @param array<string, int> $extra */
     private function archiveForm(string $intent, int $courseId, int $resourceId, string $label, string $field = '', array $extra = []): void
     {
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="amt-archive-form">';
+        $confirmation = sprintf(
+            __('Czy na pewno chcesz wykonać operację „%s”? Element zniknie z bieżącego widoku uczestniczki, ale historia pozostanie zachowana.', 'am-toolkit'),
+            $label
+        );
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="amt-archive-form" data-am-confirm="' . esc_attr($confirmation) . '">';
         $this->formBase($intent, $courseId);
         if ($field !== '') {
             echo '<input type="hidden" name="' . esc_attr($field) . '" value="' . esc_attr((string) $resourceId) . '">';
@@ -929,6 +1115,29 @@ final class CourseAdminPage
             echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr((string) $value) . '">';
         }
         echo '<button class="button-link-delete" type="submit">' . esc_html($label) . '</button></form>';
+    }
+
+    /** @param array<string, int> $extra */
+    private function deleteForm(
+        string $intent,
+        int $courseId,
+        int $resourceId,
+        string $label,
+        string $field,
+        array $extra,
+        string $confirmation
+    ): void {
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="amt-delete-form" data-am-confirm="' . esc_attr($confirmation) . '">';
+        $this->formBase($intent, $courseId);
+        if ($field !== '') {
+            echo '<input type="hidden" name="' . esc_attr($field) . '" value="' . esc_attr((string) $resourceId) . '">';
+        }
+        foreach ($extra as $name => $value) {
+            echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr((string) $value) . '">';
+        }
+        echo '<button class="button-link-delete amt-delete-form__button" type="submit">' . esc_html($label) . '</button>';
+        echo '<small>' . esc_html__('Usunięcie trwałe jest dostępne tylko dla bezpiecznego, niewykorzystanego szkicu. W przeciwnym razie serwer odmówi.', 'am-toolkit') . '</small>';
+        echo '</form>';
     }
 
     private function statusOptions(string $selected): void
@@ -1033,6 +1242,26 @@ final class CourseAdminPage
         return (string) wp_unslash($_GET[$key]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
+    /** @param list<array<string, mixed>>|\WP_Error $rows */
+    private function assetReference(array|\WP_Error $rows, int $resourceId, string $providerKey, string $referenceKey): ?string
+    {
+        if (is_wp_error($rows)) {
+            return null;
+        }
+
+        foreach ($rows as $row) {
+            if (
+                (int) ($row['id'] ?? 0) === $resourceId
+                && (string) ($row[$providerKey] ?? '') === $this->assets->provider()
+                && (string) ($row[$referenceKey] ?? '') !== ''
+            ) {
+                return (string) $row[$referenceKey];
+            }
+        }
+
+        return null;
+    }
+
     private function redirect(int $courseId, string $notice): void
     {
         $url = add_query_arg(
@@ -1049,6 +1278,27 @@ final class CourseAdminPage
             array_filter(['page' => self::PAGE_SLUG, 'course_id' => $courseId]),
             admin_url('admin.php')
         );
+    }
+
+    /** @param array<string, mixed>|null $course */
+    private function previewUrl(?array $course): string
+    {
+        $courseId = (int) ($course['id'] ?? 0);
+        $publicId = (string) ($course['public_id'] ?? '');
+
+        if (
+            $courseId <= 0
+            || $publicId === ''
+            || !function_exists('wc_get_endpoint_url')
+            || !function_exists('wc_get_page_permalink')
+        ) {
+            return '';
+        }
+
+        return add_query_arg([
+            CoursePreviewService::QUERY_COURSE => $courseId,
+            CoursePreviewService::QUERY_NONCE => wp_create_nonce(CoursePreviewService::nonceAction($courseId)),
+        ], wc_get_endpoint_url('kursy', rawurlencode($publicId), wc_get_page_permalink('myaccount')));
     }
 
     /** @return array<mixed> */

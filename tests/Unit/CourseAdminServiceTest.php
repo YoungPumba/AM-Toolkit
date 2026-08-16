@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AMToolkit\Tests\Unit;
 
 use AMToolkit\Modules\Courses\Contracts\CourseAdminStore;
+use AMToolkit\Modules\Courses\Contracts\DraftCourseResourceDeletionStore;
 use AMToolkit\Modules\Courses\Contracts\CourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Contracts\ProductCourseMappingStore;
 use AMToolkit\Modules\Courses\Domain\PublicationStatus;
@@ -93,9 +94,19 @@ final class CourseAdminServiceTest extends TestCase
         self::assertTrue($this->service->archiveCourse(7));
         self::assertSame([['archiveCourse', 7]], $this->catalog->calls);
     }
+
+    public function testPermanentDeleteIsDelegatedOnlyForSupportedDraftResources(): void
+    {
+        self::assertTrue($this->service->deleteDraft('lesson', 13, 7));
+        self::assertSame(['deleteDraftResource', 'lesson', 13, 7], $this->catalog->calls[0]);
+
+        $invalid = $this->service->deleteDraft('meeting', 4, 7);
+        self::assertInstanceOf(\WP_Error::class, $invalid);
+        self::assertSame('am_toolkit_invalid_course_admin_target', $invalid->get_error_code());
+    }
 }
 
-final class AdminCatalogSpy implements CourseAdminStore
+final class AdminCatalogSpy implements CourseAdminStore, DraftCourseResourceDeletionStore
 {
     /** @var list<array<mixed>> */
     public array $calls = [];
@@ -115,6 +126,12 @@ final class AdminCatalogSpy implements CourseAdminStore
     public function archiveCourse(int $courseId): bool|\WP_Error
     {
         $this->calls[] = ['archiveCourse', $courseId];
+        return true;
+    }
+
+    public function deleteDraftResource(string $resourceType, int $resourceId, int $courseId): bool|\WP_Error
+    {
+        $this->calls[] = ['deleteDraftResource', $resourceType, $resourceId, $courseId];
         return true;
     }
 

@@ -1,6 +1,7 @@
 # Panel administracyjny AM Courses
 
-Status: implementacja VIA-30, moduł nadal domyślnie wyłączony feature flagą.
+Status: panel bazowy VIA-30 rozszerzony przez VIA-43, VIA-70, VIA-74 i VIA-75;
+moduł nadal domyślnie wyłączony feature flagą.
 
 ## Zakres panelu
 
@@ -13,14 +14,18 @@ Po włączeniu modułu `courses` WordPress udostępnia właścicielce pozycję
 - przypisywać wiele materiałów do lekcji,
 - mapować wiele produktów WooCommerce na jeden kurs,
 - ręcznie nadawać i odbierać dostęp przez `AM Access Core`,
-- przeglądać uczestników oraz historię zdarzeń dostępu.
+- przeglądać uczestników oraz historię zdarzeń dostępu,
 - tworzyć, porządkować, publikować i archiwizować redakcyjne pytania i
-  odpowiedzi dla całego kursu albo wskazanej lekcji.
+  odpowiedzi dla całego kursu albo wskazanej lekcji,
+- budować checklisty prostych zadań do samodzielnego oznaczenia,
+- dodawać spotkania, odnośniki Zoom i prywatną grupę Telegram,
+- sprawdzać gotowość konfiguracji i korzystać z siedmiostopniowej instrukcji,
+- otwierać chroniony podgląd bieżącego szkicu w UI uczestniczki,
+- odróżniać archiwizację od trwałego usunięcia niewykorzystanego szkicu.
 
-Spotkania, prywatny odnośnik do Telegrama, odtwarzacz, postęp uczestnika oraz
-widoki konta klienta nie należą do VIA-30, ale pozostają wymaganiami AM Courses
-MVP 0.12.0 realizowanymi odpowiednio w VIA-41–VIA-44. Pełne integracje API z
-Zoomem i Telegramem oraz komponenty Elementora nie są wymagane w 0.12.0.
+Pełne integracje API z Zoomem i Telegramem oraz komponenty Elementora nie są
+wymagane w 0.12.0. Panel zapisuje terminy i chronione odnośniki, ale nie tworzy
+spotkań u zewnętrznych dostawców.
 
 ## Włączenie modułu
 
@@ -49,6 +54,60 @@ Zwykły zapis zmienia dane wersji roboczej. Wybranie operacji **Opublikuj**:
 Ponowny zwykły zapis opublikowanego kursu nie publikuje wersji jeszcze raz.
 Archiwizacja zmienia stan rekordu i datę archiwizacji; nie usuwa kursu, lekcji,
 materiałów, grantów ani historii zdarzeń.
+
+## Zalecana kolejność konfiguracji
+
+Panel prowadzi właścicielkę przez następujące kroki:
+
+1. nazwa, opis i grafika kursu,
+2. sekcje programu,
+3. lekcje, nagrania i wymagania ukończenia,
+4. checklisty zadań, materiały i Q&A,
+5. spotkania, Zoom i Telegram,
+6. produkty WooCommerce nadające dostęp,
+7. podgląd, publikacja i test na osobnym koncie uczestniczki.
+
+Kontrola gotowości jest wskazówką, nie automatycznym substytutem testu. Brak
+produktu może być celowy dla kursu nadawanego ręcznie, dlatego panel ostrzega,
+ale nie blokuje publikacji samym brakiem mapowania.
+
+## Podgląd szkicu
+
+Akcja **Podgląd jako uczestniczka** otwiera ten sam komponent huba, programu i
+lekcji, którego używa klientka. Różnica jest wyłącznie w chronionym źródle
+danych: tryb podglądu czyta bieżącą wersję roboczą.
+
+Podgląd:
+
+- wymaga zalogowania, capability `manage_am_toolkit_courses` i nonce powiązanego
+  z identyfikatorem kursu,
+- nie przyznaje dostępu i nie dodaje kursu do huba klientek,
+- nie udostępnia konfiguracji endpointu postępu, więc odtwarzanie i checkboxy
+  nie zapisują ukończeń,
+- chroni MP4 oraz materiały osobnym nonce zasobu i ponowną kontrolą capability,
+- wyświetla stały baner z powrotem do edycji.
+
+Sama znajomość adresu podglądu nie wystarcza do otwarcia szkicu.
+
+## Archiwizacja i trwałe usuwanie
+
+**Archiwizuj** jest operacją domyślną dla treści opublikowanej, zmienionej lub
+posiadającej historię. Ukrywa ją z bieżącego interfejsu i zachowuje dane.
+
+**Usuń trwale** jest wąskim narzędziem do poprawiania świeżej pomyłki. Panel
+pokazuje je przy szkicu, ale ostateczną decyzję podejmuje serwer w chwili
+żądania. Trwałe usunięcie jest odrzucane, gdy element:
+
+- był zmieniany lub publikowany,
+- należy do opublikowanego programu,
+- ma materiały, zadania albo inne zależności,
+- ma grant, postęp lub ukończenie uczestniczki.
+
+Warunek `created_at = updated_at` jest celowo konserwatywny. Jeżeli szkic był
+już poprawiany, należy go zarchiwizować. Dla spotkań, które od początku tworzą
+historię rewizji, dostępna jest wyłącznie archiwizacja. Prywatny plik świeżego
+szkicu materiału albo nagrania jest usuwany z magazynu dopiero po udanym
+usunięciu rekordu.
 
 ## Granice odpowiedzialności
 

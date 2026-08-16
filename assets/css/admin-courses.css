@@ -254,6 +254,124 @@
     }
 }
 
+.amt-courses-readiness {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, .9fr);
+    gap: 24px;
+    margin: 18px 0;
+    padding: 22px 24px;
+    border: 1px solid #dcdcde;
+    border-left: 5px solid #dba617;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.amt-courses-readiness.is-ready {
+    border-left-color: #00a32a;
+}
+
+.amt-courses-readiness h2,
+.amt-courses-guide h2 {
+    margin: 2px 0 8px;
+}
+
+.amt-courses-readiness p {
+    margin: 0;
+    color: #50575e;
+}
+
+.amt-courses-readiness ul {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+}
+
+.amt-courses-readiness li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.amt-courses-readiness li > span {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #f0f0f1;
+    font-weight: 700;
+}
+
+.amt-courses-readiness .is-complete > span {
+    color: #fff;
+    background: #00a32a;
+}
+
+.amt-courses-readiness .is-missing > span {
+    color: #1d2327;
+    background: #f0c33c;
+}
+
+.amt-courses-guide {
+    align-self: start;
+    position: static;
+}
+
+.amt-courses-guide ol {
+    margin: 18px 0 0;
+}
+
+.amt-courses-guide li {
+    margin: 0;
+    border-top: 1px solid #edf0f2;
+}
+
+.amt-courses-guide li a {
+    display: grid;
+    gap: 3px;
+    padding: 12px 0;
+    text-decoration: none;
+}
+
+.amt-courses-guide li span {
+    color: #646970;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.amt-courses-guide__note {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 8px;
+    background: #f6f7f7;
+}
+
+.amt-courses-guide__note p {
+    margin-bottom: 0;
+}
+
+.amt-delete-form {
+    display: grid;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #dcdcde;
+}
+
+.amt-delete-form small {
+    color: #646970;
+}
+
+.amt-delete-form__button {
+    justify-self: start;
+}
+
+@media (max-width: 1100px) {
+    .amt-courses-readiness {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 600px) {
     .amt-courses-header,
     .amt-courses-card__heading {

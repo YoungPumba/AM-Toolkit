@@ -6,6 +6,7 @@ use AMToolkit\Core\Diagnostics\DomainEvent;
 use AMToolkit\Core\Diagnostics\RequestId;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CourseMeetingStore;
+use AMToolkit\Modules\Courses\Contracts\CourseResourceArchiveStore;
 use AMToolkit\Modules\Courses\Domain\MeetingStatus;
 
 defined('ABSPATH') || exit;
@@ -132,6 +133,29 @@ final class CourseMeetingService
         ], $requestId);
 
         return is_wp_error($recorded) ? $recorded : $savedId;
+    }
+
+    public function archive(int $meetingId, int $courseId, int $actorId, ?string $requestId = null): bool|\WP_Error
+    {
+        if ($meetingId <= 0 || $courseId <= 0 || !$this->store instanceof CourseResourceArchiveStore) {
+            return $this->invalid();
+        }
+
+        $archived = $this->store->archiveCourseResource('meeting', $meetingId, $courseId);
+        if (is_wp_error($archived)) {
+            return $archived;
+        }
+
+        $requestId = RequestId::normalize($requestId);
+        $recorded = $this->record(
+            'meeting.archived',
+            $courseId,
+            $actorId,
+            ['meeting_id' => $meetingId],
+            $requestId
+        );
+
+        return is_wp_error($recorded) ? $recorded : true;
     }
 
     private function localDate(string $value, \DateTimeZone $timezone): ?\DateTimeImmutable

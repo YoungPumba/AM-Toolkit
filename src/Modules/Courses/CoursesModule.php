@@ -13,9 +13,13 @@ use AMToolkit\Modules\Courses\Frontend\CourseHubPage;
 use AMToolkit\Modules\Courses\Frontend\CourseProgressController;
 use AMToolkit\Modules\Courses\Frontend\WordPressCourseVideoRenderer;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseAccessPolicy;
+use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
+use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
+use AMToolkit\Modules\Courses\Services\CourseAdminService;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use AMToolkit\Modules\Courses\Services\CourseNextActionService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
+use AMToolkit\Modules\Courses\Services\CoursePreviewService;
 use AMToolkit\Modules\Courses\Services\CourseMeetingService;
 use AMToolkit\Modules\Courses\Services\CourseLessonTaskService;
 use AMToolkit\Modules\Courses\Services\CourseQaService;
@@ -60,7 +64,14 @@ final class CoursesModule implements ModuleInterface
         $taskService = $taskStore !== null
             ? new CourseLessonTaskService($taskStore, new WpdbActivityEventStore())
             : null;
-        (new CourseAdminPage(null, $assetStore, $meetingService, $qaService, $taskService))->boot();
+        $mappings = new WpdbProductCourseMappingStore();
+        $adminCourses = new CourseAdminService(
+            new WpdbCourseAdminStore(),
+            $mappings,
+            new CourseAccessLifecycle($mappings, new AccessCoreCourseEntitlementGateway())
+        );
+        $preview = new CoursePreviewService($adminCourses, $meetingService, $qaService, $taskService);
+        (new CourseAdminPage($adminCourses, $assetStore, $meetingService, $qaService, $taskService))->boot();
         $catalog = new CourseCatalogService(
             new WpdbCourseViewStore(),
             new AccessCoreCourseAccessPolicy(),
@@ -72,7 +83,7 @@ final class CoursesModule implements ModuleInterface
             $meetingStore,
             $qaStore
         );
-        $assets = new CourseAssetController($catalog, [$assetStore]);
+        $assets = new CourseAssetController($catalog, [$assetStore], $preview);
         $assets->boot();
         $progress = null;
         $progressController = null;
@@ -95,7 +106,8 @@ final class CoursesModule implements ModuleInterface
             $assets,
             new WordPressCourseVideoRenderer(),
             $progress,
-            $progressController
+            $progressController,
+            $preview
         ))->boot();
         (new CourseDashboardSection($catalog))->boot();
         (new CourseAttentionTasks($catalog))->boot();
