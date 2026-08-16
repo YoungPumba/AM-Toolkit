@@ -61,7 +61,7 @@ final class CourseDashboardSection
                 </div>
                 <a class="am-courses-dashboard__all" href="<?php echo esc_url($this->hubUrl()); ?>">
                     <?php echo esc_html__('Wszystkie kursy', 'am-toolkit'); ?>
-                    <span aria-hidden="true">→</span>
+                    <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </a>
             </header>
 
@@ -152,7 +152,9 @@ final class CourseDashboardSection
                 </small>
             </span>
             <?php if ($canOpen) : ?>
-                <span class="am-courses-dashboard-card__arrow" aria-hidden="true">→</span>
+                <span class="am-courses-dashboard-card__arrow" aria-hidden="true">
+                    <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </span>
             <?php endif; ?>
         </<?php echo esc_attr($tag); ?>>
         <?php

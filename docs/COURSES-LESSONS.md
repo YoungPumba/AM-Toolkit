@@ -26,6 +26,34 @@ publikuje stabilne zdarzenia `play`, `pause`, `ended` i `error` jako
 `amtoolkit:course-player`. Nie emituje surowego `timeupdate`, aby przyszły zapis
 postępu nie wysyłał lawiny żądań.
 
+## UX odtwarzacza i nawigacji — VIA-71
+
+MediaElement pozostaje silnikiem i źródłem semantyki kontrolek. AM Toolkit
+nakłada własny skin oraz dodaje dekoracyjne SVG do istniejących przycisków;
+nie zastępuje ich checkboxami ani własnym, równoległym odtwarzaczem.
+
+Skrypt odtwarzacza:
+
+- pokazuje ośmiopunktowy loader wyłącznie dla rzeczywistych stanów ładowania,
+  buforowania i przewijania,
+- synchronizuje polskie etykiety oraz `aria-pressed` dla play/pause, dźwięku
+  i fullscreen,
+- w przeglądarkach udostępniających `screen.orientation.lock()` próbuje po
+  wejściu w fullscreen przełączyć film do orientacji poziomej,
+- ignoruje odrzucenie blokady orientacji i zawsze zachowuje użyteczny tryb
+  pionowy; na iPhonie o orientacji może nadal decydować Safari i użytkownik,
+- zwalnia blokadę orientacji po wyjściu z fullscreen.
+
+Sticky spisu programu korzysta z obliczanej zmiennej
+`--am-course-sticky-top`. Uwzględnia aktualną dolną krawędź widocznego headera
+i bezpieczny odstęp, a przy niskim viewportcie otrzymuje własne przewijanie.
+Poniżej breakpointu tabletowego sticky i ograniczenie wysokości są wyłączone.
+
+Ikony akcji frontendowych są renderowane przez `CourseIcon`, używają
+`currentColor`, nie zawierają powtarzalnych identyfikatorów SVG i pozostają
+dekoracyjne. Dostępna nazwa akcji zawsze pochodzi z tekstu odnośnika lub
+przycisku.
+
 ## Prywatny magazyn plików
 
 Domyślny katalog magazynu to:
