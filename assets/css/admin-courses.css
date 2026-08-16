@@ -313,8 +313,8 @@
 }
 
 .amt-courses-guide {
-    position: sticky;
-    top: 48px;
+    align-self: start;
+    position: static;
 }
 
 .amt-courses-guide ol {
@@ -369,10 +369,6 @@
 @media (max-width: 1100px) {
     .amt-courses-readiness {
         grid-template-columns: 1fr;
-    }
-
-    .amt-courses-guide {
-        position: static;
     }
 }
 
