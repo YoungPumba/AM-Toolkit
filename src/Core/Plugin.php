@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
 
 final class Plugin
 {
-    public const VERSION = '0.12.0-dev';
+    public const VERSION = '0.12.0';
 
     private ModuleRegistry $modules;
 

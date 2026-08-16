@@ -200,7 +200,9 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [ ] wykorzystać istniejące ręczne przypisania produktów, ale zapisywać osobny dostęp do kursu ze źródłem, datą nadania, statusem i opcjonalnym terminem wygaśnięcia,
 - [x] umożliwić właścicielce ręczne przyznanie i odebranie dostępu do wybranego kursu przez API (formularz powstaje w zadaniu panelu),
 - [x] przygotować bezpieczne przypisanie dostępu osobom, które kupiły kurs przed uruchomieniem modułu,
-- [ ] zdefiniować i obsłużyć zasady odebrania dostępu po anulowaniu, zwrocie lub chargebacku,
+- [x] zdefiniować i obsłużyć selektywne odebranie dostępu po pełnym zwrocie,
+  anulowaniu lub nieudanym zamówieniu, bez naruszania innych źródeł dostępu;
+  częściowy zwrot pozostaje świadomą decyzją właścicielki,
 - [x] zabezpieczyć wszystkie widoki lekcji tak, aby użytkownik widział wyłącznie własne aktywne dostępy.
 
 ### Hub kursów i lekcje

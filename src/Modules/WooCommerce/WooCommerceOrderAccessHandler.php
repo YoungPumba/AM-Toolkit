@@ -14,9 +14,11 @@ final class WooCommerceOrderAccessHandler
     public function __construct(
         private CourseAccessLifecycle $access,
         private WooCommerceAccessRecordFactory $records,
-        private ?TechnicalLogger $logger = null
+        private ?TechnicalLogger $logger = null,
+        private ?WooCommerceOrderStatusPolicy $statusPolicy = null
     ) {
         $this->logger ??= new WpTechnicalLogger();
+        $this->statusPolicy ??= new WooCommerceOrderStatusPolicy();
     }
 
     public function boot(): void
@@ -36,7 +38,19 @@ final class WooCommerceOrderAccessHandler
         string $newStatus,
         mixed $order = null
     ): void {
-        if (!in_array($newStatus, wc_get_is_paid_statuses(), true)) {
+        $action = $this->statusPolicy?->actionFor($newStatus, \wc_get_is_paid_statuses());
+
+        if ($action === WooCommerceOrderStatusPolicy::REVOKE) {
+            $result = $this->access->revokePurchase($orderId, RequestId::generate());
+
+            if (is_wp_error($result)) {
+                $this->logError($result, $orderId);
+            }
+
+            return;
+        }
+
+        if ($action !== WooCommerceOrderStatusPolicy::GRANT) {
             return;
         }
 

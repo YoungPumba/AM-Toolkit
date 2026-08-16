@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Gałąź `main` przygotowuje wersję rozwojową 0.12.0 z modułem AM Courses.
+Aktualne wydanie 0.12.0 wprowadza moduł AM Courses.
 Zweryfikowane wydania instalacyjne są publikowane jako tag i GitHub Release
 zgodnie z [procedurą wydań](docs/RELEASES.md).
 
@@ -55,6 +55,12 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 
 Ustawienia komunikatów są dostępne w kokpicie WordPressa w sekcji **AM Toolkit → Powiadomienia**.
 
+Moduł Kursów jest wdrażany kontrolowanie: najpierw instaluje migracje z flagą
+`courses` wyłączoną, a następnie operator wdrożenia włącza go po sprawdzeniu
+hostingu i konfiguracji produktów. Pełna kolejność aktywacji, automatyzacji
+dostępu oraz rollbacku znajduje się w
+[runbooku wydania 0.12.0](docs/RELEASE-0.12.0.md).
+
 ## API dostępu
 
 Moduły kursów i pozostałe chronione widoki powinny korzystać ze wspólnego API,
@@ -102,6 +108,7 @@ jeśli nadal istnieje inny aktywny grant.
 - [Hub kursów AM Courses](docs/COURSES-HUB.md)
 - [Lekcje, odtwarzacz i prywatne materiały AM Courses](docs/COURSES-LESSONS.md)
 - [Postęp i ukończenie AM Courses](docs/COURSES-PROGRESS.md)
+- [Wydanie, aktywacja i rollback 0.12.0](docs/RELEASE-0.12.0.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
 

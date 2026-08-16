@@ -78,6 +78,27 @@ try {
         throw 'Composer metadata must not be shipped in the production ZIP.'
     }
 
+    $developmentPrefixes = @(
+        'am-toolkit/.build/',
+        'am-toolkit/.build-output/',
+        'am-toolkit/.git/',
+        'am-toolkit/.github/',
+        'am-toolkit/.vscode/',
+        'am-toolkit/.worktrees/',
+        'am-toolkit/docs/',
+        'am-toolkit/tests/'
+    )
+    $developmentEntries = @(
+        $entries | Where-Object {
+            $entryName = $_.FullName
+            @($developmentPrefixes | Where-Object { $entryName.StartsWith($_) }).Count -gt 0
+        }
+    )
+
+    if ($developmentEntries.Count -gt 0) {
+        throw 'Development-only files must not be shipped in the production ZIP.'
+    }
+
     $duplicates = @(
         $entries |
             Group-Object FullName |

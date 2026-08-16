@@ -73,7 +73,7 @@ function Get-SourceRelativePath {
     return $FullName.Substring($sourcePath.Length).TrimStart('\', '/')
 }
 
-function Test-IsBuildFile {
+function Test-IsPackageSourceFile {
     param(
         [Parameter(Mandatory)]
         [string] $RelativePath
@@ -81,23 +81,24 @@ function Test-IsBuildFile {
 
     $normalized = $RelativePath.Replace('\', '/')
 
-    return (
-        $normalized.StartsWith('.build/') -or
-        $normalized.StartsWith('.git/') -or
-        $normalized.StartsWith('.vscode/') -or
-        $normalized.StartsWith('docs/') -or
-        $normalized.StartsWith('vendor/') -or
-        $normalized.StartsWith('dist/') -or
-        $normalized.StartsWith('.build-output/') -or
-        $normalized -eq '.gitignore' -or
-        $normalized -eq 'composer.json' -or
-        $normalized -eq 'composer.lock' -or
-        $normalized -eq 'phpcs.xml.dist' -or
-        $normalized -eq '.DS_Store' -or
-        $normalized.EndsWith('/.DS_Store') -or
-        $normalized -eq 'Thumbs.db' -or
-        $normalized.EndsWith('/Thumbs.db')
+    $rootFiles = @(
+        'am-toolkit.php',
+        'CHANGELOG.md',
+        'README.md',
+        'ROADMAP.md'
     )
+
+    if ($rootFiles -contains $normalized) {
+        return $true
+    }
+
+    foreach ($directory in @('assets/', 'src/', 'templates/')) {
+        if ($normalized.StartsWith($directory)) {
+            return $true
+        }
+    }
+
+    return $false
 }
 
 function Add-ZipFile {
@@ -135,9 +136,9 @@ try {
 
     $sourceFiles = Get-ChildItem -LiteralPath $sourcePath -Recurse -File |
         Where-Object {
-            -not (Test-IsBuildFile -RelativePath (
+            Test-IsPackageSourceFile -RelativePath (
                 Get-SourceRelativePath -FullName $_.FullName
-            ))
+            )
         }
 
     foreach ($file in $sourceFiles) {
