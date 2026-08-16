@@ -17,6 +17,7 @@ use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use AMToolkit\Modules\Courses\Services\CourseNextActionService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
 use AMToolkit\Modules\Courses\Services\CourseMeetingService;
+use AMToolkit\Modules\Courses\Services\CourseLessonTaskService;
 use AMToolkit\Modules\Courses\Services\CourseQaService;
 
 defined('ABSPATH') || exit;
@@ -53,7 +54,13 @@ final class CoursesModule implements ModuleInterface
         $qaService = $qaStore !== null
             ? new CourseQaService($qaStore, new WpdbActivityEventStore())
             : null;
-        (new CourseAdminPage(null, $assetStore, $meetingService, $qaService))->boot();
+        $taskStore = (new FeatureFlags())->isEnabled('courses-tasks')
+            ? new WpdbCourseLessonTaskStore()
+            : null;
+        $taskService = $taskStore !== null
+            ? new CourseLessonTaskService($taskStore, new WpdbActivityEventStore())
+            : null;
+        (new CourseAdminPage(null, $assetStore, $meetingService, $qaService, $taskService))->boot();
         $catalog = new CourseCatalogService(
             new WpdbCourseViewStore(),
             new AccessCoreCourseAccessPolicy(),
@@ -76,7 +83,8 @@ final class CoursesModule implements ModuleInterface
                 new WpdbProgressRepository(),
                 new WpdbCompletionRepository(),
                 new AccessCoreCourseAccessPolicy(),
-                new WpdbActivityEventStore()
+                new WpdbActivityEventStore(),
+                $taskStore
             );
             $progressController = new CourseProgressController($progress);
             $progressController->boot();

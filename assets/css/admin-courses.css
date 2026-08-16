@@ -192,12 +192,18 @@
 .amt-check {
     align-items: center;
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
 .amt-check > span {
     display: inline !important;
     margin: 0 !important;
+}
+
+.amt-check > small {
+    flex-basis: 100%;
+    margin-left: 24px;
 }
 
 .amt-product-checklist {

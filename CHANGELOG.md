@@ -76,6 +76,12 @@
   odczytu po sprawdzeniu aktywnego dostępu,
 - migracja Courses 6 oraz flaga awaryjna `courses-qa`, która ukrywa interfejs
   bez usuwania treści; audyt nie zapisuje pytań ani odpowiedzi.
+- edytowalna checklista czynności przy lekcji: stabilna kolejność, pozycje
+  wymagane i opcjonalne, publikacja, archiwizacja oraz czytelne wskazówki w panelu,
+- trwałe zaznaczenia uczestniczki per pozycja, obsługa cofnięcia przed ukończeniem
+  lekcji i automatyczny postęp liczony wyłącznie z wymaganych czynności,
+- migracja Courses 7 oraz flaga awaryjna `courses-tasks`; wyłączenie funkcji nie
+  usuwa definicji checklist ani zapisanego postępu.
 
 ## 0.11.5 — 2026-08-11
 

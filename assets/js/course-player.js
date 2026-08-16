@@ -381,6 +381,11 @@
             body.set('intervals', JSON.stringify(extra.intervals));
         }
 
+        if (extra.task) {
+            body.set('task', extra.task);
+            body.set('completed', extra.completed ? '1' : '0');
+        }
+
         return window.fetch(config.ajaxUrl, {
             method: 'POST',
             credentials: 'same-origin',
@@ -415,6 +420,13 @@
         var manualButton = panel.querySelector('[data-am-progress-action="complete_manually"]');
         var title = panel.querySelector('[data-am-progress-title]');
         var badge = panel.querySelector('[data-am-progress-badge]');
+        var lessonTaskStates = {};
+
+        if (Array.isArray(progress.lesson_tasks)) {
+            progress.lesson_tasks.forEach(function (task) {
+                lessonTaskStates[String(task.public_id || '')] = Boolean(task.completed);
+            });
+        }
 
         if (watchedBar) {
             watchedBar.style.width = watched + '%';
@@ -436,6 +448,17 @@
             taskButton.disabled = true;
             taskButton.textContent = 'Zadanie wykonane';
         }
+
+        panel.querySelectorAll('[data-am-lesson-task]').forEach(function (checkbox) {
+            var isCompleted = Boolean(lessonTaskStates[checkbox.dataset.amLessonTask]);
+
+            checkbox.checked = isCompleted;
+            checkbox.disabled = Boolean(progress.lesson_completed);
+
+            if (checkbox.closest('[data-am-lesson-task-item]')) {
+                checkbox.closest('[data-am-lesson-task-item]').classList.toggle('is-completed', isCompleted);
+            }
+        });
 
         if (progress.lesson_completed) {
             panel.classList.add('am-lesson-progress--completed');
@@ -495,6 +518,30 @@
                     }
                 }).catch(function (error) {
                     button.disabled = false;
+                    panelMessage(panel, error.message || config.messages.error, true);
+                });
+            });
+        });
+
+        panel.querySelectorAll('[data-am-lesson-task]').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                var requestedState = checkbox.checked;
+
+                checkbox.disabled = true;
+                panelMessage(panel, config.messages.saving, false);
+                progressRequest('set_lesson_task', panel.dataset.course, panel.dataset.lesson, {
+                    task: checkbox.dataset.amLessonTask,
+                    completed: requestedState
+                }).then(function (progress) {
+                    updateProgressPanel(panel, progress);
+                    panelMessage(panel, progress.lesson_completed ? config.messages.completed : config.messages.saved, false);
+
+                    if (!progress.lesson_completed) {
+                        checkbox.disabled = false;
+                    }
+                }).catch(function (error) {
+                    checkbox.checked = !requestedState;
+                    checkbox.disabled = false;
                     panelMessage(panel, error.message || config.messages.error, true);
                 });
             });

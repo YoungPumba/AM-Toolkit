@@ -9,6 +9,7 @@ use AMToolkit\Modules\Courses\Domain\PublicationStatus;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
+use AMToolkit\Modules\Courses\Services\CourseLessonTaskService;
 use AMToolkit\Modules\Courses\Services\CourseMeetingService;
 use AMToolkit\Modules\Courses\Services\CourseQaService;
 use AMToolkit\Modules\Courses\Domain\MeetingStatus;
@@ -28,17 +29,20 @@ final class CourseAdminPage
     private CourseAssetStore $assets;
     private ?CourseMeetingService $meetings;
     private ?CourseQaService $qa;
+    private ?CourseLessonTaskService $tasks;
 
     public function __construct(
         ?CourseAdminService $courses = null,
         ?CourseAssetStore $assets = null,
         ?CourseMeetingService $meetings = null,
-        ?CourseQaService $qa = null
+        ?CourseQaService $qa = null,
+        ?CourseLessonTaskService $tasks = null
     )
     {
         $this->assets = $assets ?? new WpPrivateCourseAssetStore();
         $this->meetings = $meetings;
         $this->qa = $qa;
+        $this->tasks = $tasks;
 
         if ($courses !== null) {
             $this->courses = $courses;
@@ -247,6 +251,32 @@ final class CourseAdminPage
                 );
                 break;
 
+            case 'save_lesson_task':
+                $result = $this->tasks !== null
+                    ? $this->tasks->save([
+                        'id' => $this->postInt('task_id'),
+                        'public_id' => $this->postText('public_id'),
+                        'course_id' => $courseId,
+                        'lesson_id' => $this->postInt('lesson_id'),
+                        'title' => $this->postText('title'),
+                        'description' => $this->postTextarea('description'),
+                        'position' => $this->postInt('position'),
+                        'is_required' => $this->postBool('is_required'),
+                        'status' => $this->postStatus(),
+                    ], get_current_user_id())
+                    : new \WP_Error('am_toolkit_lesson_tasks_disabled', __('Checklisty lekcji są wyłączone.', 'am-toolkit'));
+                break;
+
+            case 'archive_lesson_task':
+                $result = $this->tasks !== null
+                    ? $this->tasks->archive(
+                        $this->postInt('task_id'),
+                        $courseId,
+                        get_current_user_id()
+                    )
+                    : new \WP_Error('am_toolkit_lesson_tasks_disabled', __('Checklisty lekcji są wyłączone.', 'am-toolkit'));
+                break;
+
             case 'save_mappings':
                 $submitted = isset($_POST['product_ids'])
                     ? (array) wp_unslash($_POST['product_ids'])
@@ -374,12 +404,16 @@ final class CourseAdminPage
         $meetingSettings = $this->meetings !== null ? $this->meetings->courseSettings($courseId) : null;
         $meetingSettings = is_array($meetingSettings) ? $meetingSettings : [];
         $qaEntries = $this->qa !== null ? $this->valueOrEmpty($this->qa->entries($courseId)) : [];
+        $lessonTasks = $this->tasks !== null ? $this->valueOrEmpty($this->tasks->entries($courseId)) : [];
 
         echo '<div class="amt-courses-layout">';
         echo '<main class="amt-courses-main">';
         $this->renderCourseForm($course);
         $this->renderSections($courseId, $sections);
         $this->renderLessons($courseId, $sections, $lessons);
+        if ($this->tasks !== null) {
+            $this->renderLessonTasks($courseId, $lessons, $lessonTasks);
+        }
         if ($this->qa !== null) {
             $this->renderQa($courseId, $lessons, $qaEntries);
         }
@@ -565,10 +599,73 @@ final class CourseAdminPage
                     <label><span><?php esc_html_e('Nagranie MP4', 'am-toolkit'); ?></span><input type="file" name="video_file" accept="video/mp4,.mp4"><small><?php echo esc_html(!empty($lesson['video_reference']) ? __('Nagranie jest zapisane. Nowy plik zastąpi przypisanie.', 'am-toolkit') : sprintf(__('Maksymalny rozmiar wysyłania: %s.', 'am-toolkit'), size_format(wp_max_upload_size()))); ?></small></label>
                     <label><span><?php esc_html_e('Czas nagrania w sekundach', 'am-toolkit'); ?></span><input type="number" min="0" name="duration_seconds" value="<?php echo esc_attr((string) ($lesson['duration_seconds'] ?? '')); ?>"><small><?php esc_html_e('Dla prywatnego MP4 czas zostanie odczytany automatycznie przy zapisie.', 'am-toolkit'); ?></small></label>
                 </div>
-                <div class="amt-courses-form__row"><label><span><?php esc_html_e('Wymagany procent filmu', 'am-toolkit'); ?></span><input type="number" min="0" max="100" name="video_percent" value="<?php echo esc_attr((string) ($requirements['video_percent'] ?? 0)); ?>"></label><label class="amt-check"><input type="checkbox" name="task_required" value="1" <?php checked(!empty($requirements['task_required'])); ?>><span><?php esc_html_e('Zadanie wymagane', 'am-toolkit'); ?></span></label><label class="amt-check"><input type="checkbox" name="is_required" value="1" <?php checked(!isset($lesson['is_required']) || (int) $lesson['is_required'] === 1); ?>><span><?php esc_html_e('Lekcja wymagana w programie', 'am-toolkit'); ?></span></label></div>
+                <div class="amt-courses-form__row"><label><span><?php esc_html_e('Wymagany procent filmu', 'am-toolkit'); ?></span><input type="number" min="0" max="100" name="video_percent" value="<?php echo esc_attr((string) ($requirements['video_percent'] ?? 0)); ?>"><small><?php esc_html_e('Ustaw 0, jeśli lekcja nie ma nagrania — inaczej nie będzie można jej ukończyć.', 'am-toolkit'); ?></small></label><label class="amt-check"><input type="checkbox" name="task_required" value="1" <?php checked(!empty($requirements['task_required'])); ?>><span><?php esc_html_e('Pojedyncze potwierdzenie zadania (tryb zgodności)', 'am-toolkit'); ?></span><small><?php esc_html_e('Nowe zadania dodawaj w checkliście poniżej. To ustawienie zachowuje starsze lekcje.', 'am-toolkit'); ?></small></label><label class="amt-check"><input type="checkbox" name="is_required" value="1" <?php checked(!isset($lesson['is_required']) || (int) $lesson['is_required'] === 1); ?>><span><?php esc_html_e('Lekcja wymagana w programie', 'am-toolkit'); ?></span></label></div>
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz lekcję', 'am-toolkit'); ?></button>
             </form>
             <?php if ($id > 0 && ($lesson['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?><?php $this->archiveForm('archive_lesson', $courseId, $id, __('Archiwizuj lekcję', 'am-toolkit'), 'lesson_id'); ?><?php endif; ?>
+        </details>
+        <?php
+    }
+
+    /** @param list<array<string, mixed>> $lessons @param list<array<string, mixed>> $tasks */
+    private function renderLessonTasks(int $courseId, array $lessons, array $tasks): void
+    {
+        ?>
+        <section class="amt-courses-card" id="course-lesson-tasks">
+            <div class="amt-courses-card__heading">
+                <div><h2><?php esc_html_e('Checklisty zadań lekcji', 'am-toolkit'); ?></h2><p><?php esc_html_e('Dodaj krótkie czynności do samodzielnego zaznaczenia. Nie wymagają plików ani odpowiedzi tekstowej.', 'am-toolkit'); ?></p></div>
+                <span class="amt-courses-count"><?php echo esc_html((string) count($tasks)); ?></span>
+            </div>
+            <?php if ($lessons === []) : ?>
+                <p class="amt-courses-empty"><?php esc_html_e('Najpierw dodaj lekcję, a potem przypisz do niej zadania.', 'am-toolkit'); ?></p>
+            <?php else : ?>
+                <?php foreach ($tasks as $task) : ?>
+                    <?php $this->lessonTaskForm($courseId, $lessons, $task); ?>
+                <?php endforeach; ?>
+                <?php $this->lessonTaskForm($courseId, $lessons, null, count($tasks)); ?>
+            <?php endif; ?>
+        </section>
+        <?php
+    }
+
+    /** @param list<array<string, mixed>> $lessons @param array<string, mixed>|null $task */
+    private function lessonTaskForm(
+        int $courseId,
+        array $lessons,
+        ?array $task,
+        int $defaultPosition = 0
+    ): void {
+        $id = (int) ($task['id'] ?? 0);
+        $lessonId = (int) ($task['lesson_id'] ?? 0);
+        $required = !isset($task['is_required']) || !empty($task['is_required']);
+        ?>
+        <details class="amt-editor amt-task-editor" <?php echo $id === 0 ? 'open' : ''; ?>>
+            <summary>
+                <span><?php echo esc_html($id > 0 ? (string) $task['title'] : __('Dodaj zadanie do checklisty', 'am-toolkit')); ?></span>
+                <small><?php echo esc_html($id > 0 ? (string) ($task['lesson_title'] ?? '') : __('Nowa pozycja', 'am-toolkit')); ?></small>
+            </summary>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
+                <?php $this->formBase('save_lesson_task', $courseId); ?>
+                <input type="hidden" name="task_id" value="<?php echo esc_attr((string) $id); ?>">
+                <input type="hidden" name="public_id" value="<?php echo esc_attr((string) ($task['public_id'] ?? '')); ?>">
+                <?php if ($id > 0) : ?>
+                    <input type="hidden" name="lesson_id" value="<?php echo esc_attr((string) $lessonId); ?>">
+                    <label><span><?php esc_html_e('Lekcja', 'am-toolkit'); ?></span><select disabled><?php foreach ($lessons as $lesson) : ?><option <?php selected($lessonId, (int) $lesson['id']); ?>><?php echo esc_html((string) $lesson['title']); ?></option><?php endforeach; ?></select><small><?php esc_html_e('Przypisania nie zmieniamy, aby ukończenie nie przeskoczyło do innej lekcji.', 'am-toolkit'); ?></small></label>
+                <?php else : ?>
+                    <label><span><?php esc_html_e('Lekcja', 'am-toolkit'); ?></span><select name="lesson_id" required><option value=""><?php esc_html_e('Wybierz lekcję', 'am-toolkit'); ?></option><?php foreach ($lessons as $lesson) : ?><option value="<?php echo esc_attr((string) $lesson['id']); ?>"><?php echo esc_html((string) $lesson['title']); ?></option><?php endforeach; ?></select></label>
+                <?php endif; ?>
+                <label><span><?php esc_html_e('Czynność do wykonania', 'am-toolkit'); ?></span><input required name="title" value="<?php echo esc_attr((string) ($task['title'] ?? '')); ?>" placeholder="Np. Zapisz trzy pomysły na publikacje"></label>
+                <label><span><?php esc_html_e('Dodatkowa wskazówka (opcjonalnie)', 'am-toolkit'); ?></span><textarea name="description" rows="3"><?php echo esc_textarea((string) ($task['description'] ?? '')); ?></textarea></label>
+                <div class="amt-courses-form__row">
+                    <label><span><?php esc_html_e('Pozycja', 'am-toolkit'); ?></span><input type="number" min="0" name="position" value="<?php echo esc_attr((string) ($task['position'] ?? $defaultPosition)); ?>"></label>
+                    <label><span><?php esc_html_e('Stan', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions((string) ($task['status'] ?? PublicationStatus::DRAFT)); ?></select></label>
+                    <label class="amt-check"><input type="checkbox" name="is_required" value="1" <?php checked($required); ?>><span><?php esc_html_e('Wymagane do ukończenia lekcji', 'am-toolkit'); ?></span></label>
+                </div>
+                <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz zadanie', 'am-toolkit'); ?></button>
+            </form>
+            <?php if ($id > 0 && ($task['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?>
+                <?php $this->archiveForm('archive_lesson_task', $courseId, $id, __('Archiwizuj zadanie', 'am-toolkit'), 'task_id'); ?>
+            <?php endif; ?>
         </details>
         <?php
     }
