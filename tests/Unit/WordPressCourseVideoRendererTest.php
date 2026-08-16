@@ -22,6 +22,7 @@ final class WordPressCourseVideoRendererTest extends TestCase
 
         self::assertIsString($html);
         self::assertStringContainsString('<video class="wp-video-shortcode"', $html);
+        self::assertStringContainsString('playsinline="playsinline"', $html);
         self::assertStringContainsString('type="video/mp4"', $html);
         self::assertStringContainsString('action=asset&amp;_wpnonce=test', $html);
         self::assertSame(['wp-mediaelement'], $GLOBALS['amt_test_enqueued_styles']);

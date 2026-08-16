@@ -361,7 +361,7 @@ final class CourseHubPage
                 <?php if ($url !== '') : ?>
                     <a class="am-course-card__action" href="<?php echo esc_url($url); ?>">
                         <?php echo esc_html__('Zobacz program', 'am-toolkit'); ?>
-                        <span aria-hidden="true">→</span>
+                        <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     </a>
                 <?php else : ?>
                     <p class="am-course-card__notice">
@@ -396,7 +396,10 @@ final class CourseHubPage
         ob_start();
         ?>
         <article class="am-course" aria-labelledby="am-course-title">
-            <a class="am-course__back" href="<?php echo esc_url($this->hubUrl()); ?>">← <?php echo esc_html__('Wróć do kursów', 'am-toolkit'); ?></a>
+            <a class="am-course__back" href="<?php echo esc_url($this->hubUrl()); ?>">
+                <?php echo CourseIcon::render(CourseIcon::ARROW_LEFT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php echo esc_html__('Wróć do kursów', 'am-toolkit'); ?>
+            </a>
             <header class="am-course__header">
                 <div class="am-course__header-copy">
                     <span class="am-courses__eyebrow"><?php echo esc_html__('Twój kurs', 'am-toolkit'); ?></span>
@@ -479,7 +482,9 @@ final class CourseHubPage
                                 <strong><?php echo esc_html((string) ($lesson['title'] ?? '')); ?></strong>
                                 <span><?php echo esc_html($this->lessonMeta($lesson)); ?></span>
                             </span>
-                            <span class="am-course-lesson__arrow" aria-hidden="true">→</span>
+                            <span class="am-course-lesson__arrow">
+                                <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            </span>
                         </a>
                     </li>
                 <?php endforeach; ?>
@@ -573,7 +578,10 @@ final class CourseHubPage
         ?>
         <article class="am-lesson" aria-labelledby="am-lesson-title">
             <nav class="am-lesson__breadcrumbs" aria-label="<?php echo esc_attr__('Nawigacja kursu', 'am-toolkit'); ?>">
-                <a href="<?php echo esc_url($this->courseUrl($coursePublicId)); ?>">← <?php echo esc_html__('Wróć do programu', 'am-toolkit'); ?></a>
+                <a href="<?php echo esc_url($this->courseUrl($coursePublicId)); ?>">
+                    <?php echo CourseIcon::render(CourseIcon::ARROW_LEFT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php echo esc_html__('Wróć do programu', 'am-toolkit'); ?>
+                </a>
             </nav>
             <div class="am-lesson__layout">
                 <main class="am-lesson__main">
@@ -635,10 +643,12 @@ final class CourseHubPage
         }
 
         return sprintf(
-            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" aria-label="%3$s">%4$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>',
+            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" aria-label="%3$s"><div class="am-course-player__loader" data-am-course-player-loader role="status" aria-label="%4$s">%5$s</div>%6$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>',
             esc_attr($coursePublicId),
             esc_attr($lessonPublicId),
             esc_attr__('Nagranie lekcji', 'am-toolkit'),
+            esc_attr__('Ładowanie nagrania', 'am-toolkit'),
+            str_repeat('<span class="am-course-player__loader-dot" aria-hidden="true"></span>', 8),
             $player
         );
     }
@@ -662,7 +672,8 @@ final class CourseHubPage
                             <?php if (!empty($material['description'])) : ?><p><?php echo esc_html((string) $material['description']); ?></p><?php endif; ?>
                         </div>
                         <a href="<?php echo esc_url($this->assets->url($coursePublicId, $lessonPublicId, 'material', (string) ($material['public_id'] ?? ''))); ?>">
-                            <?php echo esc_html__('Pobierz', 'am-toolkit'); ?> <span aria-hidden="true">↓</span>
+                            <?php echo esc_html__('Pobierz', 'am-toolkit'); ?>
+                            <?php echo CourseIcon::render(CourseIcon::DOWNLOAD); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
@@ -687,10 +698,10 @@ final class CourseHubPage
         ?>
         <nav class="am-lesson__navigation" aria-label="<?php echo esc_attr__('Poprzednia i następna lekcja', 'am-toolkit'); ?>">
             <?php if ($previous !== null) : ?>
-                <a href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $previous['public_id'])); ?>"><small><?php echo esc_html__('Poprzednia lekcja', 'am-toolkit'); ?></small><strong>← <?php echo esc_html((string) $previous['title']); ?></strong></a>
+                <a href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $previous['public_id'])); ?>"><small><?php echo esc_html__('Poprzednia lekcja', 'am-toolkit'); ?></small><strong><?php echo CourseIcon::render(CourseIcon::ARROW_LEFT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php echo esc_html((string) $previous['title']); ?></strong></a>
             <?php else : ?><span></span><?php endif; ?>
             <?php if ($next !== null) : ?>
-                <a class="am-lesson__navigation-next" href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $next['public_id'])); ?>"><small><?php echo esc_html__('Następna lekcja', 'am-toolkit'); ?></small><strong><?php echo esc_html((string) $next['title']); ?> →</strong></a>
+                <a class="am-lesson__navigation-next" href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $next['public_id'])); ?>"><small><?php echo esc_html__('Następna lekcja', 'am-toolkit'); ?></small><strong><?php echo esc_html((string) $next['title']); ?><?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong></a>
             <?php endif; ?>
         </nav>
         <?php
