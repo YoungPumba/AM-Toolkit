@@ -117,3 +117,9 @@ Test tworzy syntetyczne kursy i granty w transakcji, sprawdza aktywny i wygasły
 dostęp, filtrowanie draftu oraz próbę odczytu przez inną osobę, a następnie
 wykonuje `ROLLBACK`. Skrypt `course-hub-browser-fixture.php` służy wyłącznie do
 kontrolowanego QA widoków i zawsze wymaga późniejszego trybu `cleanup`.
+
+Do kontrolowanego testu opublikowanego Q&A w istniejącym lokalnym kursie służy
+`.build/course-qa-browser-fixture.php`. Tryb `setup` tworzy jeden opublikowany
+wpis i jeden niewidoczny szkic o stałych UUID, a `cleanup` usuwa wyłącznie te
+dwa syntetyczne rekordy dla wskazanego kursu. Cleanup jest obowiązkowy po
+zakończeniu testu przeglądarkowego.
