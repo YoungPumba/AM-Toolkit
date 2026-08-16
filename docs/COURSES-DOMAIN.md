@@ -91,6 +91,15 @@ historię rewizji i statusy `scheduled`, `rescheduled`, `cancelled` oraz
 zapisuje adresy ręcznie, a uczestniczka otrzymuje je dopiero po serwerowej
 weryfikacji aktywnego dostępu.
 
+### CourseQaEntry
+
+Redakcyjna para pytanie–odpowiedź przypisana do kursu, opcjonalnie osadzona
+w kontekście lekcji. Używa stanów `draft`, `published` i `archived` oraz jawnej
+pozycji. Uczestniczki nie tworzą ani nie komentują wpisów; read model zwraca
+wyłącznie opublikowane rekordy po potwierdzeniu aktywnego dostępu do kursu.
+Kontekst lekcji jest linkowany tylko wtedy, gdy lekcja należy do aktualnie
+opublikowanego programu.
+
 ### LessonProgress
 
 Bieżący stan jednej pary użytkownik/kurs/lekcja. Brak rekordu oznacza stan
@@ -164,6 +173,15 @@ Migracja Courses `5` dodaje informacje organizacyjne:
 
 Rewizje przechowują pełny prywatny snapshot do audytu administracyjnego.
 Zdarzenia diagnostyczne zapisują wyłącznie obecność linku, nigdy jego wartość.
+
+Migracja Courses `6` tworzy redakcyjne Q&A:
+
+- `amt_course_qa_entries` z deterministyczną kolejnością, opcjonalnym kontekstem
+  lekcji i bezpieczną archiwizacją bez usuwania treści.
+
+Flaga `courses-qa` pozwala ukryć panel i widok Q&A bez kasowania tabeli ani
+rekordów. Audyt zapisuje identyfikator, stan, pozycję i kontekst, ale nie treść
+pytania ani odpowiedzi.
 
 Mapowanie jest relacją wiele-do-wielu i można je dezaktywować bez usuwania
 historycznych grantów. Szczegółowy kontrakt cyklu dostępu opisuje

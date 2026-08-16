@@ -37,6 +37,13 @@ ten sam publiczny stan. Widok nie ujawnia technicznego błędu bazy ani
 identyfikatorów wewnętrznych. Drafty, odnośniki do filmów i materiały nie są
 częścią read modelu VIA-41.
 
+VIA-70 rozszerza tę samą granicę o redakcyjne Q&A. Magazyn pytań jest
+odpytywany dopiero po autoryzacji kursu i zwraca wyłącznie rekordy w stanie
+`published`. Uczestniczka otrzymuje akordeon tylko do odczytu, jawny stan pusty
+oraz opcjonalny odnośnik do lekcji, jeśli ta lekcja nadal należy do bieżącego
+opublikowanego programu. Flaga `courses-qa` ukrywa całą sekcję bez usuwania
+danych.
+
 ## Integracja z Account
 
 Gdy moduł Courses jest aktywny:
@@ -110,3 +117,9 @@ Test tworzy syntetyczne kursy i granty w transakcji, sprawdza aktywny i wygasły
 dostęp, filtrowanie draftu oraz próbę odczytu przez inną osobę, a następnie
 wykonuje `ROLLBACK`. Skrypt `course-hub-browser-fixture.php` służy wyłącznie do
 kontrolowanego QA widoków i zawsze wymaga późniejszego trybu `cleanup`.
+
+Do kontrolowanego testu opublikowanego Q&A w istniejącym lokalnym kursie służy
+`.build/course-qa-browser-fixture.php`. Tryb `setup` tworzy jeden opublikowany
+wpis i jeden niewidoczny szkic o stałych UUID, a `cleanup` usuwa wyłącznie te
+dwa syntetyczne rekordy dla wskazanego kursu. Cleanup jest obowiązkowy po
+zakończeniu testu przeglądarkowego.

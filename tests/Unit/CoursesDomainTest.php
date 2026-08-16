@@ -6,6 +6,7 @@ namespace AMToolkit\Tests\Unit;
 
 use AMToolkit\Modules\Courses\Domain\CourseCompletion;
 use AMToolkit\Modules\Courses\Domain\CourseMeeting;
+use AMToolkit\Modules\Courses\Domain\CourseQaEntry;
 use AMToolkit\Modules\Courses\Domain\MeetingStatus;
 use AMToolkit\Modules\Courses\Domain\CourseProgramVersion;
 use AMToolkit\Modules\Courses\Domain\Identifier;
@@ -119,6 +120,22 @@ final class CoursesDomainTest extends TestCase
 
         self::assertSame('2026-08-13 18:00:00', $meeting->startsAtUtc()->format('Y-m-d H:i:s'));
         self::assertSame('UTC', $meeting->startsAtUtc()->getTimezone()->getName());
+    }
+
+    public function testQaEntryRequiresEditorialContentAndKeepsLessonContext(): void
+    {
+        $entry = new CourseQaEntry(0, $this->publicId, 8, 12, 'Czy dostanę nagranie?', 'Tak, po spotkaniu.', 3, PublicationStatus::PUBLISHED);
+
+        self::assertSame(12, $entry->lessonId());
+        self::assertSame(3, $entry->position());
+        self::assertSame(PublicationStatus::PUBLISHED, $entry->status());
+    }
+
+    public function testQaEntryRejectsEmptyAnswer(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new CourseQaEntry(0, $this->publicId, 8, null, 'Pytanie', ' ', 0, PublicationStatus::DRAFT);
     }
 
     /**

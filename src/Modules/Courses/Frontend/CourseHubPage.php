@@ -498,7 +498,55 @@ final class CourseHubPage
                     <?php endif; ?>
                 <?php endif; ?>
             </section>
+
+            <?php if (array_key_exists('qa', $course)) : ?>
+                <?php echo $this->renderCourseQa(is_array($course['qa']) ? $course['qa'] : [], $publicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php endif; ?>
         </article>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /** @param list<array<string, mixed>> $entries */
+    private function renderCourseQa(array $entries, string $coursePublicId): string
+    {
+        ob_start();
+        ?>
+        <section class="am-course-qa" aria-labelledby="am-course-qa-title">
+            <header class="am-course-qa__header">
+                <span class="am-courses__eyebrow"><?php esc_html_e('Warto wiedzieć', 'am-toolkit'); ?></span>
+                <h2 id="am-course-qa-title"><?php esc_html_e('Pytania i odpowiedzi', 'am-toolkit'); ?></h2>
+                <p><?php esc_html_e('Najważniejsze odpowiedzi związane z kursem znajdziesz w jednym miejscu.', 'am-toolkit'); ?></p>
+            </header>
+
+            <?php if ($entries === []) : ?>
+                <div class="am-course-qa__empty" role="status">
+                    <strong><?php esc_html_e('Nie ma jeszcze opublikowanych odpowiedzi', 'am-toolkit'); ?></strong>
+                    <p><?php esc_html_e('Gdy pojawią się dodatkowe informacje, zobaczysz je właśnie tutaj.', 'am-toolkit'); ?></p>
+                </div>
+            <?php else : ?>
+                <div class="am-course-qa__list">
+                    <?php foreach ($entries as $entry) : ?>
+                        <details class="am-course-qa__entry">
+                            <summary>
+                                <span><?php echo esc_html((string) ($entry['question'] ?? '')); ?></span>
+                                <span class="am-course-qa__toggle" aria-hidden="true">+</span>
+                            </summary>
+                            <div class="am-course-qa__answer">
+                                <p><?php echo nl2br(esc_html((string) ($entry['answer'] ?? ''))); ?></p>
+                                <?php if (!empty($entry['lesson_public_id']) && !empty($entry['lesson_title'])) : ?>
+                                    <a href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $entry['lesson_public_id'])); ?>">
+                                        <?php echo esc_html(sprintf(__('Przejdź do lekcji: %s', 'am-toolkit'), (string) $entry['lesson_title'])); ?>
+                                        <?php echo CourseIcon::render(CourseIcon::ARROW_RIGHT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </details>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
         <?php
 
         return (string) ob_get_clean();

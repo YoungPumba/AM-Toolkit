@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 final class CoursesSchema
 {
-    public const VERSION = 5;
+    public const VERSION = 6;
 
     public static function coursesTable(): string
     {
@@ -97,6 +97,13 @@ final class CoursesSchema
         global $wpdb;
 
         return $wpdb->prefix . 'amt_course_meeting_revisions';
+    }
+
+    public static function qaEntriesTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_course_qa_entries';
     }
 
     public static function productMappingDefinition(string $charsetCollate): string
@@ -267,6 +274,32 @@ final class CoursesSchema
                 PRIMARY KEY  (id),
                 UNIQUE KEY meeting_revision (meeting_id, revision_number),
                 KEY course_revisions (course_id, created_at)
+            ) {$charsetCollate};",
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function qaDefinitions(string $charsetCollate): array
+    {
+        $entries = self::qaEntriesTable();
+
+        return [
+            $entries => "CREATE TABLE {$entries} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                public_id char(36) NOT NULL,
+                course_id bigint(20) unsigned NOT NULL,
+                lesson_id bigint(20) unsigned NULL DEFAULT NULL,
+                question text NOT NULL,
+                answer longtext NOT NULL,
+                position int(10) unsigned NOT NULL DEFAULT 0,
+                status varchar(24) NOT NULL DEFAULT 'draft',
+                created_at datetime NOT NULL,
+                updated_at datetime NOT NULL,
+                archived_at datetime NULL DEFAULT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY public_id (public_id),
+                KEY course_qa_order (course_id, status, position, id),
+                KEY lesson_qa_context (lesson_id, status)
             ) {$charsetCollate};",
         ];
     }

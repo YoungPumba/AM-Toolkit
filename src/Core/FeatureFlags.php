@@ -17,6 +17,7 @@ final class FeatureFlags
         'courses' => false,
         'courses-progress' => true,
         'courses-meetings' => true,
+        'courses-qa' => true,
         'courses-access-automation' => false,
     ];
 

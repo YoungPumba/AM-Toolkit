@@ -673,6 +673,16 @@
         setupStickyOffset();
         document.querySelectorAll('[data-am-course-player]').forEach(init);
         document.querySelectorAll('[data-am-course-progress]').forEach(setupProgressActions);
+        document.querySelectorAll('.am-course-qa__entry > summary').forEach(function (summary) {
+            summary.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                event.preventDefault();
+                summary.parentElement.open = !summary.parentElement.open;
+            });
+        });
     }
 
     if (document.readyState === 'loading') {
