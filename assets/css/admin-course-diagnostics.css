@@ -1,0 +1,166 @@
+.am-toolkit-diagnostics {
+    max-width: 1180px;
+}
+
+.am-toolkit-diagnostics > .description {
+    max-width: 760px;
+    margin-bottom: 24px;
+}
+
+.am-toolkit-diagnostics__card {
+    box-sizing: border-box;
+    margin: 18px 0;
+    padding: 24px;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.am-toolkit-diagnostics__card h2 {
+    margin-top: 0;
+}
+
+.am-toolkit-diagnostics__health,
+.am-toolkit-diagnostics__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: start;
+}
+
+.am-toolkit-diagnostics__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.am-toolkit-diagnostics__actions > div + div {
+    padding-left: 24px;
+    border-left: 1px solid #dcdcde;
+}
+
+.am-toolkit-diagnostics__eyebrow {
+    color: #6c38ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.am-toolkit-diagnostics__status {
+    display: inline-flex;
+    min-width: 74px;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.am-toolkit-diagnostics__status.is-good {
+    color: #006b36;
+    background: #d7f5e4;
+}
+
+.am-toolkit-diagnostics__status.is-warning {
+    color: #8a4b00;
+    background: #fff0cf;
+}
+
+.am-toolkit-diagnostics__filters,
+.am-toolkit-diagnostics__repair {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: end;
+}
+
+.am-toolkit-diagnostics__filters label,
+.am-toolkit-diagnostics__repair label {
+    display: grid;
+    min-width: 250px;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.am-toolkit-diagnostics__filters small {
+    max-width: 360px;
+    color: #646970;
+    font-weight: 400;
+}
+
+.am-toolkit-diagnostics__filters select {
+    min-width: 320px;
+}
+
+.am-toolkit-diagnostics__metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.am-toolkit-diagnostics__metrics > div {
+    padding: 14px;
+    border-radius: 8px;
+    background: #f6f7f7;
+}
+
+.am-toolkit-diagnostics__metrics span,
+.am-toolkit-diagnostics__metrics strong {
+    display: block;
+}
+
+.am-toolkit-diagnostics__metrics strong {
+    margin-top: 6px;
+    font-size: 20px;
+}
+
+.am-toolkit-diagnostics__issues {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+.am-toolkit-diagnostics__issues li {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr) auto;
+    gap: 12px;
+    margin: 0;
+    padding: 12px;
+    border-left: 4px solid #dba617;
+    background: #fff8e5;
+}
+
+.am-toolkit-diagnostics__issues li.is-error {
+    border-left-color: #d63638;
+    background: #fcf0f1;
+}
+
+.am-toolkit-diagnostics__issues em {
+    font-style: normal;
+    font-weight: 600;
+}
+
+.am-toolkit-diagnostics__empty {
+    color: #50575e;
+}
+
+.am-toolkit-diagnostics__table {
+    margin-top: 18px;
+}
+
+@media (max-width: 782px) {
+    .am-toolkit-diagnostics__actions,
+    .am-toolkit-diagnostics__metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .am-toolkit-diagnostics__actions > div + div {
+        padding-top: 20px;
+        padding-left: 0;
+        border-top: 1px solid #dcdcde;
+        border-left: 0;
+    }
+
+    .am-toolkit-diagnostics__issues li {
+        grid-template-columns: 1fr;
+    }
+}

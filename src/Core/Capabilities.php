@@ -10,8 +10,9 @@ final class Capabilities
     public const MANAGE_ACCESS = 'manage_am_toolkit_access';
     public const MANAGE_COURSES = 'manage_am_toolkit_courses';
     public const VIEW_DIAGNOSTICS = 'view_am_toolkit_diagnostics';
+    public const REPAIR_COURSES = 'repair_am_toolkit_courses';
 
-    private const VERSION = 1;
+    private const VERSION = 2;
     private const OPTION = 'am_toolkit_capabilities_version';
 
     public static function install(): void
@@ -61,6 +62,7 @@ final class Capabilities
             self::MANAGE_ACCESS,
             self::MANAGE_COURSES,
             self::VIEW_DIAGNOSTICS,
+            self::REPAIR_COURSES,
         ];
     }
 

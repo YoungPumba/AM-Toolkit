@@ -1,6 +1,6 @@
 # Panel administracyjny AM Courses
 
-Status: panel bazowy VIA-30 rozszerzony przez VIA-43, VIA-70, VIA-74 i VIA-75;
+Status: panel bazowy VIA-30 rozszerzony przez VIA-43, VIA-46, VIA-70, VIA-74 i VIA-75;
 moduł nadal domyślnie wyłączony feature flagą.
 
 ## Zakres panelu
@@ -22,6 +22,9 @@ Po włączeniu modułu `courses` WordPress udostępnia właścicielce pozycję
 - sprawdzać gotowość konfiguracji i korzystać z siedmiostopniowej instrukcji,
 - otwierać chroniony podgląd bieżącego szkicu w UI uczestniczki,
 - odróżniać archiwizację od trwałego usunięcia niewykorzystanego szkicu.
+- diagnozować dostęp, postęp i spójność danych bez ręcznego odczytu bazy,
+- pobierać pseudonimizowany eksport i — wyłącznie jako administrator —
+  potwierdzać idempotentne przeliczenie postępu ze źródeł.
 
 Pełne integracje API z Zoomem i Telegramem oraz komponenty Elementora nie są
 wymagane w 0.12.0. Panel zapisuje terminy i chronione odnośniki, ale nie tworzy
@@ -119,6 +122,13 @@ jest grantem. Wszystkie ręczne granty i ich zdarzenia zapisuje `AM Access Core`
 Operacje zmieniające stan wymagają capability, żądania `POST` i nonce. Panel
 kursów wymaga `manage_am_toolkit_courses`; nadawanie lub odbieranie dostępu
 dodatkowo wymaga `manage_am_toolkit_access`.
+
+Diagnostyka ma osobne uprawnienia. `view_am_toolkit_diagnostics` pozwala
+wykonać kontrolę tylko do odczytu i pobrać bezpieczny JSON.
+`repair_am_toolkit_courses` pozwala uruchomić potwierdzone przeliczenie; nie
+jest nadawane kierownikowi sklepu. Flagą `courses-repair-tools` można wyłączyć
+sam zapis bez wyłączania odczytu. Szczegółowy kontrakt opisuje
+[`COURSES-DIAGNOSTICS.md`](COURSES-DIAGNOSTICS.md).
 
 ## Redakcyjne Q&A
 

@@ -6,6 +6,7 @@ use AMToolkit\Core\FeatureFlags;
 use AMToolkit\Core\ModuleInterface;
 use AMToolkit\Modules\Access\WpdbActivityEventStore;
 use AMToolkit\Modules\Courses\Admin\CourseAdminPage;
+use AMToolkit\Modules\Courses\Admin\CourseDiagnosticsPage;
 use AMToolkit\Modules\Courses\Frontend\CourseAssetController;
 use AMToolkit\Modules\Courses\Frontend\CourseAttentionTasks;
 use AMToolkit\Modules\Courses\Frontend\CourseDashboardSection;
@@ -17,6 +18,7 @@ use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
+use AMToolkit\Modules\Courses\Services\CourseDiagnosticsService;
 use AMToolkit\Modules\Courses\Services\CourseNextActionService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
 use AMToolkit\Modules\Courses\Services\CoursePreviewService;
@@ -45,24 +47,26 @@ final class CoursesModule implements ModuleInterface
 
     public function boot(): void
     {
+        $flags = new FeatureFlags();
+        $events = new WpdbActivityEventStore();
         $assetStore = new WpPrivateCourseAssetStore();
-        $meetingStore = (new FeatureFlags())->isEnabled('courses-meetings')
+        $meetingStore = $flags->isEnabled('courses-meetings')
             ? new WpdbCourseMeetingStore()
             : null;
         $meetingService = $meetingStore !== null
-            ? new CourseMeetingService($meetingStore, new WpdbActivityEventStore())
+            ? new CourseMeetingService($meetingStore, $events)
             : null;
-        $qaStore = (new FeatureFlags())->isEnabled('courses-qa')
+        $qaStore = $flags->isEnabled('courses-qa')
             ? new WpdbCourseQaStore()
             : null;
         $qaService = $qaStore !== null
-            ? new CourseQaService($qaStore, new WpdbActivityEventStore())
+            ? new CourseQaService($qaStore, $events)
             : null;
-        $taskStore = (new FeatureFlags())->isEnabled('courses-tasks')
+        $taskStore = $flags->isEnabled('courses-tasks')
             ? new WpdbCourseLessonTaskStore()
             : null;
         $taskService = $taskStore !== null
-            ? new CourseLessonTaskService($taskStore, new WpdbActivityEventStore())
+            ? new CourseLessonTaskService($taskStore, $events)
             : null;
         $mappings = new WpdbProductCourseMappingStore();
         $adminCourses = new CourseAdminService(
@@ -75,7 +79,7 @@ final class CoursesModule implements ModuleInterface
         $catalog = new CourseCatalogService(
             new WpdbCourseViewStore(),
             new AccessCoreCourseAccessPolicy(),
-            (new FeatureFlags())->isEnabled('courses-progress')
+            $flags->isEnabled('courses-progress')
                 ? new CourseNextActionService(
                     new WpdbCourseProgressOverviewStore()
                 )
@@ -88,17 +92,27 @@ final class CoursesModule implements ModuleInterface
         $progress = null;
         $progressController = null;
 
-        if ((new FeatureFlags())->isEnabled('courses-progress')) {
+        if ($flags->isEnabled('courses-progress')) {
             $progress = new CourseProgressService(
                 new WpdbCourseProgressSourceStore(),
                 new WpdbProgressRepository(),
                 new WpdbCompletionRepository(),
                 new AccessCoreCourseAccessPolicy(),
-                new WpdbActivityEventStore(),
+                $events,
                 $taskStore
             );
             $progressController = new CourseProgressController($progress);
             $progressController->boot();
+
+            (new CourseDiagnosticsPage(
+                new CourseDiagnosticsService(
+                    new WpdbCourseDiagnosticsStore(),
+                    $progress,
+                    $events
+                ),
+                $adminCourses,
+                $flags->isEnabled('courses-repair-tools')
+            ))->boot();
         }
 
         (new CourseHubPage(
