@@ -37,6 +37,13 @@ ten sam publiczny stan. Widok nie ujawnia technicznego błędu bazy ani
 identyfikatorów wewnętrznych. Drafty, odnośniki do filmów i materiały nie są
 częścią read modelu VIA-41.
 
+VIA-70 rozszerza tę samą granicę o redakcyjne Q&A. Magazyn pytań jest
+odpytywany dopiero po autoryzacji kursu i zwraca wyłącznie rekordy w stanie
+`published`. Uczestniczka otrzymuje akordeon tylko do odczytu, jawny stan pusty
+oraz opcjonalny odnośnik do lekcji, jeśli ta lekcja nadal należy do bieżącego
+opublikowanego programu. Flaga `courses-qa` ukrywa całą sekcję bez usuwania
+danych.
+
 ## Integracja z Account
 
 Gdy moduł Courses jest aktywny:

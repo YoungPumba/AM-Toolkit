@@ -10,6 +10,7 @@ use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
 use AMToolkit\Modules\Courses\Services\CourseMeetingService;
+use AMToolkit\Modules\Courses\Services\CourseQaService;
 use AMToolkit\Modules\Courses\Domain\MeetingStatus;
 use AMToolkit\Modules\Courses\WpdbCourseAdminStore;
 use AMToolkit\Modules\Courses\WpdbProductCourseMappingStore;
@@ -26,15 +27,18 @@ final class CourseAdminPage
     private CourseAdminService $courses;
     private CourseAssetStore $assets;
     private ?CourseMeetingService $meetings;
+    private ?CourseQaService $qa;
 
     public function __construct(
         ?CourseAdminService $courses = null,
         ?CourseAssetStore $assets = null,
-        ?CourseMeetingService $meetings = null
+        ?CourseMeetingService $meetings = null,
+        ?CourseQaService $qa = null
     )
     {
         $this->assets = $assets ?? new WpPrivateCourseAssetStore();
         $this->meetings = $meetings;
+        $this->qa = $qa;
 
         if ($courses !== null) {
             $this->courses = $courses;
@@ -283,6 +287,31 @@ final class CourseAdminPage
                     : new \WP_Error('am_toolkit_course_meetings_disabled', __('Informacje organizacyjne są wyłączone.', 'am-toolkit'));
                 break;
 
+            case 'save_qa':
+                $result = $this->qa !== null
+                    ? $this->qa->save([
+                        'id' => $this->postInt('qa_entry_id'),
+                        'public_id' => $this->postText('public_id'),
+                        'course_id' => $courseId,
+                        'lesson_id' => $this->postInt('lesson_id'),
+                        'question' => $this->postTextarea('question'),
+                        'answer' => $this->postTextarea('answer'),
+                        'position' => $this->postInt('position'),
+                        'status' => $this->postStatus(),
+                    ], get_current_user_id())
+                    : new \WP_Error('am_toolkit_course_qa_disabled', __('Sekcja Q&A jest wyłączona.', 'am-toolkit'));
+                break;
+
+            case 'archive_qa':
+                $result = $this->qa !== null
+                    ? $this->qa->archive(
+                        $this->postInt('qa_entry_id'),
+                        $courseId,
+                        get_current_user_id()
+                    )
+                    : new \WP_Error('am_toolkit_course_qa_disabled', __('Sekcja Q&A jest wyłączona.', 'am-toolkit'));
+                break;
+
             case 'grant_manual':
                 if (!Authorization::canManageAccess()) {
                     wp_die(esc_html__('Nie masz uprawnień do zarządzania dostępem.', 'am-toolkit'));
@@ -344,12 +373,16 @@ final class CourseAdminPage
         $meetings = $this->meetings !== null ? $this->valueOrEmpty($this->meetings->meetings($courseId)) : [];
         $meetingSettings = $this->meetings !== null ? $this->meetings->courseSettings($courseId) : null;
         $meetingSettings = is_array($meetingSettings) ? $meetingSettings : [];
+        $qaEntries = $this->qa !== null ? $this->valueOrEmpty($this->qa->entries($courseId)) : [];
 
         echo '<div class="amt-courses-layout">';
         echo '<main class="amt-courses-main">';
         $this->renderCourseForm($course);
         $this->renderSections($courseId, $sections);
         $this->renderLessons($courseId, $sections, $lessons);
+        if ($this->qa !== null) {
+            $this->renderQa($courseId, $lessons, $qaEntries);
+        }
         $this->renderMaterials($courseId, $lessons, $materials);
         if ($this->meetings !== null) {
             $this->renderMeetings($courseId, $meetings, $meetingSettings);
@@ -536,6 +569,55 @@ final class CourseAdminPage
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz lekcję', 'am-toolkit'); ?></button>
             </form>
             <?php if ($id > 0 && ($lesson['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?><?php $this->archiveForm('archive_lesson', $courseId, $id, __('Archiwizuj lekcję', 'am-toolkit'), 'lesson_id'); ?><?php endif; ?>
+        </details>
+        <?php
+    }
+
+    /** @param list<array<string, mixed>> $lessons @param list<array<string, mixed>> $entries */
+    private function renderQa(int $courseId, array $lessons, array $entries): void
+    {
+        ?>
+        <section class="amt-courses-card" id="course-qa">
+            <div class="amt-courses-card__heading">
+                <div>
+                    <h2><?php esc_html_e('Pytania i odpowiedzi (Q&A)', 'am-toolkit'); ?></h2>
+                    <p><?php esc_html_e('Właścicielka publikuje odpowiedzi, a uczestniczki wyłącznie je czytają. Kolejność wyznacza pozycja.', 'am-toolkit'); ?></p>
+                </div>
+            </div>
+            <?php foreach ($entries as $entry) : ?>
+                <?php $this->qaForm($courseId, $lessons, $entry); ?>
+            <?php endforeach; ?>
+            <?php $this->qaForm($courseId, $lessons, null, count($entries)); ?>
+        </section>
+        <?php
+    }
+
+    /** @param list<array<string, mixed>> $lessons @param array<string, mixed>|null $entry */
+    private function qaForm(int $courseId, array $lessons, ?array $entry, int $defaultPosition = 0): void
+    {
+        $id = (int) ($entry['id'] ?? 0);
+        ?>
+        <details class="amt-editor amt-qa-editor" <?php echo $id === 0 ? 'open' : ''; ?>>
+            <summary>
+                <span><?php echo esc_html($id > 0 ? (string) $entry['question'] : __('Dodaj pytanie i odpowiedź', 'am-toolkit')); ?></span>
+                <small><?php echo esc_html($id > 0 ? $this->statusLabel((string) $entry['status']) : __('Nowe', 'am-toolkit')); ?></small>
+            </summary>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
+                <?php $this->formBase('save_qa', $courseId); ?>
+                <input type="hidden" name="qa_entry_id" value="<?php echo esc_attr((string) $id); ?>">
+                <input type="hidden" name="public_id" value="<?php echo esc_attr((string) ($entry['public_id'] ?? '')); ?>">
+                <label><span><?php esc_html_e('Pytanie', 'am-toolkit'); ?></span><textarea required maxlength="1000" name="question" rows="2"><?php echo esc_textarea((string) ($entry['question'] ?? '')); ?></textarea></label>
+                <label><span><?php esc_html_e('Odpowiedź', 'am-toolkit'); ?></span><textarea required name="answer" rows="6"><?php echo esc_textarea((string) ($entry['answer'] ?? '')); ?></textarea></label>
+                <div class="amt-courses-form__row">
+                    <label><span><?php esc_html_e('Kontekst lekcji (opcjonalnie)', 'am-toolkit'); ?></span><select name="lesson_id"><option value="0"><?php esc_html_e('Cały kurs', 'am-toolkit'); ?></option><?php foreach ($lessons as $lesson) : ?><option value="<?php echo esc_attr((string) $lesson['id']); ?>" <?php selected((int) ($entry['lesson_id'] ?? 0), (int) $lesson['id']); ?>><?php echo esc_html((string) $lesson['title']); ?></option><?php endforeach; ?></select></label>
+                    <label><span><?php esc_html_e('Pozycja', 'am-toolkit'); ?></span><input type="number" min="0" name="position" value="<?php echo esc_attr((string) ($entry['position'] ?? $defaultPosition)); ?>"></label>
+                    <label><span><?php esc_html_e('Stan', 'am-toolkit'); ?></span><select name="status"><?php $this->statusOptions((string) ($entry['status'] ?? PublicationStatus::DRAFT)); ?></select></label>
+                </div>
+                <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz Q&A', 'am-toolkit'); ?></button>
+            </form>
+            <?php if ($id > 0 && ($entry['status'] ?? '') !== PublicationStatus::ARCHIVED) : ?>
+                <?php $this->archiveForm('archive_qa', $courseId, $id, __('Archiwizuj Q&A', 'am-toolkit'), 'qa_entry_id'); ?>
+            <?php endif; ?>
         </details>
         <?php
     }

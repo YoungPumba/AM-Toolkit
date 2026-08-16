@@ -5,6 +5,7 @@ namespace AMToolkit\Modules\Courses\Services;
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
 use AMToolkit\Modules\Courses\Contracts\CourseViewStore;
 use AMToolkit\Modules\Courses\Contracts\CourseMeetingStore;
+use AMToolkit\Modules\Courses\Contracts\CourseQaStore;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 
 defined('ABSPATH') || exit;
@@ -15,7 +16,8 @@ final class CourseCatalogService
         private CourseViewStore $store,
         private CourseAccessPolicy $access,
         private ?CourseNextActionService $nextAction = null,
-        private ?CourseMeetingStore $meetings = null
+        private ?CourseMeetingStore $meetings = null,
+        private ?CourseQaStore $qa = null
     ) {
     }
 
@@ -125,6 +127,17 @@ final class CourseCatalogService
             if (is_array($settings) && !empty($settings['telegram_reference'])) {
                 $course['telegram_reference'] = (string) $settings['telegram_reference'];
             }
+        }
+
+        if ($this->qa !== null) {
+            $entries = $this->qa->publishedEntriesForCourse(
+                (int) $course['id'],
+                (int) $course['current_program_version_id']
+            );
+            if (is_wp_error($entries)) {
+                return $this->readError();
+            }
+            $course['qa'] = $entries;
         }
 
         unset($course['id'], $course['current_program_version_id']);

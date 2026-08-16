@@ -68,6 +68,11 @@
   i możliwość odbudowy agregatu ze źródeł,
 - procent, stany lekcji i wspólna akcja „Kontynuuj” w hubie, programie i widoku
   lekcji oraz osobna flaga awaryjna `courses-progress`.
+- redakcyjne Q&A kursów ze stanami szkic/opublikowane/archiwum, stabilną
+  kolejnością, opcjonalnym kontekstem lekcji i widokiem uczestniczki tylko do
+  odczytu po sprawdzeniu aktywnego dostępu,
+- migracja Courses 6 oraz flaga awaryjna `courses-qa`, która ukrywa interfejs
+  bez usuwania treści; audyt nie zapisuje pytań ani odpowiedzi.
 
 ## 0.11.5 — 2026-08-11
 

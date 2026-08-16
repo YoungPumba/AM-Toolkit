@@ -31,6 +31,8 @@ AM Toolkit to rozwijana modułowo wtyczka dla WordPressa i WooCommerce. Zastępu
 - chroniony hub klientki pod `/moje-konto/kursy/` z aktywnymi, ukończonymi
   i wygasłymi kursami, widokiem opublikowanego programu oraz podglądem
   „Twoje kursy” na głównym ekranie konta.
+- redakcyjne Q&A kursów zarządzane przez właścicielkę, z opcjonalnym kontekstem
+  lekcji i chronionym widokiem tylko do odczytu dla uczestniczek.
 
 ## Wymagania
 

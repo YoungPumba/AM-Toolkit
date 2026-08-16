@@ -7,6 +7,7 @@ namespace AMToolkit\Tests\Unit;
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
 use AMToolkit\Modules\Courses\Contracts\CourseViewStore;
 use AMToolkit\Modules\Courses\Contracts\CourseMeetingStore;
+use AMToolkit\Modules\Courses\Contracts\CourseQaStore;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use PHPUnit\Framework\TestCase;
@@ -118,6 +119,32 @@ final class CourseCatalogServiceTest extends TestCase
         self::assertArrayNotHasKey('id', $result);
         self::assertArrayNotHasKey('current_program_version_id', $result);
         self::assertSame([[71, 18]], $this->store->programRequests);
+    }
+
+    public function testQaIsReadOnlyAfterAuthorizationAndContainsOnlyPublishedView(): void
+    {
+        $qa = new ParticipantQaStoreSpy();
+        $this->service = new CourseCatalogService($this->store, $this->access, null, null, $qa);
+        $this->store->course = [
+            'id' => 71,
+            'public_id' => $this->uuid(1),
+            'title' => 'Kurs testowy',
+            'current_program_version_id' => 18,
+        ];
+
+        $this->access->allowed = false;
+        self::assertTrue(is_wp_error($this->service->courseForUser(9, $this->uuid(1))));
+        self::assertSame(0, $qa->readCalls);
+
+        $this->access->allowed = true;
+        $result = $this->service->courseForUser(9, $this->uuid(1));
+        self::assertIsArray($result);
+        self::assertSame(1, $qa->readCalls);
+        self::assertSame([[71, 18]], $qa->requests);
+        self::assertSame('Czy dostanę nagranie?', $result['qa'][0]['question']);
+        self::assertArrayNotHasKey('id', $result['qa'][0]);
+        self::assertArrayNotHasKey('course_id', $result['qa'][0]);
+        self::assertArrayNotHasKey('status', $result['qa'][0]);
     }
 
     public function testDatabaseFailureIsReplacedWithSafePublicError(): void
@@ -324,5 +351,42 @@ final class ParticipantMeetingStoreSpy implements CourseMeetingStore
             'join_reference' => 'https://zoom.example/private',
             'status' => 'scheduled',
         ];
+    }
+}
+
+final class ParticipantQaStoreSpy implements CourseQaStore
+{
+    public int $readCalls = 0;
+
+    /** @var list<array{0: int, 1: int}> */
+    public array $requests = [];
+
+    public function entriesForCourse(int $courseId): array|\WP_Error
+    {
+        return [];
+    }
+
+    public function publishedEntriesForCourse(int $courseId, int $programVersionId): array|\WP_Error
+    {
+        $this->readCalls++;
+        $this->requests[] = [$courseId, $programVersionId];
+        return [[
+            'public_id' => '12345678-1234-4123-8123-000000000099',
+            'question' => 'Czy dostanę nagranie?',
+            'answer' => 'Tak.',
+            'position' => 0,
+            'lesson_public_id' => null,
+            'lesson_title' => null,
+        ]];
+    }
+
+    public function saveEntry(array $entry): int|\WP_Error
+    {
+        return 1;
+    }
+
+    public function archiveEntry(int $entryId, int $courseId): bool|\WP_Error
+    {
+        return true;
     }
 }
