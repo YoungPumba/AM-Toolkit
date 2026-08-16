@@ -52,6 +52,15 @@ final class CourseProgressController
             );
         } elseif ($operation === 'acknowledge_task') {
             $result = $this->progress->acknowledgeTask($userId, $course, $lesson, $requestId);
+        } elseif ($operation === 'set_lesson_task') {
+            $result = $this->progress->setLessonTask(
+                $userId,
+                $course,
+                $lesson,
+                $this->postValue('task'),
+                $this->postValue('completed') === '1',
+                $requestId
+            );
         } elseif ($operation === 'complete_manually') {
             $result = $this->progress->completeManually($userId, $course, $lesson, $requestId);
         } else {

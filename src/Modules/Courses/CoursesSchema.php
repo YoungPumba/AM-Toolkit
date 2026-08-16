@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 final class CoursesSchema
 {
-    public const VERSION = 6;
+    public const VERSION = 7;
 
     public static function coursesTable(): string
     {
@@ -104,6 +104,61 @@ final class CoursesSchema
         global $wpdb;
 
         return $wpdb->prefix . 'amt_course_qa_entries';
+    }
+
+    public static function lessonTasksTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_lesson_tasks';
+    }
+
+    public static function lessonTaskProgressTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_lesson_task_progress';
+    }
+
+    /** @return array<string, string> */
+    public static function lessonTaskDefinitions(string $charsetCollate): array
+    {
+        $tasks = self::lessonTasksTable();
+        $progress = self::lessonTaskProgressTable();
+
+        return [
+            $tasks => "CREATE TABLE {$tasks} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                public_id char(36) NOT NULL,
+                lesson_id bigint(20) unsigned NOT NULL,
+                title text NOT NULL,
+                description longtext NULL,
+                position int(10) unsigned NOT NULL DEFAULT 0,
+                is_required tinyint(1) unsigned NOT NULL DEFAULT 1,
+                status varchar(24) NOT NULL DEFAULT 'draft',
+                created_at datetime NOT NULL,
+                updated_at datetime NOT NULL,
+                archived_at datetime NULL DEFAULT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY public_id (public_id),
+                KEY lesson_task_order (lesson_id, status, position, id)
+            ) {$charsetCollate};",
+            $progress => "CREATE TABLE {$progress} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                user_id bigint(20) unsigned NOT NULL,
+                course_id bigint(20) unsigned NOT NULL,
+                lesson_id bigint(20) unsigned NOT NULL,
+                task_id bigint(20) unsigned NOT NULL,
+                is_completed tinyint(1) unsigned NOT NULL DEFAULT 0,
+                request_id varchar(32) NOT NULL,
+                completed_at datetime NULL DEFAULT NULL,
+                created_at datetime NOT NULL,
+                updated_at datetime NOT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY user_task (user_id, task_id),
+                KEY lesson_task_progress (user_id, course_id, lesson_id, is_completed)
+            ) {$charsetCollate};",
+        ];
     }
 
     public static function productMappingDefinition(string $charsetCollate): string

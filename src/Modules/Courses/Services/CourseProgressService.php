@@ -7,6 +7,7 @@ use AMToolkit\Core\Diagnostics\RequestId;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CompletionRepository;
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
+use AMToolkit\Modules\Courses\Contracts\CourseLessonTaskStore;
 use AMToolkit\Modules\Courses\Contracts\CourseProgressSourceStore;
 use AMToolkit\Modules\Courses\Contracts\ProgressRepository;
 use AMToolkit\Modules\Courses\Domain\CourseCompletion;
@@ -29,7 +30,8 @@ final class CourseProgressService
         private ProgressRepository $progress,
         private CompletionRepository $completions,
         private CourseAccessPolicy $access,
-        private ActivityEventStore $events
+        private ActivityEventStore $events,
+        private ?CourseLessonTaskStore $tasks = null
     ) {
     }
 
@@ -159,6 +161,82 @@ final class CourseProgressService
     }
 
     /** @return array<string, mixed>|\WP_Error */
+    public function setLessonTask(
+        int $userId,
+        string $coursePublicId,
+        string $lessonPublicId,
+        string $taskPublicId,
+        bool $completed,
+        ?string $requestId = null
+    ): array|\WP_Error {
+        if ($this->tasks === null) {
+            return $this->invalidRequest(__('Checklista zadań jest wyłączona.', 'am-toolkit'));
+        }
+
+        $context = $this->authorizedContext($userId, $coursePublicId, $lessonPublicId);
+
+        if (is_wp_error($context)) {
+            return $context;
+        }
+
+        try {
+            $taskId = new Identifier($taskPublicId);
+        } catch (\InvalidArgumentException) {
+            return $this->invalidRequest(__('Nieprawidłowe zadanie lekcji.', 'am-toolkit'));
+        }
+
+        $before = $this->stateFromContext($userId, $context);
+
+        if (is_wp_error($before)) {
+            return $before;
+        }
+
+        if (!empty($before['lesson_completed'])) {
+            return $this->invalidRequest(__('Ukończona lekcja ma zamkniętą checklistę.', 'am-toolkit'));
+        }
+
+        $requestId = RequestId::normalize($requestId);
+        $now = current_time('mysql', true);
+        $storedTaskId = $this->tasks->setTaskCompletion(
+            $userId,
+            (int) $context['course_id'],
+            (int) $context['lesson_id'],
+            $taskId,
+            $completed,
+            $requestId,
+            $now
+        );
+
+        if (is_wp_error($storedTaskId)) {
+            return $storedTaskId;
+        }
+
+        if (!$this->markStarted($userId, $context, $requestId)) {
+            return $this->writeError();
+        }
+
+        $eventType = $completed ? 'course.lesson_task.completed' : 'course.lesson_task.reopened';
+        $this->recordEvent(
+            $eventType . '.' . $userId . '.' . $storedTaskId . '.' . $requestId,
+            $eventType,
+            $userId,
+            (int) $context['lesson_id'],
+            [
+                'course_id' => (int) $context['course_id'],
+                'task_id' => $storedTaskId,
+                'completed' => $completed,
+            ],
+            $now,
+            $requestId
+        );
+
+        return $this->withRequestId(
+            $this->evaluateAndReturn($userId, $context, $requestId, 'checklist_requirements_met'),
+            $requestId
+        );
+    }
+
+    /** @return array<string, mixed>|\WP_Error */
     public function completeManually(
         int $userId,
         string $coursePublicId,
@@ -237,7 +315,12 @@ final class CourseProgressService
             return $this->withRequestId($result, $requestId);
         }
 
-        if ((float) $state['watched_percent'] > 0 || !empty($state['task_completed'])) {
+        $hasCheckedTask = array_filter(
+            (array) ($state['lesson_tasks'] ?? []),
+            static fn (array $task): bool => !empty($task['completed'])
+        ) !== [];
+
+        if ((float) $state['watched_percent'] > 0 || !empty($state['task_completed']) || $hasCheckedTask) {
             if (!$this->markStarted($userId, $context, $requestId)) {
                 return $this->writeError();
             }
@@ -273,9 +356,11 @@ final class CourseProgressService
         }
 
         if (
-            $this->requirements($context)->isSatisfied(
+            $this->requirementsSatisfied(
+                $this->requirements($context),
                 (float) $state['watched_percent'],
-                !empty($state['task_completed'])
+                !empty($state['task_completed']),
+                (array) ($state['lesson_tasks'] ?? [])
             )
             && !$this->completeLesson($userId, $context, $completionSource, $requestId)
         ) {
@@ -477,6 +562,12 @@ final class CourseProgressService
             return $taskCompleted;
         }
 
+        $lessonTasks = $this->lessonTaskState($userId, (int) $context['lesson_id']);
+
+        if (is_wp_error($lessonTasks)) {
+            return $lessonTasks;
+        }
+
         $lessonProgress = $this->progress->find(
             $userId,
             (int) $context['course_id'],
@@ -513,8 +604,15 @@ final class CourseProgressService
             $requirements,
             $watched,
             $taskCompleted,
+            $lessonTasks,
             $lessonCompleted
         );
+        $hasChecklistRequirements = array_filter(
+            $lessonTasks,
+            static fn (array $task): bool => !empty($task['is_required'])
+        ) !== [];
+        $hasAutomaticRequirements = $requirements->videoPercent() > 0
+            || ($lessonTasks !== [] ? $hasChecklistRequirements : $requirements->taskRequired());
 
         return [
             'status' => $lessonCompleted
@@ -523,9 +621,10 @@ final class CourseProgressService
             'lesson_completed' => $lessonCompleted,
             'watched_percent' => $watched,
             'video_percent_required' => $requirements->videoPercent(),
-            'task_required' => $requirements->taskRequired(),
+            'task_required' => $lessonTasks === [] && $requirements->taskRequired(),
             'task_completed' => $taskCompleted,
-            'manual_completion_available' => !$requirements->hasAutomaticRequirements(),
+            'lesson_tasks' => $lessonTasks,
+            'manual_completion_available' => !$hasAutomaticRequirements,
             'resume_at_seconds' => min((float) $duration, max(0.0, $resumeAt)),
             'lesson_progress_percent' => $lessonProgressPercent,
             'course_completed' => $courseCompleted,
@@ -539,6 +638,7 @@ final class CourseProgressService
         LessonCompletionRequirements $requirements,
         float $watchedPercent,
         bool $taskCompleted,
+        array $lessonTasks,
         bool $lessonCompleted
     ): int {
         if ($lessonCompleted) {
@@ -552,7 +652,13 @@ final class CourseProgressService
             $requirementProgress[] = min(1.0, max(0.0, $watchedPercent) / $videoPercent);
         }
 
-        if ($requirements->taskRequired()) {
+        if ($lessonTasks !== []) {
+            foreach ($lessonTasks as $task) {
+                if (!empty($task['is_required'])) {
+                    $requirementProgress[] = !empty($task['completed']) ? 1.0 : 0.0;
+                }
+            }
+        } elseif ($requirements->taskRequired()) {
             $requirementProgress[] = $taskCompleted ? 1.0 : 0.0;
         }
 
@@ -561,6 +667,72 @@ final class CourseProgressService
         }
 
         return (int) floor((array_sum($requirementProgress) / count($requirementProgress)) * 100);
+    }
+
+    /** @param list<array<string, mixed>> $lessonTasks */
+    private function requirementsSatisfied(
+        LessonCompletionRequirements $requirements,
+        float $watchedPercent,
+        bool $legacyTaskCompleted,
+        array $lessonTasks
+    ): bool {
+        $hasAutomaticRequirement = $requirements->videoPercent() > 0;
+
+        if ($requirements->videoPercent() > 0 && $watchedPercent < $requirements->videoPercent()) {
+            return false;
+        }
+
+        if ($lessonTasks === []) {
+            return $requirements->taskRequired()
+                ? $legacyTaskCompleted
+                : $hasAutomaticRequirement;
+        }
+
+        foreach ($lessonTasks as $task) {
+            if (empty($task['is_required'])) {
+                continue;
+            }
+
+            $hasAutomaticRequirement = true;
+
+            if (empty($task['completed'])) {
+                return false;
+            }
+        }
+
+        return $hasAutomaticRequirement;
+    }
+
+    /** @return list<array<string, mixed>>|\WP_Error */
+    private function lessonTaskState(int $userId, int $lessonId): array|\WP_Error
+    {
+        if ($this->tasks === null) {
+            return [];
+        }
+
+        $tasks = $this->tasks->publishedTasksForLesson($lessonId);
+
+        if (is_wp_error($tasks)) {
+            return $tasks;
+        }
+
+        $completedIds = $this->tasks->completedTaskIds($userId, $lessonId);
+
+        if (is_wp_error($completedIds)) {
+            return $completedIds;
+        }
+
+        return array_map(
+            static fn (array $task): array => [
+                'public_id' => (string) ($task['public_id'] ?? ''),
+                'title' => (string) ($task['title'] ?? ''),
+                'description' => (string) ($task['description'] ?? ''),
+                'position' => (int) ($task['position'] ?? 0),
+                'is_required' => !empty($task['is_required']),
+                'completed' => in_array((int) ($task['id'] ?? 0), $completedIds, true),
+            ],
+            $tasks
+        );
     }
 
     /** @param array<string, mixed> $context */

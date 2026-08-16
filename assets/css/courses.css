@@ -1025,6 +1025,95 @@
     margin: 4px 0 0;
 }
 
+.am-lesson-checklist__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.am-lesson-checklist__heading > strong {
+    color: var(--am-courses-ink);
+    font-size: 14px;
+}
+
+.am-lesson-checklist__heading > span {
+    color: var(--am-courses-muted);
+    font-size: 12px;
+}
+
+.am-lesson-checklist ul {
+    display: grid;
+    gap: 10px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.am-lesson-checklist li {
+    border: 1px solid #eadfe3;
+    border-radius: 14px;
+    background: #fff;
+    transition: border-color 160ms ease, background 160ms ease;
+}
+
+.am-lesson-checklist li.is-completed {
+    border-color: #b9d8c5;
+    background: #f6fcf8;
+}
+
+.am-lesson-checklist label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+}
+
+.am-lesson-checklist input {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0;
+    accent-color: var(--am-courses-pink);
+}
+
+.am-lesson-checklist input:disabled {
+    cursor: default;
+}
+
+.am-lesson-checklist__content {
+    display: grid;
+    flex: 1;
+    gap: 4px;
+}
+
+.am-lesson-checklist__content > strong {
+    color: var(--am-courses-ink);
+    font-size: 14px;
+}
+
+.am-lesson-checklist__content > span {
+    color: var(--am-courses-muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.am-lesson-checklist__content > small {
+    justify-self: start;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #f6edf1;
+    color: #766b70;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.am-lesson-checklist li.is-completed .am-lesson-checklist__content > strong {
+    color: #4f6e5a;
+    text-decoration: line-through;
+}
+
 .am-lesson-progress__bar {
     height: 9px;
     margin-top: 11px;

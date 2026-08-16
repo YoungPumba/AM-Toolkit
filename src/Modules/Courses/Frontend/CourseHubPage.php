@@ -923,6 +923,10 @@ final class CourseHubPage
         $videoRequired = min(100, max(0, (int) ($progress['video_percent_required'] ?? 0)));
         $taskRequired = !empty($progress['task_required']);
         $taskCompleted = !empty($progress['task_completed']);
+        $lessonTasks = array_values(array_filter(
+            (array) ($progress['lesson_tasks'] ?? []),
+            static fn (mixed $task): bool => is_array($task) && (string) ($task['public_id'] ?? '') !== ''
+        ));
         $lessonProgressPercent = min(100, max(0, (int) ($progress['lesson_progress_percent'] ?? 0)));
 
         ob_start();
@@ -956,6 +960,39 @@ final class CourseHubPage
                     <div class="am-lesson-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php echo esc_attr((string) $watched); ?>">
                         <span data-am-watched-bar style="width: <?php echo esc_attr((string) $watched); ?>%"></span>
                     </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($lessonTasks !== []) : ?>
+                <div class="am-lesson-progress__requirement am-lesson-checklist" data-am-lesson-checklist>
+                    <div class="am-lesson-checklist__heading">
+                        <strong><?php echo esc_html__('Zadania do wykonania', 'am-toolkit'); ?></strong>
+                        <span><?php echo esc_html__('Zaznacz wykonane czynności', 'am-toolkit'); ?></span>
+                    </div>
+                    <ul>
+                        <?php foreach ($lessonTasks as $task) : ?>
+                            <?php $taskDone = !empty($task['completed']); ?>
+                            <li class="<?php echo $taskDone ? 'is-completed' : ''; ?>" data-am-lesson-task-item>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        data-am-lesson-task="<?php echo esc_attr((string) $task['public_id']); ?>"
+                                        <?php checked($taskDone); ?>
+                                        <?php disabled($completed); ?>
+                                    >
+                                    <span class="am-lesson-checklist__content">
+                                        <strong><?php echo esc_html((string) ($task['title'] ?? '')); ?></strong>
+                                        <?php if (empty($task['is_required'])) : ?>
+                                            <small><?php echo esc_html__('Opcjonalne', 'am-toolkit'); ?></small>
+                                        <?php endif; ?>
+                                        <?php if ((string) ($task['description'] ?? '') !== '') : ?>
+                                            <span><?php echo esc_html((string) $task['description']); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </label>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
             <?php endif; ?>
 

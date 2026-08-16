@@ -1,6 +1,6 @@
 # Postęp i ukończenie AM Courses
 
-## Zakres VIA-44
+## Zakres VIA-44 i VIA-74
 
 Postęp uczestniczki ma trzy stany: `no_record`, `started` i `completed`.
 Samo otwarcie lekcji nie tworzy postępu. Stan `started` powstaje dopiero po
@@ -13,8 +13,16 @@ Warunki ukończenia są edytowane przy lekcji:
 - `task_required` wymaga świadomego potwierdzenia wykonania zadania,
 - lekcja bez obu warunków udostępnia jawny przycisk „Oznacz jako ukończoną”.
 
-Treść zadania pozostaje częścią redagowanej przez właścicielkę lekcji. MVP nie
-zbiera odpowiedzi, notatek ani innych treści użytkownika.
+W VIA-74 pojedyncze potwierdzenie zostało rozszerzone o uporządkowaną checklistę.
+Właścicielka może przy lekcji dodać, edytować, publikować i archiwizować dowolną
+liczbę krótkich czynności. Każda pozycja ma stabilny UUID oraz status „wymagana”
+albo „opcjonalna”. Uczestniczka wyłącznie zaznacza wykonanie; MVP nie zbiera
+plików, odpowiedzi tekstowych, notatek ani innych treści użytkownika.
+
+Opublikowana checklista ma pierwszeństwo przed starszym przełącznikiem
+`task_required`. Gdy lekcja nie ma pozycji checklisty, dotychczasowy tryb
+pojedynczego potwierdzenia nadal działa, co zachowuje zgodność istniejących
+kursów.
 
 ## Źródło prawdy
 
@@ -29,15 +37,20 @@ Serwer:
 3. zapisuje niezmienny checkpoint z unikalnym `request_id`,
 4. scala wszystkie przedziały danego użytkownika, lekcji i wersji treści,
 5. liczy pokrycie bez podwójnego zaliczania nakładających się fragmentów,
-6. ocenia łącznie warunek filmu i zadania.
+6. ocenia łącznie warunek filmu i wszystkie wymagane pozycje checklisty.
 
 Checkpointy kilku kart lub urządzeń nie nadpisują się. Powtórzone żądanie z
 tym samym `request_id` ma jeden efekt. Nie zapisujemy surowej telemetrii
 `timeupdate`, adresu IP ani historii przewijania.
 
-Ręczne potwierdzenie zadania i ręczne ukończenie lekcji także mają osobne,
+Stan każdej pozycji checklisty jest zapisywany osobno dla użytkownika i może
+zostać zaznaczony lub odznaczony do czasu ukończenia lekcji. Ukończona lekcja
+pozostaje trwałym faktem: jej checklista jest blokowana i późniejsza edycja
+programu nie cofa zaliczenia.
+
+Ręczne potwierdzenie starszego zadania i ręczne ukończenie lekcji także mają osobne,
 niezmienne rekordy źródłowe. `CourseProgressService::rebuildLessonProgress()`
-potrafi z nich odbudować agregat lekcji.
+potrafi odbudować agregat lekcji również ze stanu checklisty.
 
 ## Tabele i trwałość
 
@@ -46,6 +59,15 @@ Migracja Courses v4:
 - rozszerza `amt_lesson_progress` i `amt_course_completions` o `request_id`,
 - tworzy `amt_lesson_video_checkpoints`,
 - tworzy `amt_lesson_requirement_completions`.
+
+Migracja Courses v7 dodaje:
+
+- `amt_lesson_tasks` — stabilne definicje, kolejność, status i wymagalność,
+- `amt_lesson_task_progress` — bieżący stan pozycji per użytkownik i lekcja.
+
+Zmiana tytułu lub kolejności zachowuje stan tej samej pozycji. Archiwizacja i
+utworzenie nowej pozycji nie przenosi zaznaczenia, ponieważ postęp odwołuje się
+do technicznego identyfikatora, a nie tekstu ani miejsca na liście.
 
 `amt_lesson_progress` jest bieżącym agregatem użytkownika i lekcji. Zmiana
 `content_version` wymusza ponowne spełnienie wymagań tej lekcji. Stare źródła
@@ -70,8 +92,10 @@ pasek postępu, wspólną akcję i stany pozycji programu. Widok lekcji aktualiz
 pokrycie filmu oraz wymagania bez przeładowania strony.
 
 Procent widoczny w odznace lekcji dotyczy wyłącznie wymagań bieżącej lekcji.
-Każdy skonfigurowany warunek ma równy udział: film wnosi postęp proporcjonalnie
-do osiągnięcia wymaganego progu, a zadanie wartość `0%` albo `100%`. Lekcja bez
+Każdy wymagany warunek ma równy udział: film wnosi postęp proporcjonalnie do
+osiągnięcia wymaganego progu, a każda wymagana pozycja checklisty wartość `0%`
+albo `100%`. Pozycje opcjonalne są widoczne i zachowują stan, ale nie zmieniają
+procentu ani automatycznego ukończenia. Lekcja bez
 automatycznych wymagań pokazuje `0%` do ręcznego ukończenia. Ukończona lekcja
 zawsze ma `100%`. Ukończenie innych lekcji nie zmienia tej wartości.
 
@@ -88,7 +112,8 @@ Ukończenie zadania, lekcji i kursu zapisuje idempotentne zdarzenie domenowe z
 
 Flaga `courses-progress` wyłącza endpoint zapisu oraz elementy postępu bez
 usuwania tabel, checkpointów, agregatów ani historycznych ukończeń. Główna
-flaga `courses` nadal wyłącza cały moduł.
+flaga `courses` nadal wyłącza cały moduł. Osobna flaga `courses-tasks` ukrywa
+panel i checklistę oraz odłącza jej zapis bez usuwania definicji i zaznaczeń.
 
 ## Kontrola jakości
 
@@ -98,7 +123,8 @@ node --check assets/js/course-player.js
 ```
 
 Testy jednostkowe obejmują scalanie przedziałów, duplikaty, kilka urządzeń,
-łączne wymagania, trwałą migawkę ukończenia, odbudowę ręcznego źródła,
-autoryzację oraz wybór następnego działania. QA na
+łączne wymagania, zaznaczenie i cofnięcie zadania, brak dostępu, zmiany
+konfiguracji bez przenoszenia postępu, trwałą migawkę ukończenia, odbudowę
+źródeł, autoryzację oraz wybór następnego działania. QA na
 `klaudia-socials-local` potwierdza zapis checkpointu przez AJAX, zachowanie
-postępu po przeładowaniu oraz „Kontynuuj” w programie i hubie.
+postępu i checklisty po przeładowaniu oraz „Kontynuuj” w programie i hubie.

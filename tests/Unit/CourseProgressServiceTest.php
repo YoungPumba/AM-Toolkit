@@ -9,6 +9,7 @@ use AMToolkit\Core\Diagnostics\DomainEvent;
 use AMToolkit\Modules\Access\ActivityEventStore;
 use AMToolkit\Modules\Courses\Contracts\CompletionRepository;
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
+use AMToolkit\Modules\Courses\Contracts\CourseLessonTaskStore;
 use AMToolkit\Modules\Courses\Contracts\CourseProgressSourceStore;
 use AMToolkit\Modules\Courses\Contracts\ProgressRepository;
 use AMToolkit\Modules\Courses\Domain\CourseCompletion;
@@ -253,6 +254,232 @@ final class CourseProgressServiceTest extends TestCase
 
         self::assertIsArray($rebuilt);
         self::assertTrue($rebuilt['lesson_completed']);
+    }
+
+    public function testChecklistUsesStableItemsAndCanBeUncheckedBeforeLessonCompletion(): void
+    {
+        $this->sources->completionRequirements = [];
+        $tasks = new CourseLessonTaskStoreFake();
+        $this->service = new CourseProgressService(
+            $this->sources,
+            $this->progress,
+            $this->completions,
+            new CourseAccessPolicyFake(),
+            $this->events,
+            $tasks
+        );
+
+        $initial = $this->service->lessonState(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID
+        );
+        self::assertSame(0, $initial['lesson_progress_percent']);
+        self::assertFalse($initial['manual_completion_available']);
+
+        $first = $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::FIRST_PUBLIC_ID,
+            true,
+            'AM-20260816-121212121212'
+        );
+        self::assertSame(50, $first['lesson_progress_percent']);
+        self::assertFalse($first['lesson_completed']);
+
+        $unchecked = $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::FIRST_PUBLIC_ID,
+            false,
+            'AM-20260816-131313131313'
+        );
+        self::assertSame(0, $unchecked['lesson_progress_percent']);
+
+        $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::FIRST_PUBLIC_ID,
+            true,
+            'AM-20260816-141414141414'
+        );
+        $optional = $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::OPTIONAL_PUBLIC_ID,
+            true,
+            'AM-20260816-151515151515'
+        );
+        self::assertSame(50, $optional['lesson_progress_percent']);
+
+        $finished = $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::SECOND_PUBLIC_ID,
+            true,
+            'AM-20260816-161616161616'
+        );
+        self::assertTrue($finished['lesson_completed']);
+        self::assertSame(100, $finished['lesson_progress_percent']);
+    }
+
+    public function testChecklistConfigurationDoesNotTransferCompletionToAnotherTask(): void
+    {
+        $this->sources->completionRequirements = [];
+        $tasks = new CourseLessonTaskStoreFake();
+        $this->service = new CourseProgressService(
+            $this->sources,
+            $this->progress,
+            $this->completions,
+            new CourseAccessPolicyFake(),
+            $this->events,
+            $tasks
+        );
+        $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::FIRST_PUBLIC_ID,
+            true,
+            'AM-20260816-171717171717'
+        );
+
+        $firstTask = $tasks->published[0];
+        $secondTask = $tasks->published[1];
+        $firstTask['title'] = 'Pierwsze po edycji';
+        $firstTask['position'] = 9;
+        $tasks->published = [$secondTask, $firstTask];
+        $editedState = $this->service->lessonState(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID
+        );
+        $editedById = array_column($editedState['lesson_tasks'], null, 'public_id');
+
+        self::assertTrue($editedById[CourseLessonTaskStoreFake::FIRST_PUBLIC_ID]['completed']);
+        self::assertFalse($editedById[CourseLessonTaskStoreFake::SECOND_PUBLIC_ID]['completed']);
+
+        $tasks->published = [$secondTask];
+        $state = $this->service->lessonState(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID
+        );
+
+        self::assertSame(0, $state['lesson_progress_percent']);
+        self::assertFalse($state['lesson_tasks'][0]['completed']);
+    }
+
+    public function testChecklistCannotBeChangedWithoutCourseAccess(): void
+    {
+        $this->sources->completionRequirements = [];
+        $tasks = new CourseLessonTaskStoreFake();
+        $this->service = new CourseProgressService(
+            $this->sources,
+            $this->progress,
+            $this->completions,
+            new CourseAccessPolicyFake(false),
+            $this->events,
+            $tasks
+        );
+
+        $result = $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::FIRST_PUBLIC_ID,
+            true,
+            'AM-20260816-181818181818'
+        );
+
+        self::assertInstanceOf(\WP_Error::class, $result);
+        self::assertSame('am_toolkit_course_progress_not_available', $result->get_error_code());
+        self::assertSame([], $tasks->completed);
+        self::assertSame([], $this->events->events);
+    }
+
+    public function testOptionalChecklistItemDoesNotCompleteAnOtherwiseManualLesson(): void
+    {
+        $this->sources->completionRequirements = [];
+        $tasks = new CourseLessonTaskStoreFake();
+        $tasks->published = [$tasks->published[2]];
+        $this->service = new CourseProgressService(
+            $this->sources,
+            $this->progress,
+            $this->completions,
+            new CourseAccessPolicyFake(),
+            $this->events,
+            $tasks
+        );
+
+        $state = $this->service->setLessonTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            CourseLessonTaskStoreFake::OPTIONAL_PUBLIC_ID,
+            true,
+            'AM-20260816-202020202020'
+        );
+
+        self::assertFalse($state['lesson_completed']);
+        self::assertTrue($state['manual_completion_available']);
+        self::assertSame(0, $state['lesson_progress_percent']);
+    }
+}
+
+final class CourseLessonTaskStoreFake implements CourseLessonTaskStore
+{
+    public const FIRST_PUBLIC_ID = '123e4567-e89b-42d3-a456-426614174010';
+    public const SECOND_PUBLIC_ID = '123e4567-e89b-42d3-a456-426614174011';
+    public const OPTIONAL_PUBLIC_ID = '123e4567-e89b-42d3-a456-426614174012';
+
+    /** @var list<array<string, mixed>> */
+    public array $published = [
+        ['id' => 31, 'public_id' => self::FIRST_PUBLIC_ID, 'title' => 'Pierwsze', 'description' => '', 'position' => 0, 'is_required' => 1],
+        ['id' => 32, 'public_id' => self::SECOND_PUBLIC_ID, 'title' => 'Drugie', 'description' => '', 'position' => 1, 'is_required' => 1],
+        ['id' => 33, 'public_id' => self::OPTIONAL_PUBLIC_ID, 'title' => 'Opcjonalne', 'description' => '', 'position' => 2, 'is_required' => 0],
+    ];
+
+    /** @var array<int, true> */
+    public array $completed = [];
+
+    public function tasksForCourse(int $courseId): array|\WP_Error { return $this->published; }
+    public function publishedTasksForLesson(int $lessonId): array|\WP_Error { return $this->published; }
+    public function saveTask(array $task): int|\WP_Error { return 1; }
+    public function archiveTask(int $taskId, int $courseId): bool|\WP_Error { return true; }
+    public function completedTaskIds(int $userId, int $lessonId): array|\WP_Error { return array_keys($this->completed); }
+
+    public function setTaskCompletion(
+        int $userId,
+        int $courseId,
+        int $lessonId,
+        Identifier $taskPublicId,
+        bool $completed,
+        string $requestId,
+        string $occurredAt
+    ): int|\WP_Error {
+        foreach ($this->published as $task) {
+            if ((string) $task['public_id'] !== $taskPublicId->value()) {
+                continue;
+            }
+
+            $id = (int) $task['id'];
+
+            if ($completed) {
+                $this->completed[$id] = true;
+            } else {
+                unset($this->completed[$id]);
+            }
+
+            return $id;
+        }
+
+        return new \WP_Error('am_toolkit_lesson_task_not_found', 'Brak zadania.');
     }
 }
 
