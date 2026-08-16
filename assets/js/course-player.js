@@ -428,6 +428,10 @@
             progressBar.setAttribute('aria-valuenow', watched);
         }
 
+        if (Number.isFinite(Number(progress.resume_at_seconds))) {
+            panel.dataset.resumeAt = String(progress.resume_at_seconds);
+        }
+
         if (progress.task_completed && taskButton) {
             taskButton.disabled = true;
             taskButton.textContent = 'Zadanie wykonane';
@@ -514,6 +518,66 @@
         var sending = false;
         var previousTime = null;
         var accumulated = 0;
+        var lastStoredSecond = -1;
+        var storageKey = 'am-toolkit-course-position:' + wrapper.dataset.course + ':' + wrapper.dataset.lesson;
+
+        function storedPosition() {
+            try {
+                return Number(window.localStorage.getItem(storageKey));
+            } catch (error) {
+                return 0;
+            }
+        }
+
+        function savePosition() {
+            var current = Number(video.currentTime);
+            var second = Math.floor(current);
+
+            if (!Number.isFinite(current) || current <= 0 || second === lastStoredSecond) {
+                return;
+            }
+
+            try {
+                window.localStorage.setItem(storageKey, String(current));
+                lastStoredSecond = second;
+            } catch (error) {
+                // Private browsing may disable storage; server checkpoints remain the fallback.
+            }
+        }
+
+        function clearStoredPosition() {
+            try {
+                window.localStorage.removeItem(storageKey);
+            } catch (error) {
+                // Storage is an optional convenience, never a completion source.
+            }
+        }
+
+        function restorePosition() {
+            var duration = Number(video.duration);
+            var localPosition = storedPosition();
+            var serverPosition = Number(panel.dataset.resumeAt) || 0;
+            var position = localPosition > 0 ? localPosition : serverPosition;
+
+            if (
+                panel.classList.contains('am-lesson-progress--completed')
+                || !Number.isFinite(duration)
+                || !Number.isFinite(position)
+                || position < 5
+                || position >= duration - 5
+            ) {
+                return;
+            }
+
+            video.currentTime = position;
+            previousTime = position;
+        }
+
+        if (video.readyState >= 1) {
+            restorePosition();
+        } else {
+            video.addEventListener('loadedmetadata', restorePosition, {once: true});
+        }
 
         function enqueue(keepalive) {
             if (!pending.length) {
@@ -522,14 +586,15 @@
 
             queue.push({
                 intervals: mergeIntervals(pending),
-                requestId: requestId()
+                requestId: requestId(),
+                keepalive: Boolean(keepalive)
             });
             pending = [];
             accumulated = 0;
-            pump(keepalive);
+            pump();
         }
 
-        function pump(keepalive) {
+        function pump() {
             if (sending || !queue.length) {
                 return;
             }
@@ -537,14 +602,15 @@
             sending = true;
             var batch = queue[0];
 
-            progressRequest('video_checkpoint', wrapper.dataset.course, wrapper.dataset.lesson, batch, keepalive).then(function (progress) {
+            progressRequest('video_checkpoint', wrapper.dataset.course, wrapper.dataset.lesson, batch, batch.keepalive).then(function (progress) {
                 queue.shift();
                 updateProgressPanel(panel, progress);
                 panelMessage(panel, progress.lesson_completed ? config.messages.completed : '', false);
-            }).catch(function () {
-                panelMessage(panel, config.messages.error, true);
-            }).finally(function () {
                 sending = false;
+                pump();
+            }).catch(function () {
+                sending = false;
+                panelMessage(panel, config.messages.error, true);
             });
         }
 
@@ -572,6 +638,7 @@
             }
 
             previousTime = current;
+            savePosition();
         });
 
         video.addEventListener('seeking', function () {
@@ -582,15 +649,22 @@
             previousTime = video.currentTime;
         });
 
-        ['pause', 'ended'].forEach(function (eventName) {
-            video.addEventListener(eventName, enqueue);
+        video.addEventListener('pause', function () {
+            savePosition();
+            enqueue();
+        });
+
+        video.addEventListener('ended', function () {
+            clearStoredPosition();
+            enqueue();
         });
 
         window.addEventListener('pagehide', function () {
+            savePosition();
             enqueue(true);
 
             if (!sending) {
-                pump(true);
+                pump();
             }
         });
     }

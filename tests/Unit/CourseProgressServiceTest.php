@@ -73,6 +73,7 @@ final class CourseProgressServiceTest extends TestCase
         self::assertSame('AM-20260816-AAAAAAAAAAAA', $first['request_id']);
         self::assertSame(50.0, $duplicate['watched_percent']);
         self::assertSame(90.0, $secondDevice['watched_percent']);
+        self::assertSame(90.0, $secondDevice['resume_at_seconds']);
         self::assertFalse($secondDevice['lesson_completed']);
         self::assertCount(2, $this->sources->checkpoints);
 
@@ -84,6 +85,7 @@ final class CourseProgressServiceTest extends TestCase
         );
 
         self::assertTrue($task['lesson_completed']);
+        self::assertSame(0.0, $task['resume_at_seconds']);
         self::assertFalse($task['course_completed']);
         self::assertSame(50, $task['course_progress_percent']);
 
@@ -237,6 +239,21 @@ final class CourseProgressSourceStoreFake implements CourseProgressSourceStore
     public function videoCheckpointIntervals(int $userId, int $lessonId, int $contentVersion): array
     {
         return array_values($this->checkpoints);
+    }
+
+    public function latestVideoPosition(int $userId, int $lessonId, int $contentVersion): float
+    {
+        $latest = end($this->checkpoints);
+
+        if (!is_array($latest)) {
+            return 0.0;
+        }
+
+        return array_reduce(
+            $latest,
+            static fn (float $position, array $interval): float => max($position, (float) $interval[1]),
+            0.0
+        );
     }
 
     public function recordRequirementCompletion(

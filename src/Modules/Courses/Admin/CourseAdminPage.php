@@ -141,6 +141,14 @@ final class CourseAdminPage
                     $videoReference = $uploadedReference;
                 }
 
+                if ($videoProvider === $this->assets->provider() && $videoReference !== '') {
+                    $detectedDuration = $this->assets->videoDurationSeconds($videoReference);
+
+                    if (!is_wp_error($detectedDuration)) {
+                        $duration = $detectedDuration;
+                    }
+                }
+
                 $result = $this->courses->saveLesson(
                     $this->postInt('lesson_id'),
                     $courseId,
@@ -479,7 +487,7 @@ final class CourseAdminPage
                 <input type="hidden" name="video_reference" value="<?php echo esc_attr((string) ($lesson['video_reference'] ?? '')); ?>">
                 <div class="amt-courses-form__row">
                     <label><span><?php esc_html_e('Nagranie MP4', 'am-toolkit'); ?></span><input type="file" name="video_file" accept="video/mp4,.mp4"><small><?php echo esc_html(!empty($lesson['video_reference']) ? __('Nagranie jest zapisane. Nowy plik zastąpi przypisanie.', 'am-toolkit') : sprintf(__('Maksymalny rozmiar wysyłania: %s.', 'am-toolkit'), size_format(wp_max_upload_size()))); ?></small></label>
-                    <label><span><?php esc_html_e('Czas w sekundach', 'am-toolkit'); ?></span><input type="number" min="0" name="duration_seconds" value="<?php echo esc_attr((string) ($lesson['duration_seconds'] ?? '')); ?>"></label>
+                    <label><span><?php esc_html_e('Czas nagrania w sekundach', 'am-toolkit'); ?></span><input type="number" min="0" name="duration_seconds" value="<?php echo esc_attr((string) ($lesson['duration_seconds'] ?? '')); ?>"><small><?php esc_html_e('Dla prywatnego MP4 czas zostanie odczytany automatycznie przy zapisie.', 'am-toolkit'); ?></small></label>
                 </div>
                 <div class="amt-courses-form__row"><label><span><?php esc_html_e('Wymagany procent filmu', 'am-toolkit'); ?></span><input type="number" min="0" max="100" name="video_percent" value="<?php echo esc_attr((string) ($requirements['video_percent'] ?? 0)); ?>"></label><label class="amt-check"><input type="checkbox" name="task_required" value="1" <?php checked(!empty($requirements['task_required'])); ?>><span><?php esc_html_e('Zadanie wymagane', 'am-toolkit'); ?></span></label><label class="amt-check"><input type="checkbox" name="is_required" value="1" <?php checked(!isset($lesson['is_required']) || (int) $lesson['is_required'] === 1); ?>><span><?php esc_html_e('Lekcja wymagana w programie', 'am-toolkit'); ?></span></label></div>
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz lekcję', 'am-toolkit'); ?></button>

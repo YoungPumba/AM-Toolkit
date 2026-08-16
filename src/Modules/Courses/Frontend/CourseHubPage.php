@@ -766,6 +766,7 @@ final class CourseHubPage
             data-am-course-progress
             data-course="<?php echo esc_attr($coursePublicId); ?>"
             data-lesson="<?php echo esc_attr($lessonPublicId); ?>"
+            data-resume-at="<?php echo esc_attr((string) ((float) ($progress['resume_at_seconds'] ?? 0))); ?>"
             aria-labelledby="am-lesson-progress-title"
         >
             <header class="am-lesson-progress__header">

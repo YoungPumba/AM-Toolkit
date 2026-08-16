@@ -19,5 +19,7 @@ interface CourseAssetStore
 
     public function locate(string $reference, string $downloadName): ProtectedAsset|\WP_Error;
 
+    public function videoDurationSeconds(string $reference): int|\WP_Error;
+
     public function remove(string $reference): bool;
 }

@@ -168,6 +168,37 @@ final class WpdbCourseProgressSourceStore implements CourseProgressSourceStore
         return $sets;
     }
 
+    public function latestVideoPosition(int $userId, int $lessonId, int $contentVersion): float|\WP_Error
+    {
+        $encoded = $this->database->get_var(
+            $this->database->prepare(
+                'SELECT intervals FROM ' . CoursesSchema::videoCheckpointsTable()
+                . ' WHERE user_id = %d AND lesson_id = %d AND content_version = %d'
+                . ' ORDER BY id DESC LIMIT 1',
+                $userId,
+                $lessonId,
+                $contentVersion
+            )
+        );
+
+        if ($this->database->last_error !== '') {
+            return $this->databaseError();
+        }
+
+        $decoded = json_decode((string) $encoded, true);
+        $position = 0.0;
+
+        if (is_array($decoded)) {
+            foreach ($decoded as $interval) {
+                if (is_array($interval) && count($interval) === 2 && is_numeric($interval[1] ?? null)) {
+                    $position = max($position, (float) $interval[1]);
+                }
+            }
+        }
+
+        return $position;
+    }
+
     public function recordRequirementCompletion(
         int $userId,
         int $courseId,

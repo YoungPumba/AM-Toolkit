@@ -30,6 +30,8 @@ interface CourseProgressSourceStore
     /** @return list<list<array{0: float, 1: float}>>|\WP_Error */
     public function videoCheckpointIntervals(int $userId, int $lessonId, int $contentVersion): array|\WP_Error;
 
+    public function latestVideoPosition(int $userId, int $lessonId, int $contentVersion): float|\WP_Error;
+
     /** @return bool|\WP_Error True only when a new requirement completion was inserted. */
     public function recordRequirementCompletion(
         int $userId,

@@ -497,6 +497,17 @@ final class CourseProgressService
             (int) $context['program_version_id']
         ) !== null;
         $requirements = $this->requirements($context);
+        $resumeAt = $lessonCompleted
+            ? 0.0
+            : $this->sources->latestVideoPosition(
+                $userId,
+                (int) $context['lesson_id'],
+                (int) $context['content_version']
+            );
+
+        if (is_wp_error($resumeAt)) {
+            return $resumeAt;
+        }
 
         return [
             'status' => $lessonCompleted
@@ -508,6 +519,7 @@ final class CourseProgressService
             'task_required' => $requirements->taskRequired(),
             'task_completed' => $taskCompleted,
             'manual_completion_available' => !$requirements->hasAutomaticRequirements(),
+            'resume_at_seconds' => min((float) $duration, max(0.0, $resumeAt)),
             'course_completed' => $courseCompleted,
             'course_progress_percent' => $courseCompleted || $requiredIds === []
                 ? 100
