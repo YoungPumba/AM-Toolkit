@@ -53,11 +53,13 @@
 - przesyłanie plików MP4 i materiałów bezpośrednio z panelu właścicielki oraz
   adaptery przygotowane pod przyszłą migrację do CDN lub podpisanych adresów.
 - spójny skin odtwarzacza lekcji: ośmiopunktowy loader, animowane ikony
-  kontrolek, różowy postęp, Poppins dla czasu i zachowany fokus klawiatury,
+  kontrolek, półprzezroczyste tło, różowy postęp, Poppins dla czasu i
+  zachowany fokus klawiatury,
 - dynamiczny offset przyklejonego spisu programu pod headerem oraz bezpieczne
   ograniczenie wysokości na niskich ekranach,
 - wspólny zestaw ikon SVG dla nawigacji i materiałów oraz best-effort
   przełączenie fullscreen do orientacji poziomej na wspieranych telefonach.
+- komunikaty błędów kursów wymuszają krój Poppins obsługujący polskie znaki.
 
 ## 0.11.5 — 2026-08-11
 

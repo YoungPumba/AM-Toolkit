@@ -226,6 +226,10 @@
     margin: 8px 0;
 }
 
+.am-courses__error h1 {
+    font-family: Poppins, sans-serif;
+}
+
 .am-courses__empty p,
 .am-courses__error p {
     margin: 0 0 18px;
@@ -563,7 +567,7 @@
     align-items: center;
     height: 56px;
     padding: 6px 8px;
-    background: rgb(23 19 22 / 94%);
+    background: rgb(23 19 22 / 78%);
 }
 
 .am-lesson-player .mejs-controls .mejs-button {
