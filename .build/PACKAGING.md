@@ -1,5 +1,8 @@
 # Stały schemat paczek AM Toolkit
 
+Politykę linii utrzymaniowych, tagów i GitHub Releases opisuje
+[`docs/RELEASES.md`](../docs/RELEASES.md).
+
 Za wzorzec referencyjny przyjmujemy działającą paczkę:
 
 `am-toolkit-v0.9.0.zip`

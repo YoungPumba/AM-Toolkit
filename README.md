@@ -1,5 +1,9 @@
 # AM Toolkit
 
+Gałąź `main` przygotowuje wersję rozwojową 0.12.0 z modułem AM Courses.
+Zweryfikowane wydania instalacyjne są publikowane jako tag i GitHub Release
+zgodnie z [procedurą wydań](docs/RELEASES.md).
+
 Wtyczka jest uruchamiana przez Composer PSR-4 i centralny rejestr modułów.
 Jawne zależności, migracje per moduł, capabilities i przełączniki awaryjne
 tworzą bezpieczny fundament pod AM Courses.
