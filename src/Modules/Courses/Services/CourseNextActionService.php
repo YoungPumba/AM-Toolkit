@@ -30,6 +30,7 @@ final class CourseNextActionService
 
         $requiredTotal = 0;
         $requiredCompleted = 0;
+        $hasLessonProgress = false;
         $statuses = [];
         $started = [];
         $firstRequired = null;
@@ -48,6 +49,7 @@ final class CourseNextActionService
                 : 'no_record';
             $required = !empty($row['is_required']);
             $statuses[$publicId] = $status;
+            $hasLessonProgress = $hasLessonProgress || $status !== 'no_record';
 
             if ($required) {
                 $requiredTotal++;
@@ -84,7 +86,7 @@ final class CourseNextActionService
             'lesson_statuses' => $statuses,
             'next_lesson_public_id' => $nextLesson !== '' ? $nextLesson : null,
             'next_action' => $nextLesson !== ''
-                ? ($started !== [] ? 'continue' : 'start')
+                ? ($hasLessonProgress ? 'continue' : 'start')
                 : ($hasCompletion ? 'completed' : 'program'),
         ];
     }
