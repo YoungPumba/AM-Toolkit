@@ -457,7 +457,7 @@
                 manualButton.remove();
             }
         } else if (badge) {
-            badge.textContent = (Number(progress.course_progress_percent) || 0) + '%';
+            badge.textContent = (Number(progress.lesson_progress_percent) || 0) + '%';
         }
     }
 

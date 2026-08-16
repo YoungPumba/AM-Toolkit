@@ -168,6 +168,11 @@
     background: #eadfe3;
 }
 
+.am-course__progress-bar {
+    align-self: start;
+    margin-top: 8px;
+}
+
 .am-course-card__progress {
     margin-top: 12px;
 }
@@ -1780,6 +1785,11 @@ a.am-course-meetings__telegram:focus-visible {
     .am-course__progress {
         grid-template-columns: 1fr;
         gap: 14px;
+    }
+
+    .am-course__progress-bar {
+        align-self: stretch;
+        margin-top: 0;
     }
 
     .am-course__progress > a {

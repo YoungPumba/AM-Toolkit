@@ -75,6 +75,7 @@ final class CourseProgressServiceTest extends TestCase
         self::assertSame(90.0, $secondDevice['watched_percent']);
         self::assertSame(90.0, $secondDevice['resume_at_seconds']);
         self::assertFalse($secondDevice['lesson_completed']);
+        self::assertSame(50, $secondDevice['lesson_progress_percent']);
         self::assertCount(2, $this->sources->checkpoints);
 
         $task = $this->service->acknowledgeTask(
@@ -87,6 +88,7 @@ final class CourseProgressServiceTest extends TestCase
         self::assertTrue($task['lesson_completed']);
         self::assertSame(0.0, $task['resume_at_seconds']);
         self::assertFalse($task['course_completed']);
+        self::assertSame(100, $task['lesson_progress_percent']);
         self::assertSame(50, $task['course_progress_percent']);
 
         $this->progress->save(new LessonProgress(
@@ -116,6 +118,85 @@ final class CourseProgressServiceTest extends TestCase
         self::assertTrue($again['course_completed']);
         self::assertCount(1, $this->completions->items);
         self::assertSame([10, 11], $this->completions->items[0]->requiredLessonIds());
+    }
+
+    public function testLessonProgressDoesNotReuseCourseProgress(): void
+    {
+        $this->progress->save(new LessonProgress(
+            0,
+            7,
+            4,
+            11,
+            ProgressStatus::COMPLETED,
+            1,
+            'requirements_met',
+            '2026-08-16 10:00:00'
+        ));
+
+        $empty = $this->service->lessonState(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID
+        );
+
+        self::assertSame(0, $empty['lesson_progress_percent']);
+        self::assertSame(50, $empty['course_progress_percent']);
+
+        $video = $this->service->recordVideoCheckpoint(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            [[0, 40]],
+            'AM-20260816-222222222222'
+        );
+
+        self::assertSame(25, $video['lesson_progress_percent']);
+        self::assertSame(50, $video['course_progress_percent']);
+
+        $task = $this->service->acknowledgeTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            'AM-20260816-333333333333'
+        );
+
+        self::assertFalse($task['lesson_completed']);
+        self::assertSame(75, $task['lesson_progress_percent']);
+        self::assertSame(50, $task['course_progress_percent']);
+    }
+
+    public function testEmptyManualVideoAndTaskLessonsExposeTheirOwnProgress(): void
+    {
+        $this->sources->completionRequirements = [];
+        $manual = $this->service->lessonState(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID
+        );
+        self::assertSame(0, $manual['lesson_progress_percent']);
+        self::assertTrue($manual['manual_completion_available']);
+
+        $this->sources->completionRequirements = ['video_percent' => 80];
+        $video = $this->service->recordVideoCheckpoint(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            [[0, 40]],
+            'AM-20260816-444444444444'
+        );
+        self::assertSame(50, $video['lesson_progress_percent']);
+
+        $this->sources->checkpoints = [];
+        $this->progress->items = [];
+        $this->sources->completionRequirements = ['task_required' => true];
+        $task = $this->service->acknowledgeTask(
+            7,
+            CourseProgressSourceStoreFake::COURSE_PUBLIC_ID,
+            CourseProgressSourceStoreFake::LESSON_PUBLIC_ID,
+            'AM-20260816-555555555555'
+        );
+        self::assertTrue($task['lesson_completed']);
+        self::assertSame(100, $task['lesson_progress_percent']);
     }
 
     public function testManualCompletionCannotBypassConfiguredRequirements(): void

@@ -923,6 +923,7 @@ final class CourseHubPage
         $videoRequired = min(100, max(0, (int) ($progress['video_percent_required'] ?? 0)));
         $taskRequired = !empty($progress['task_required']);
         $taskCompleted = !empty($progress['task_completed']);
+        $lessonProgressPercent = min(100, max(0, (int) ($progress['lesson_progress_percent'] ?? 0)));
 
         ob_start();
         ?>
@@ -942,7 +943,7 @@ final class CourseHubPage
                     </h2>
                 </div>
                 <span class="am-lesson-progress__badge" data-am-progress-badge>
-                    <?php echo esc_html($completed ? '✓' : (string) ((int) ($progress['course_progress_percent'] ?? 0)) . '%'); ?>
+                    <?php echo esc_html($completed ? '✓' : (string) $lessonProgressPercent . '%'); ?>
                 </span>
             </header>
 
