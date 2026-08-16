@@ -30,6 +30,7 @@
     "scripts": {
         "check": [
             "@check:syntax",
+            "@test:version",
             "@test:bootstrap",
             "@test:access-core",
             "@test:module-registry",
@@ -38,7 +39,8 @@
             "@analyse",
             "@test:unit"
         ],
-        "check:syntax": "parallel-lint --exclude vendor .",
+        "check:syntax": "parallel-lint --exclude vendor --exclude .worktrees .",
+        "test:version": "php .build/test-version-consistency.php",
         "test:bootstrap": "php .build/test-bootstrap.php",
         "test:access-core": "php .build/test-access-core.php",
         "test:module-registry": "php .build/test-module-registry.php",

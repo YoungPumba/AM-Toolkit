@@ -1,6 +1,6 @@
 # Historia zmian AM Toolkit
 
-## Unreleased — AM Courses foundation
+## 0.12.0 — w przygotowaniu
 
 - rejestracja modułu `Courses` zależnego od `Core` i `Access`, domyślnie
   wyłączonego feature flagą,
