@@ -535,8 +535,8 @@ final class CourseHubPage
                     </div>
                     <?php if (!empty($nearest['join_reference'])) : ?>
                         <a class="am-course-meeting__action" href="<?php echo esc_url((string) $nearest['join_reference']); ?>" target="_blank" rel="noopener noreferrer">
+                            <?php echo $this->meetingPlatformIcon((string) ($nearest['platform'] ?? '')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                             <?php esc_html_e('Dołącz do spotkania', 'am-toolkit'); ?>
-                            <?php echo CourseIcon::render(CourseIcon::EXTERNAL); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </a>
                     <?php endif; ?>
                 </article>
@@ -549,8 +549,8 @@ final class CourseHubPage
 
             <?php if ($telegram !== '') : ?>
                 <a class="am-course-meetings__telegram" href="<?php echo esc_url($telegram); ?>" target="_blank" rel="noopener noreferrer">
+                    <img class="am-course-brand-icon am-course-brand-icon--telegram" src="<?php echo esc_url(AM_TOOLKIT_URL . 'assets/images/courses/telegram.svg'); ?>" alt="" aria-hidden="true">
                     <span><strong><?php esc_html_e('Prywatna grupa kursu', 'am-toolkit'); ?></strong><small><?php esc_html_e('Otwórz grupę na Telegramie', 'am-toolkit'); ?></small></span>
-                    <?php echo CourseIcon::render(CourseIcon::EXTERNAL); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </a>
             <?php endif; ?>
 
@@ -578,6 +578,17 @@ final class CourseHubPage
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    private function meetingPlatformIcon(string $platform): string
+    {
+        if (stripos($platform, 'zoom') !== false) {
+            return '<img class="am-course-brand-icon am-course-brand-icon--zoom" src="'
+                . esc_url(AM_TOOLKIT_URL . 'assets/images/courses/zoom.svg')
+                . '" alt="" aria-hidden="true">';
+        }
+
+        return CourseIcon::render(CourseIcon::EXTERNAL);
     }
 
     /** @param array<string, mixed> $meeting */

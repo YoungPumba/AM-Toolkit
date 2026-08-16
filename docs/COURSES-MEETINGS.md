@@ -21,6 +21,17 @@ Zmiana początku istniejącego zaplanowanego spotkania automatycznie nadaje stan
 Najbliższe spotkanie to pierwszy przyszły rekord w stanie `scheduled` lub
 `rescheduled`. Brak takiego rekordu jest osobnym, czytelnym stanem interfejsu.
 
+## Widok uczestnika
+
+Najbliższy termin jest widoczny w kafelku kursu, programie kursu oraz w sekcji
+„Wymaga Twojej uwagi” na pulpicie konta. Wpis w sekcji uwagi pokazuje tytuł
+spotkania, nazwę kursu i czas w strefie prezentacji, a prowadzi do chronionego
+widoku kursu — prywatny adres spotkania nie jest ujawniany na pulpicie.
+
+Odnośniki do spotkania Zoom i grupy Telegram korzystają z ikon dostarczonych
+dla projektu oraz kolorów identyfikacji obu usług. Dla innych platform
+spotkań pozostaje neutralna ikona odnośnika zewnętrznego.
+
 ## Prywatność i audyt
 
 Prywatne linki są odczytywane dopiero po serwerowym potwierdzeniu aktywnego

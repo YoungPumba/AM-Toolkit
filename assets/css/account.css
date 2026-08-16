@@ -292,6 +292,28 @@
     font-weight: 700;
 }
 
+.am-account-attention__icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.am-account-attention__copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.am-account-attention__copy strong {
+    font-weight: 600;
+}
+
+.am-account-attention__copy small {
+    color: #756b70;
+    font-size: 12px;
+    font-weight: 400;
+}
+
 .am-account-attention__arrow {
     color: #f176a4;
     font-size: 18px;

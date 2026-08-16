@@ -86,7 +86,9 @@ chronionego pobierania plików ani zapisu postępu. Te elementy powstają w
 VIA-42 i VIA-44. VIA-43 dodaje najbliższy termin w kafelku i programie,
 czytelny brak terminu, historię statusów oraz CTA do spotkania, nagrania i
 prywatnej grupy kursu. Dane te są dołączane do read modelu dopiero po
-potwierdzeniu aktywnego grantu.
+potwierdzeniu aktywnego grantu. Najbliższy termin trafia również do sekcji
+„Wymaga Twojej uwagi” na pulpicie konta, ale bez ujawniania prywatnego adresu
+spotkania poza widokiem kursu.
 
 ## Testy
 

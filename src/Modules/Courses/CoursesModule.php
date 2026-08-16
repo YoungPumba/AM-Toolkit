@@ -7,6 +7,7 @@ use AMToolkit\Core\ModuleInterface;
 use AMToolkit\Modules\Access\WpdbActivityEventStore;
 use AMToolkit\Modules\Courses\Admin\CourseAdminPage;
 use AMToolkit\Modules\Courses\Frontend\CourseAssetController;
+use AMToolkit\Modules\Courses\Frontend\CourseAttentionTasks;
 use AMToolkit\Modules\Courses\Frontend\CourseDashboardSection;
 use AMToolkit\Modules\Courses\Frontend\CourseHubPage;
 use AMToolkit\Modules\Courses\Frontend\CourseProgressController;
@@ -81,6 +82,7 @@ final class CoursesModule implements ModuleInterface
             $progressController
         ))->boot();
         (new CourseDashboardSection($catalog))->boot();
+        (new CourseAttentionTasks($catalog))->boot();
 
         do_action('am_toolkit_courses_ready');
     }

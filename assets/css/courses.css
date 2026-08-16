@@ -1463,11 +1463,20 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
 
 .am-course-meeting__action {
     padding: 11px 15px;
+    border: 1px solid rgba(74, 140, 255, .32);
     border-radius: 999px;
-    background: var(--am-courses-pink);
-    color: #fff;
+    background: #f5f8ff;
+    color: #356fd4;
     font-size: 13px;
     font-weight: 700;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+a.am-course-meeting__action:hover,
+a.am-course-meeting__action:focus-visible {
+    border-color: #4a8cff;
+    background: #edf3ff;
+    color: #4a8cff;
 }
 
 .am-course-meeting__action .am-course-icon,
@@ -1488,14 +1497,23 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
 }
 
 .am-course-meetings__telegram {
-    justify-content: space-between;
+    justify-content: flex-start;
     width: 100%;
     box-sizing: border-box;
     margin-top: 14px;
     padding: 14px 18px;
     border-radius: 16px;
-    background: #30282c;
-    color: #fff;
+    border: 1px solid rgba(55, 174, 226, .3);
+    background: #f4fbfe;
+    color: #187eaa;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+a.am-course-meetings__telegram:hover,
+a.am-course-meetings__telegram:focus-visible {
+    border-color: #37aee2;
+    background: #eaf8fd;
+    color: #37aee2;
 }
 
 .am-course-meetings__telegram span,
@@ -1505,7 +1523,23 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
 
 .am-course-meetings__telegram small {
     margin-top: 2px;
-    color: #eadfe4;
+    color: #39788f;
+}
+
+.am-course-brand-icon {
+    display: block;
+    flex: 0 0 auto;
+    object-fit: contain;
+}
+
+.am-course-brand-icon--zoom {
+    width: 52px;
+    height: 26px;
+}
+
+.am-course-brand-icon--telegram {
+    width: 32px;
+    height: 32px;
 }
 
 .am-course-meetings__history {
