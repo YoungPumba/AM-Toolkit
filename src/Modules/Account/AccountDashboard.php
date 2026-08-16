@@ -356,6 +356,11 @@ final class AccountDashboard
             }
         }
 
+        $filteredTasks = apply_filters('am_toolkit_account_attention_tasks', $tasks, $user);
+        if (is_array($filteredTasks)) {
+            $tasks = $filteredTasks;
+        }
+
         if ($tasks === []) {
             return sprintf(
                 '<p class="am-account-attention__empty"><span aria-hidden="true">✓</span>%s</p>',
@@ -369,8 +374,15 @@ final class AccountDashboard
             <?php foreach ($tasks as $task) : ?>
                 <li class="am-account-attention__item am-account-attention__item--<?php echo esc_attr($task['type']); ?>">
                     <a class="am-account-attention__link" href="<?php echo esc_url($task['url']); ?>">
-                        <span class="am-account-attention__icon" aria-hidden="true">!</span>
-                        <span><?php echo esc_html($task['label']); ?></span>
+                        <span class="am-account-attention__icon" aria-hidden="true">
+                            <?php echo $this->attentionIcon((string) ($task['icon'] ?? 'attention')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        </span>
+                        <span class="am-account-attention__copy">
+                            <strong><?php echo esc_html($task['label']); ?></strong>
+                            <?php if (!empty($task['meta'])) : ?>
+                                <small><?php echo esc_html((string) $task['meta']); ?></small>
+                            <?php endif; ?>
+                        </span>
                         <span class="am-account-attention__arrow" aria-hidden="true">→</span>
                     </a>
                 </li>
@@ -379,6 +391,15 @@ final class AccountDashboard
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    private function attentionIcon(string $icon): string
+    {
+        if ($icon === 'calendar') {
+            return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 2v3M17 2v3M3.5 9h17M5.5 4h13a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        }
+
+        return '!';
     }
 
     /**

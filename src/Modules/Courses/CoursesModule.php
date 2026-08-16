@@ -7,6 +7,7 @@ use AMToolkit\Core\ModuleInterface;
 use AMToolkit\Modules\Access\WpdbActivityEventStore;
 use AMToolkit\Modules\Courses\Admin\CourseAdminPage;
 use AMToolkit\Modules\Courses\Frontend\CourseAssetController;
+use AMToolkit\Modules\Courses\Frontend\CourseAttentionTasks;
 use AMToolkit\Modules\Courses\Frontend\CourseDashboardSection;
 use AMToolkit\Modules\Courses\Frontend\CourseHubPage;
 use AMToolkit\Modules\Courses\Frontend\CourseProgressController;
@@ -15,6 +16,7 @@ use AMToolkit\Modules\Courses\Services\AccessCoreCourseAccessPolicy;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use AMToolkit\Modules\Courses\Services\CourseNextActionService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
+use AMToolkit\Modules\Courses\Services\CourseMeetingService;
 
 defined('ABSPATH') || exit;
 
@@ -38,7 +40,13 @@ final class CoursesModule implements ModuleInterface
     public function boot(): void
     {
         $assetStore = new WpPrivateCourseAssetStore();
-        (new CourseAdminPage(null, $assetStore))->boot();
+        $meetingStore = (new FeatureFlags())->isEnabled('courses-meetings')
+            ? new WpdbCourseMeetingStore()
+            : null;
+        $meetingService = $meetingStore !== null
+            ? new CourseMeetingService($meetingStore, new WpdbActivityEventStore())
+            : null;
+        (new CourseAdminPage(null, $assetStore, $meetingService))->boot();
         $catalog = new CourseCatalogService(
             new WpdbCourseViewStore(),
             new AccessCoreCourseAccessPolicy(),
@@ -46,7 +54,8 @@ final class CoursesModule implements ModuleInterface
                 ? new CourseNextActionService(
                     new WpdbCourseProgressOverviewStore()
                 )
-                : null
+                : null,
+            $meetingStore
         );
         $assets = new CourseAssetController($catalog, [$assetStore]);
         $assets->boot();
@@ -73,6 +82,7 @@ final class CoursesModule implements ModuleInterface
             $progressController
         ))->boot();
         (new CourseDashboardSection($catalog))->boot();
+        (new CourseAttentionTasks($catalog))->boot();
 
         do_action('am_toolkit_courses_ready');
     }

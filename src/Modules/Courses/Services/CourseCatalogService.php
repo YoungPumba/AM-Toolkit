@@ -4,6 +4,7 @@ namespace AMToolkit\Modules\Courses\Services;
 
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
 use AMToolkit\Modules\Courses\Contracts\CourseViewStore;
+use AMToolkit\Modules\Courses\Contracts\CourseMeetingStore;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 
 defined('ABSPATH') || exit;
@@ -13,7 +14,8 @@ final class CourseCatalogService
     public function __construct(
         private CourseViewStore $store,
         private CourseAccessPolicy $access,
-        private ?CourseNextActionService $nextAction = null
+        private ?CourseNextActionService $nextAction = null,
+        private ?CourseMeetingStore $meetings = null
     ) {
     }
 
@@ -28,6 +30,18 @@ final class CourseCatalogService
 
         if (is_wp_error($courses)) {
             return $this->readError();
+        }
+
+        $nearest = [];
+        if ($this->meetings !== null) {
+            $courseIds = array_values(array_filter(array_map(
+                static fn (array $course): int => !empty($course['has_active_access']) ? (int) ($course['id'] ?? 0) : 0,
+                $courses
+            )));
+            $loaded = $this->meetings->nearestMeetings($courseIds, current_time('mysql', true));
+            if (!is_wp_error($loaded)) {
+                $nearest = $loaded;
+            }
         }
 
         foreach ($courses as &$course) {
@@ -50,6 +64,11 @@ final class CourseCatalogService
                 if (!is_wp_error($overview)) {
                     $course['progress'] = $overview;
                 }
+            }
+
+            $courseId = (int) ($course['id'] ?? 0);
+            if ($course['can_open'] && isset($nearest[$courseId])) {
+                $course['nearest_meeting'] = $this->participantMeeting($nearest[$courseId]);
             }
 
             unset($course['id'], $course['current_program_version_id']);
@@ -87,6 +106,24 @@ final class CourseCatalogService
             if (!is_wp_error($overview)) {
                 $course['progress'] = $overview;
                 $this->applyLessonStatuses($program, (array) $overview['lesson_statuses']);
+            }
+        }
+
+        if ($this->meetings !== null) {
+            $courseId = (int) $course['id'];
+            $meetingRows = $this->meetings->meetingsForCourse($courseId);
+            $settings = $this->meetings->courseSettings($courseId);
+
+            if (!is_wp_error($meetingRows)) {
+                $course['meetings'] = array_map([$this, 'participantMeeting'], $meetingRows);
+                $nearest = $this->meetings->nearestMeetings([$courseId], current_time('mysql', true));
+                if (!is_wp_error($nearest) && isset($nearest[$courseId])) {
+                    $course['nearest_meeting'] = $this->participantMeeting($nearest[$courseId]);
+                }
+            }
+
+            if (is_array($settings) && !empty($settings['telegram_reference'])) {
+                $course['telegram_reference'] = (string) $settings['telegram_reference'];
             }
         }
 
@@ -238,6 +275,13 @@ final class CourseCatalogService
             'am_toolkit_course_view_read_failed',
             __('Nie udało się teraz wczytać kursów. Spróbuj ponownie później.', 'am-toolkit')
         );
+    }
+
+    /** @param array<string, mixed> $meeting @return array<string, mixed> */
+    private function participantMeeting(array $meeting): array
+    {
+        unset($meeting['id'], $meeting['course_id'], $meeting['archived_at']);
+        return $meeting;
     }
 
     /**

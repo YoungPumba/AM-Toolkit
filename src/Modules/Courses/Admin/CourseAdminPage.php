@@ -9,6 +9,8 @@ use AMToolkit\Modules\Courses\Domain\PublicationStatus;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
 use AMToolkit\Modules\Courses\Services\CourseAdminService;
+use AMToolkit\Modules\Courses\Services\CourseMeetingService;
+use AMToolkit\Modules\Courses\Domain\MeetingStatus;
 use AMToolkit\Modules\Courses\WpdbCourseAdminStore;
 use AMToolkit\Modules\Courses\WpdbProductCourseMappingStore;
 use AMToolkit\Modules\Courses\WpPrivateCourseAssetStore;
@@ -23,10 +25,16 @@ final class CourseAdminPage
 
     private CourseAdminService $courses;
     private CourseAssetStore $assets;
+    private ?CourseMeetingService $meetings;
 
-    public function __construct(?CourseAdminService $courses = null, ?CourseAssetStore $assets = null)
+    public function __construct(
+        ?CourseAdminService $courses = null,
+        ?CourseAssetStore $assets = null,
+        ?CourseMeetingService $meetings = null
+    )
     {
         $this->assets = $assets ?? new WpPrivateCourseAssetStore();
+        $this->meetings = $meetings;
 
         if ($courses !== null) {
             $this->courses = $courses;
@@ -246,6 +254,35 @@ final class CourseAdminPage
                 );
                 break;
 
+            case 'save_course_links':
+                $result = $this->meetings !== null
+                    ? $this->meetings->saveTelegram(
+                        $courseId,
+                        $this->postUrl('telegram_reference'),
+                        get_current_user_id()
+                    )
+                    : new \WP_Error('am_toolkit_course_meetings_disabled', __('Informacje organizacyjne są wyłączone.', 'am-toolkit'));
+                break;
+
+            case 'save_meeting':
+                $result = $this->meetings !== null
+                    ? $this->meetings->saveMeeting([
+                        'id' => $this->postInt('meeting_id'),
+                        'course_id' => $courseId,
+                        'title' => $this->postText('title'),
+                        'description' => $this->postTextarea('description'),
+                        'starts_at' => $this->postValue('starts_at'),
+                        'ends_at' => $this->postValue('ends_at'),
+                        'display_timezone' => $this->postText('display_timezone'),
+                        'platform' => $this->postText('platform'),
+                        'location' => $this->postText('location'),
+                        'join_reference' => $this->postUrl('join_reference'),
+                        'recording_reference' => $this->postUrl('recording_reference'),
+                        'status' => $this->postKey('meeting_status'),
+                    ], get_current_user_id())
+                    : new \WP_Error('am_toolkit_course_meetings_disabled', __('Informacje organizacyjne są wyłączone.', 'am-toolkit'));
+                break;
+
             case 'grant_manual':
                 if (!Authorization::canManageAccess()) {
                     wp_die(esc_html__('Nie masz uprawnień do zarządzania dostępem.', 'am-toolkit'));
@@ -304,6 +341,9 @@ final class CourseAdminPage
         $productIds = $this->valueOrEmpty($this->courses->productIds($courseId));
         $participants = $this->valueOrEmpty($this->courses->participants($courseId));
         $activity = $this->valueOrEmpty($this->courses->activity($courseId));
+        $meetings = $this->meetings !== null ? $this->valueOrEmpty($this->meetings->meetings($courseId)) : [];
+        $meetingSettings = $this->meetings !== null ? $this->meetings->courseSettings($courseId) : null;
+        $meetingSettings = is_array($meetingSettings) ? $meetingSettings : [];
 
         echo '<div class="amt-courses-layout">';
         echo '<main class="amt-courses-main">';
@@ -311,6 +351,9 @@ final class CourseAdminPage
         $this->renderSections($courseId, $sections);
         $this->renderLessons($courseId, $sections, $lessons);
         $this->renderMaterials($courseId, $lessons, $materials);
+        if ($this->meetings !== null) {
+            $this->renderMeetings($courseId, $meetings, $meetingSettings);
+        }
         echo '</main><aside class="amt-courses-side">';
         $this->renderMappings($courseId, $productIds);
         $this->renderAccess($courseId, $participants, $activity);
@@ -532,6 +575,108 @@ final class CourseAdminPage
         <?php
     }
 
+    /** @param list<array<string, mixed>> $meetings @param array<string, mixed> $settings */
+    private function renderMeetings(int $courseId, array $meetings, array $settings): void
+    {
+        ?>
+        <section class="amt-courses-card" id="course-meetings">
+            <div class="amt-courses-card__heading">
+                <div>
+                    <h2><?php esc_html_e('Spotkania i linki prywatne', 'am-toolkit'); ?></h2>
+                    <p><?php esc_html_e('Terminy są prezentowane w strefie Europe/Warsaw. Prywatne adresy zobaczą wyłącznie uczestniczki z aktywnym dostępem.', 'am-toolkit'); ?></p>
+                </div>
+            </div>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form amt-private-links-form">
+                <?php $this->formBase('save_course_links', $courseId); ?>
+                <label>
+                    <span><?php esc_html_e('Prywatny link do grupy Telegram', 'am-toolkit'); ?></span>
+                    <input type="url" name="telegram_reference" inputmode="url" autocomplete="off" placeholder="https://t.me/..." value="<?php echo esc_attr((string) ($settings['telegram_reference'] ?? '')); ?>">
+                    <small><?php esc_html_e('Pole opcjonalne. Adres nie trafia do logów ani eksportu diagnostycznego.', 'am-toolkit'); ?></small>
+                </label>
+                <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz link kursu', 'am-toolkit'); ?></button>
+            </form>
+
+            <?php foreach ($meetings as $meeting) : ?>
+                <?php $this->meetingForm($courseId, $meeting); ?>
+            <?php endforeach; ?>
+            <?php $this->meetingForm($courseId, null); ?>
+        </section>
+        <?php
+    }
+
+    /** @param array<string, mixed>|null $meeting */
+    private function meetingForm(int $courseId, ?array $meeting): void
+    {
+        $id = (int) ($meeting['id'] ?? 0);
+        $timezone = (string) ($meeting['display_timezone'] ?? 'Europe/Warsaw');
+        ?>
+        <details class="amt-editor amt-meeting-editor" <?php echo $id === 0 ? 'open' : ''; ?>>
+            <summary>
+                <span><?php echo esc_html($id > 0 ? (string) $meeting['title'] : __('Dodaj spotkanie', 'am-toolkit')); ?></span>
+                <small><?php echo esc_html($id > 0 ? $this->meetingStatusLabel((string) $meeting['status']) : __('Nowe', 'am-toolkit')); ?></small>
+            </summary>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="amt-courses-form">
+                <?php $this->formBase('save_meeting', $courseId); ?>
+                <input type="hidden" name="meeting_id" value="<?php echo esc_attr((string) $id); ?>">
+                <label><span><?php esc_html_e('Nazwa spotkania', 'am-toolkit'); ?></span><input required maxlength="240" name="title" value="<?php echo esc_attr((string) ($meeting['title'] ?? '')); ?>"></label>
+                <label><span><?php esc_html_e('Opis', 'am-toolkit'); ?></span><textarea name="description" rows="3"><?php echo esc_textarea((string) ($meeting['description'] ?? '')); ?></textarea></label>
+                <div class="amt-courses-form__row">
+                    <label><span><?php esc_html_e('Początek', 'am-toolkit'); ?></span><input required type="datetime-local" name="starts_at" value="<?php echo esc_attr($this->meetingLocalValue((string) ($meeting['starts_at_utc'] ?? ''), $timezone)); ?>"></label>
+                    <label><span><?php esc_html_e('Koniec', 'am-toolkit'); ?></span><input required type="datetime-local" name="ends_at" value="<?php echo esc_attr($this->meetingLocalValue((string) ($meeting['ends_at_utc'] ?? ''), $timezone)); ?>"></label>
+                    <label><span><?php esc_html_e('Strefa czasowa', 'am-toolkit'); ?></span><input required name="display_timezone" value="<?php echo esc_attr($timezone); ?>" readonly></label>
+                </div>
+                <div class="amt-courses-form__row">
+                    <label><span><?php esc_html_e('Platforma', 'am-toolkit'); ?></span><input name="platform" placeholder="Zoom" value="<?php echo esc_attr((string) ($meeting['platform'] ?? '')); ?>"></label>
+                    <label><span><?php esc_html_e('Miejsce / dodatkowa informacja', 'am-toolkit'); ?></span><input name="location" value="<?php echo esc_attr((string) ($meeting['location'] ?? '')); ?>"></label>
+                    <label><span><?php esc_html_e('Status', 'am-toolkit'); ?></span><select name="meeting_status"><?php $this->meetingStatusOptions((string) ($meeting['status'] ?? MeetingStatus::SCHEDULED)); ?></select></label>
+                </div>
+                <div class="amt-courses-form__row">
+                    <label><span><?php esc_html_e('Prywatny link do spotkania', 'am-toolkit'); ?></span><input type="url" inputmode="url" autocomplete="off" name="join_reference" placeholder="https://..." value="<?php echo esc_attr((string) ($meeting['join_reference'] ?? '')); ?>"></label>
+                    <label><span><?php esc_html_e('Prywatny link do nagrania', 'am-toolkit'); ?></span><input type="url" inputmode="url" autocomplete="off" name="recording_reference" placeholder="https://..." value="<?php echo esc_attr((string) ($meeting['recording_reference'] ?? '')); ?>"></label>
+                </div>
+                <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz spotkanie', 'am-toolkit'); ?></button>
+            </form>
+        </details>
+        <?php
+    }
+
+    private function meetingStatusOptions(string $selected): void
+    {
+        foreach ([
+            MeetingStatus::SCHEDULED => __('Zaplanowane', 'am-toolkit'),
+            MeetingStatus::RESCHEDULED => __('Przesunięte', 'am-toolkit'),
+            MeetingStatus::CANCELLED => __('Odwołane', 'am-toolkit'),
+            MeetingStatus::COMPLETED => __('Zakończone', 'am-toolkit'),
+        ] as $value => $label) {
+            printf('<option value="%1$s" %2$s>%3$s</option>', esc_attr($value), selected($selected, $value, false), esc_html($label));
+        }
+    }
+
+    private function meetingStatusLabel(string $status): string
+    {
+        return [
+            MeetingStatus::SCHEDULED => __('Zaplanowane', 'am-toolkit'),
+            MeetingStatus::RESCHEDULED => __('Przesunięte', 'am-toolkit'),
+            MeetingStatus::CANCELLED => __('Odwołane', 'am-toolkit'),
+            MeetingStatus::COMPLETED => __('Zakończone', 'am-toolkit'),
+        ][$status] ?? $status;
+    }
+
+    private function meetingLocalValue(string $utcValue, string $timezone): string
+    {
+        if ($utcValue === '') {
+            return '';
+        }
+
+        try {
+            return (new \DateTimeImmutable($utcValue, new \DateTimeZone('UTC')))
+                ->setTimezone(new \DateTimeZone($timezone))
+                ->format('Y-m-d\TH:i');
+        } catch (\Throwable) {
+            return '';
+        }
+    }
+
     /** @param list<int> $selected */
     private function renderMappings(int $courseId, array $selected): void
     {
@@ -636,6 +781,11 @@ final class CourseAdminPage
     private function postTextarea(string $key): string
     {
         return sanitize_textarea_field($this->postValue($key));
+    }
+
+    private function postUrl(string $key): string
+    {
+        return trim($this->postValue($key));
     }
 
     private function postKey(string $key): string

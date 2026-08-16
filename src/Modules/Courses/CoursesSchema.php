@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 final class CoursesSchema
 {
-    public const VERSION = 4;
+    public const VERSION = 5;
 
     public static function coursesTable(): string
     {
@@ -85,6 +85,20 @@ final class CoursesSchema
         return $wpdb->prefix . 'amt_course_product_mappings';
     }
 
+    public static function meetingsTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_course_meetings';
+    }
+
+    public static function meetingRevisionsTable(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'amt_course_meeting_revisions';
+    }
+
     public static function productMappingDefinition(string $charsetCollate): string
     {
         $mappings = self::productMappingsTable();
@@ -120,6 +134,7 @@ final class CoursesSchema
                 title text NOT NULL,
                 description longtext NULL,
                 image_attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
+                telegram_reference varchar(500) NULL DEFAULT NULL,
                 status varchar(24) NOT NULL DEFAULT 'draft',
                 current_program_version_id bigint(20) unsigned NULL DEFAULT NULL,
                 created_at datetime NOT NULL,
@@ -207,6 +222,51 @@ final class CoursesSchema
                 PRIMARY KEY  (id),
                 UNIQUE KEY public_id (public_id),
                 KEY lesson_materials (lesson_id, status, position)
+            ) {$charsetCollate};",
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function meetingDefinitions(string $charsetCollate): array
+    {
+        $meetings = self::meetingsTable();
+        $revisions = self::meetingRevisionsTable();
+
+        return [
+            $meetings => "CREATE TABLE {$meetings} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                public_id char(36) NOT NULL,
+                course_id bigint(20) unsigned NOT NULL,
+                title text NOT NULL,
+                description longtext NULL,
+                starts_at_utc datetime NOT NULL,
+                ends_at_utc datetime NOT NULL,
+                display_timezone varchar(64) NOT NULL DEFAULT 'Europe/Warsaw',
+                platform varchar(120) NULL DEFAULT NULL,
+                location text NULL,
+                join_reference varchar(500) NULL DEFAULT NULL,
+                recording_reference varchar(500) NULL DEFAULT NULL,
+                status varchar(24) NOT NULL DEFAULT 'scheduled',
+                created_at datetime NOT NULL,
+                updated_at datetime NOT NULL,
+                archived_at datetime NULL DEFAULT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY public_id (public_id),
+                KEY course_schedule (course_id, starts_at_utc, status),
+                KEY meeting_status (status, starts_at_utc)
+            ) {$charsetCollate};",
+            $revisions => "CREATE TABLE {$revisions} (
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                meeting_id bigint(20) unsigned NOT NULL,
+                course_id bigint(20) unsigned NOT NULL,
+                revision_number int(10) unsigned NOT NULL,
+                snapshot longtext NOT NULL,
+                actor_id bigint(20) unsigned NOT NULL DEFAULT 0,
+                request_id varchar(32) NOT NULL,
+                created_at datetime NOT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY meeting_revision (meeting_id, revision_number),
+                KEY course_revisions (course_id, created_at)
             ) {$charsetCollate};",
         ];
     }

@@ -6,6 +6,7 @@ namespace AMToolkit\Tests\Unit;
 
 use AMToolkit\Modules\Courses\Contracts\CourseAccessPolicy;
 use AMToolkit\Modules\Courses\Contracts\CourseViewStore;
+use AMToolkit\Modules\Courses\Contracts\CourseMeetingStore;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use PHPUnit\Framework\TestCase;
@@ -66,6 +67,32 @@ final class CourseCatalogServiceTest extends TestCase
         self::assertSame('am_toolkit_course_not_available', $result->get_error_code());
         self::assertSame([[9, 71]], $this->access->calls);
         self::assertSame(0, $this->store->programCalls);
+    }
+
+    public function testPrivateMeetingLinksAreReadOnlyAfterCourseAuthorization(): void
+    {
+        $meetings = new ParticipantMeetingStoreSpy();
+        $this->service = new CourseCatalogService($this->store, $this->access, null, $meetings);
+        $this->store->course = [
+            'id' => 71,
+            'public_id' => $this->uuid(1),
+            'title' => 'Kurs testowy',
+            'current_program_version_id' => 18,
+        ];
+
+        $this->access->allowed = false;
+        $denied = $this->service->courseForUser(9, $this->uuid(1));
+        self::assertTrue(is_wp_error($denied));
+        self::assertSame(0, $meetings->readCalls);
+
+        $this->access->allowed = true;
+        $allowed = $this->service->courseForUser(9, $this->uuid(1));
+        self::assertIsArray($allowed);
+        self::assertSame(2, $meetings->readCalls);
+        self::assertSame('https://zoom.example/private', $allowed['nearest_meeting']['join_reference']);
+        self::assertSame('https://t.me/private', $allowed['telegram_reference']);
+        self::assertArrayNotHasKey('id', $allowed['nearest_meeting']);
+        self::assertArrayNotHasKey('course_id', $allowed['nearest_meeting']);
     }
 
     public function testAuthorizedCourseReturnsProgramWithoutInternalIdentifiers(): void
@@ -249,5 +276,53 @@ final class ParticipantAccessPolicySpy implements CourseAccessPolicy
         $this->calls[] = [$userId, $courseId];
 
         return $this->allowed;
+    }
+}
+
+final class ParticipantMeetingStoreSpy implements CourseMeetingStore
+{
+    public int $readCalls = 0;
+
+    public function courseSettings(int $courseId): array|null|\WP_Error
+    {
+        $this->readCalls++;
+        return ['id' => $courseId, 'telegram_reference' => 'https://t.me/private'];
+    }
+
+    public function meetingsForCourse(int $courseId): array|\WP_Error
+    {
+        $this->readCalls++;
+        return [$this->meeting($courseId)];
+    }
+
+    public function saveMeeting(array $meeting, int $actorId, string $requestId): int|\WP_Error
+    {
+        return 1;
+    }
+
+    public function saveTelegramReference(int $courseId, ?string $reference): bool|\WP_Error
+    {
+        return true;
+    }
+
+    public function nearestMeetings(array $courseIds, string $atUtc): array|\WP_Error
+    {
+        $courseId = $courseIds[0] ?? 0;
+        return $courseId > 0 ? [$courseId => $this->meeting($courseId)] : [];
+    }
+
+    /** @return array<string, mixed> */
+    private function meeting(int $courseId): array
+    {
+        return [
+            'id' => 41,
+            'course_id' => $courseId,
+            'public_id' => '12345678-1234-4123-8123-000000000041',
+            'title' => 'Q&A',
+            'starts_at_utc' => '2026-08-20 18:00:00',
+            'display_timezone' => 'Europe/Warsaw',
+            'join_reference' => 'https://zoom.example/private',
+            'status' => 'scheduled',
+        ];
     }
 }

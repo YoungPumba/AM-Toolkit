@@ -6,6 +6,7 @@ namespace AMToolkit\Tests\Unit;
 
 use AMToolkit\Modules\Courses\Domain\CourseCompletion;
 use AMToolkit\Modules\Courses\Domain\CourseMeeting;
+use AMToolkit\Modules\Courses\Domain\MeetingStatus;
 use AMToolkit\Modules\Courses\Domain\CourseProgramVersion;
 use AMToolkit\Modules\Courses\Domain\Identifier;
 use AMToolkit\Modules\Courses\Domain\LessonCompletionRequirements;
@@ -105,13 +106,15 @@ final class CoursesDomainTest extends TestCase
             $this->publicId,
             8,
             'Q&A',
+            'Opis spotkania',
             new \DateTimeImmutable('2026-08-13 20:00:00', new \DateTimeZone('Europe/Warsaw')),
             new \DateTimeImmutable('2026-08-13 21:00:00', new \DateTimeZone('Europe/Warsaw')),
             'Europe/Warsaw',
             'external',
+            'Online',
             'protected-join-reference',
             null,
-            PublicationStatus::DRAFT
+            MeetingStatus::SCHEDULED
         );
 
         self::assertSame('2026-08-13 18:00:00', $meeting->startsAtUtc()->format('Y-m-d H:i:s'));

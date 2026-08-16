@@ -83,7 +83,12 @@ dashboardu konta, endpointu Courses lub świadomego użycia shortcode'u.
 
 VIA-41 nie dodaje odtwarzacza, linków do niegotowych widoków lekcji,
 chronionego pobierania plików ani zapisu postępu. Te elementy powstają w
-VIA-42 i VIA-44. Najbliższe spotkanie oraz prywatne linki powstaną w VIA-43.
+VIA-42 i VIA-44. VIA-43 dodaje najbliższy termin w kafelku i programie,
+czytelny brak terminu, historię statusów oraz CTA do spotkania, nagrania i
+prywatnej grupy kursu. Dane te są dołączane do read modelu dopiero po
+potwierdzeniu aktywnego grantu. Najbliższy termin trafia również do sekcji
+„Wymaga Twojej uwagi” na pulpicie konta, ale bez ujawniania prywatnego adresu
+spotkania poza widokiem kursu.
 
 ## Testy
 

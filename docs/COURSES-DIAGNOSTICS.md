@@ -54,6 +54,10 @@ Identyfikator nie zawiera adresu e-mail, loginu ani innych danych osobowych.
 Każde zdarzenie ma stabilny typ, wersję formatu, unikalny klucz, czas UTC,
 `request_id`, aktora, użytkownika, obiekt oraz ograniczony payload.
 
+Zdarzenia spotkań zapisują tylko status, czas i flagi obecności prywatnych
+odnośników. Wartości linków do spotkania, nagrania i Telegrama nie mogą znaleźć
+się w payloadzie, logu technicznym ani eksporcie diagnostycznym.
+
 ## Minimalny panel diagnostyczny
 
 Dla wybranego użytkownika i kursu właścicielka lub osoba z odpowiednią

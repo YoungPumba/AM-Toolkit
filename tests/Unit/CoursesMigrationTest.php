@@ -8,6 +8,7 @@ use AMToolkit\Modules\Courses\CoursesSchema;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesCatalogTables;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesProgressTables;
 use AMToolkit\Modules\Courses\Migrations\CreateCourseProductMappingsTable;
+use AMToolkit\Modules\Courses\Migrations\CreateCourseMeetingsTables;
 use AMToolkit\Modules\Courses\Migrations\UpgradeCoursesProgressSources;
 use PHPUnit\Framework\TestCase;
 
@@ -39,7 +40,8 @@ final class CoursesMigrationTest extends TestCase
         self::assertTrue((new CreateCoursesProgressTables())->up());
         self::assertTrue((new CreateCourseProductMappingsTable())->up());
         self::assertTrue((new UpgradeCoursesProgressSources())->up());
-        self::assertCount(11, $this->database->tables);
+        self::assertTrue((new CreateCourseMeetingsTables())->up());
+        self::assertCount(13, $this->database->tables);
 
         self::assertArrayHasKey('course_version', $this->database->indexes[CoursesSchema::programVersionsTable()]);
         self::assertArrayHasKey('program_lesson', $this->database->indexes[CoursesSchema::programLessonsTable()]);
@@ -48,6 +50,8 @@ final class CoursesMigrationTest extends TestCase
         self::assertArrayHasKey('product_course', $this->database->indexes[CoursesSchema::productMappingsTable()]);
         self::assertArrayHasKey('user_lesson_request', $this->database->indexes[CoursesSchema::videoCheckpointsTable()]);
         self::assertArrayHasKey('user_lesson_requirement', $this->database->indexes[CoursesSchema::requirementCompletionsTable()]);
+        self::assertArrayHasKey('course_schedule', $this->database->indexes[CoursesSchema::meetingsTable()]);
+        self::assertArrayHasKey('meeting_revision', $this->database->indexes[CoursesSchema::meetingRevisionsTable()]);
     }
 
     public function testMigrationsCanRunAgainWithoutChangingTheSchema(): void
@@ -56,17 +60,20 @@ final class CoursesMigrationTest extends TestCase
         $progress = new CreateCoursesProgressTables();
         $mappings = new CreateCourseProductMappingsTable();
         $sources = new UpgradeCoursesProgressSources();
+        $meetings = new CreateCourseMeetingsTables();
 
         self::assertTrue($catalog->up());
         self::assertTrue($progress->up());
         self::assertTrue($mappings->up());
         self::assertTrue($sources->up());
+        self::assertTrue($meetings->up());
         $firstSchema = [$this->database->tables, $this->database->indexes];
 
         self::assertTrue($catalog->up());
         self::assertTrue($progress->up());
         self::assertTrue($mappings->up());
         self::assertTrue($sources->up());
+        self::assertTrue($meetings->up());
         self::assertSame($firstSchema, [$this->database->tables, $this->database->indexes]);
     }
 
@@ -77,6 +84,7 @@ final class CoursesMigrationTest extends TestCase
             CoursesSchema::progressDefinitions('')
         );
         $definitions = array_merge($definitions, CoursesSchema::progressSourceDefinitions(''));
+        $definitions = array_merge($definitions, CoursesSchema::meetingDefinitions(''));
         $definitions[] = CoursesSchema::productMappingDefinition('');
         $sql = strtoupper(implode("\n", $definitions));
 

@@ -15,10 +15,12 @@ final class CourseMeeting
         private Identifier $publicId,
         private int $courseId,
         private string $title,
+        private string $description,
         \DateTimeInterface $startsAt,
         \DateTimeInterface $endsAt,
         private string $displayTimezone,
         private string $platform,
+        private string $location,
         private ?string $joinReference,
         private ?string $recordingReference,
         private string $status
@@ -33,7 +35,7 @@ final class CourseMeeting
             throw new \InvalidArgumentException('Meeting display timezone is invalid.');
         }
 
-        PublicationStatus::assertValid($status);
+        MeetingStatus::assertValid($status);
         $utc = new \DateTimeZone('UTC');
         $this->startsAtUtc = \DateTimeImmutable::createFromInterface($startsAt)->setTimezone($utc);
         $this->endsAtUtc = \DateTimeImmutable::createFromInterface($endsAt)->setTimezone($utc);
@@ -63,6 +65,11 @@ final class CourseMeeting
         return $this->title;
     }
 
+    public function description(): string
+    {
+        return $this->description;
+    }
+
     public function startsAtUtc(): \DateTimeImmutable
     {
         return $this->startsAtUtc;
@@ -81,6 +88,11 @@ final class CourseMeeting
     public function platform(): string
     {
         return $this->platform;
+    }
+
+    public function location(): string
+    {
+        return $this->location;
     }
 
     public function joinReference(): ?string
