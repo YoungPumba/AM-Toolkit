@@ -91,6 +91,10 @@ Automatyzacja jest domyślnie wyłączona flagą
 `AM_TOOLKIT_DISABLE_COURSES_ACCESS_AUTOMATION` zatrzymuje nowe automatyczne
 granty i migrację bez usuwania istniejących danych.
 
-Zwrot i chargeback nie odbierają automatycznie dostępu w MVP. Administrator
-odbiera właściwe źródło ręcznie; automatyzację można dodać dopiero po uzgodnieniu
-reguł biznesowych.
+Statusy opłacone zwracane przez WooCommerce nadają lub przywracają granty.
+Pełny zwrot (`refunded`), anulowanie (`cancelled`) i nieudane zamówienie
+(`failed`) cofają wyłącznie granty, których źródłem jest dane zamówienie.
+Pozostałe niezależne źródła — na przykład ręczne przypisanie — pozostają
+aktywne. Statusy przejściowe `pending` i `on-hold` nie zmieniają istniejącego
+stanu. Częściowy zwrot nie ustawia całego zamówienia jako `refunded`, dlatego
+nie odbiera automatycznie całego kursu i wymaga decyzji właścicielki.

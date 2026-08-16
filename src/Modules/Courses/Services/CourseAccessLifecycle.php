@@ -54,6 +54,22 @@ final class CourseAccessLifecycle
         );
     }
 
+    public function revokePurchase(int $orderId, ?string $requestId = null): int|\WP_Error
+    {
+        if ($orderId <= 0) {
+            return new \WP_Error(
+                'am_toolkit_invalid_course_access_source',
+                __('Nieprawidłowe zamówienie źródłowe dostępu do kursu.', 'am-toolkit')
+            );
+        }
+
+        return $this->entitlements->revokeAllSource(
+            CourseAccessSource::PURCHASE,
+            $orderId,
+            ['request_id' => RequestId::normalize($requestId)]
+        );
+    }
+
     /**
      * @param list<int> $productIds
      * @param array<string, mixed> $metadata

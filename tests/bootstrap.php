@@ -96,6 +96,12 @@ function wp_enqueue_script(string $handle): void
     $GLOBALS['amt_test_enqueued_scripts'][] = $handle;
 }
 
+/** @return list<string> */
+function wc_get_is_paid_statuses(): array
+{
+    return ['processing', 'completed'];
+}
+
 /** @param string|array<int, string> $queries */
 function dbDelta(string|array $queries = '', bool $execute = true): array
 {

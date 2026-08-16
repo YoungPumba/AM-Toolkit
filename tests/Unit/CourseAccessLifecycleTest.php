@@ -57,6 +57,27 @@ final class CourseAccessLifecycleTest extends TestCase
         self::assertCount(0, $this->entitlements->activeBySource(CourseAccessSource::SUBSCRIPTION, 300));
     }
 
+    public function testRefundRevokesOnlyThePurchaseSourceAndRepaidOrderCanRestoreIt(): void
+    {
+        $this->lifecycle->grantPurchase(5, 900, [101]);
+        $this->lifecycle->grantManual(5, 7, 44);
+
+        self::assertSame(2, $this->lifecycle->revokePurchase(900, 'AM-20260816-REFUND000001'));
+        self::assertCount(0, $this->entitlements->activeBySource(CourseAccessSource::PURCHASE, 900));
+        self::assertTrue($this->entitlements->hasActive(5, 7));
+
+        self::assertSame([1, 2], $this->lifecycle->grantPurchase(5, 900, [101]));
+        self::assertCount(2, $this->entitlements->activeBySource(CourseAccessSource::PURCHASE, 900));
+    }
+
+    public function testRejectsInvalidPurchaseRevocationSource(): void
+    {
+        $result = $this->lifecycle->revokePurchase(0);
+
+        self::assertInstanceOf(\WP_Error::class, $result);
+        self::assertSame('am_toolkit_invalid_course_access_source', $result->get_error_code());
+    }
+
     public function testSubscriptionCanBeRestoredAfterItWasEnded(): void
     {
         self::assertSame([1, 2], $this->lifecycle->activateSubscription(5, 300, [101]));

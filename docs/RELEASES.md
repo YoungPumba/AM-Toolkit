@@ -39,6 +39,9 @@ przed wdrożeniem 0.12.0.
 7. Status wdrożenia zapisuj wyłącznie na podstawie dowodu z właściwego
    środowiska; nie wyprowadzaj go z istnienia tagu ani Release.
 
+Szczegółowy plan wdrożenia, aktywacji flag i rollbacku AM Courses 0.12.0
+znajduje się w [runbooku wydania 0.12.0](RELEASE-0.12.0.md).
+
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po
 publikacji, przygotowujemy kolejne wydanie naprawcze.

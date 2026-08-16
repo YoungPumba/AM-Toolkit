@@ -1,6 +1,6 @@
 # Historia zmian AM Toolkit
 
-## 0.12.0 — w przygotowaniu
+## 0.12.0 — 2026-08-16
 
 - rejestracja modułu `Courses` zależnego od `Core` i `Access`, domyślnie
   wyłączonego feature flagą,
@@ -96,6 +96,9 @@
   odnośników i payloadów zdarzeń,
 - osobne uprawnienie administratora, jawne potwierdzenie i flaga awaryjna dla
   idempotentnego przeliczenia postępu ze źródeł wraz z audytem `request_id`.
+- jawna polityka statusów zamówień WooCommerce: opłacenie nadaje dostęp,
+  pełny zwrot, anulowanie lub nieudane zamówienie cofa wyłącznie granty tego
+  zamówienia, a ponowne opłacenie bezpiecznie je przywraca.
 
 ## 0.11.5 — 2026-08-11
 
