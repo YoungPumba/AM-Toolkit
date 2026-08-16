@@ -112,6 +112,8 @@
 
 .amt-courses-form input[type="text"],
 .amt-courses-form input[type="number"],
+.amt-courses-form input[type="url"],
+.amt-courses-form input[type="datetime-local"],
 .amt-courses-form input[type="file"],
 .amt-courses-form input:not([type]),
 .amt-courses-form textarea,
@@ -119,6 +121,12 @@
     box-sizing: border-box;
     max-width: none;
     width: 100%;
+}
+
+.amt-private-links-form {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--amt-line);
 }
 
 .amt-courses-form label > small {

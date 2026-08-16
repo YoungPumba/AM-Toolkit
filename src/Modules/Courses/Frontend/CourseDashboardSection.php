@@ -145,6 +145,12 @@ final class CourseDashboardSection
             <span class="am-courses-dashboard-card__copy">
                 <span class="am-courses-dashboard-card__status"><?php echo esc_html($labels[$state] ?? $labels['active']); ?></span>
                 <strong><?php echo esc_html((string) ($course['title'] ?? '')); ?></strong>
+                <?php if (isset($course['nearest_meeting']) && is_array($course['nearest_meeting'])) : ?>
+                    <span class="am-courses-dashboard-card__meeting">
+                        <?php echo CourseIcon::render(CourseIcon::CALENDAR); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php echo esc_html($this->meetingDate($course['nearest_meeting'])); ?>
+                    </span>
+                <?php endif; ?>
                 <small>
                     <?php echo esc_html($canOpen
                         ? __('Otwórz program kursu', 'am-toolkit')
@@ -178,6 +184,18 @@ final class CourseDashboardSection
         }
 
         return '<span class="am-course-image am-course-image--placeholder" aria-hidden="true">AM</span>';
+    }
+
+    /** @param array<string, mixed> $meeting */
+    private function meetingDate(array $meeting): string
+    {
+        try {
+            $timezone = new \DateTimeZone((string) ($meeting['display_timezone'] ?? 'Europe/Warsaw'));
+            $date = new \DateTimeImmutable((string) ($meeting['starts_at_utc'] ?? ''), new \DateTimeZone('UTC'));
+            return wp_date('j.m.Y · H:i', $date->getTimestamp(), $timezone);
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     private function courseUrl(string $publicId): string

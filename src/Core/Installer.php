@@ -8,6 +8,7 @@ use AMToolkit\Modules\Access\Migrations\UpgradeActivityEventContract;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesCatalogTables;
 use AMToolkit\Modules\Courses\Migrations\CreateCoursesProgressTables;
 use AMToolkit\Modules\Courses\Migrations\CreateCourseProductMappingsTable;
+use AMToolkit\Modules\Courses\Migrations\CreateCourseMeetingsTables;
 use AMToolkit\Modules\Courses\Migrations\UpgradeCoursesProgressSources;
 
 defined('ABSPATH') || exit;
@@ -51,6 +52,7 @@ final class Installer
                 2 => new CreateCoursesProgressTables(),
                 3 => new CreateCourseProductMappingsTable(),
                 4 => new UpgradeCoursesProgressSources(),
+                5 => new CreateCourseMeetingsTables(),
             ]);
 
             Capabilities::install();

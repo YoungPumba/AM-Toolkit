@@ -85,9 +85,11 @@ kontraktu domenowego.
 ### CourseMeeting
 
 Kontrakt domenowy rozdzielający czas UTC, strefę prezentacji, platformę oraz
-chronione odniesienia do spotkania i nagrania. Persystencja, providerzy Zoom,
-Telegram i obsługa spotkań są świadomie poza VIA-29 i powstaną w VIA-43. Nie ma
-tymczasowej tabeli spotkań, której kontrakt trzeba byłoby później łamać.
+chronione odniesienia do spotkania i nagrania. VIA-43 dodaje persystencję,
+historię rewizji i statusy `scheduled`, `rescheduled`, `cancelled` oraz
+`completed`. Integracje API Zoom i Telegram pozostają poza MVP: właścicielka
+zapisuje adresy ręcznie, a uczestniczka otrzymuje je dopiero po serwerowej
+weryfikacji aktywnego dostępu.
 
 ### LessonProgress
 
@@ -154,6 +156,15 @@ Migracja Courses `3` tworzy konfigurację integracji handlowej:
 
 - `amt_course_product_mappings`.
 
+Migracja Courses `5` dodaje informacje organizacyjne:
+
+- pole prywatnego linku Telegram na kursie,
+- `amt_course_meetings`,
+- `amt_course_meeting_revisions`.
+
+Rewizje przechowują pełny prywatny snapshot do audytu administracyjnego.
+Zdarzenia diagnostyczne zapisują wyłącznie obecność linku, nigdy jego wartość.
+
 Mapowanie jest relacją wiele-do-wielu i można je dezaktywować bez usuwania
 historycznych grantów. Szczegółowy kontrakt cyklu dostępu opisuje
 `docs/COURSES-ACCESS.md`.
@@ -189,7 +200,7 @@ warstwy widoku.
 - implementacje repozytoriów i przypadków użycia publikacji,
 - automatyczne granty z WooCommerce,
 - śledzenie i naprawa postępu,
-- spotkania, Zoom, Telegram i chronione dostarczanie materiałów,
+- integracje API Zoom i Telegram,
 - analityka zachowania.
 
 Te elementy muszą używać opisanych identyfikatorów, tabel i kontraktów zamiast

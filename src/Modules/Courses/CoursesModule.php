@@ -15,6 +15,7 @@ use AMToolkit\Modules\Courses\Services\AccessCoreCourseAccessPolicy;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use AMToolkit\Modules\Courses\Services\CourseNextActionService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
+use AMToolkit\Modules\Courses\Services\CourseMeetingService;
 
 defined('ABSPATH') || exit;
 
@@ -38,7 +39,13 @@ final class CoursesModule implements ModuleInterface
     public function boot(): void
     {
         $assetStore = new WpPrivateCourseAssetStore();
-        (new CourseAdminPage(null, $assetStore))->boot();
+        $meetingStore = (new FeatureFlags())->isEnabled('courses-meetings')
+            ? new WpdbCourseMeetingStore()
+            : null;
+        $meetingService = $meetingStore !== null
+            ? new CourseMeetingService($meetingStore, new WpdbActivityEventStore())
+            : null;
+        (new CourseAdminPage(null, $assetStore, $meetingService))->boot();
         $catalog = new CourseCatalogService(
             new WpdbCourseViewStore(),
             new AccessCoreCourseAccessPolicy(),
@@ -46,7 +53,8 @@ final class CoursesModule implements ModuleInterface
                 ? new CourseNextActionService(
                     new WpdbCourseProgressOverviewStore()
                 )
-                : null
+                : null,
+            $meetingStore
         );
         $assets = new CourseAssetController($catalog, [$assetStore]);
         $assets->boot();

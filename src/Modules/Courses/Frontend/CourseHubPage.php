@@ -383,6 +383,12 @@ final class CourseHubPage
             <div class="am-course-card__body">
                 <span class="am-course-card__status"><?php echo esc_html($labels[$state] ?? $labels['expired']); ?></span>
                 <h3><?php echo esc_html((string) ($course['title'] ?? '')); ?></h3>
+                <?php if (isset($course['nearest_meeting']) && is_array($course['nearest_meeting'])) : ?>
+                    <div class="am-course-card__meeting">
+                        <?php echo CourseIcon::render(CourseIcon::CALENDAR); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <span><strong><?php esc_html_e('Najbliższe spotkanie', 'am-toolkit'); ?></strong><small><?php echo esc_html($this->meetingDate($course['nearest_meeting'])); ?></small></span>
+                    </div>
+                <?php endif; ?>
                 <?php if ($canOpen && isset($progress['progress_percent'])) : ?>
                     <div class="am-course-card__progress" aria-label="<?php echo esc_attr__('Postęp kursu', 'am-toolkit'); ?>">
                         <span style="width: <?php echo esc_attr((string) (int) $progress['progress_percent']); ?>%"></span>
@@ -470,6 +476,8 @@ final class CourseHubPage
                 </section>
             <?php endif; ?>
 
+            <?php echo $this->renderCourseMeetings($course); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+
             <section class="am-course__program" aria-labelledby="am-course-program-title">
                 <header class="am-course__program-header">
                     <span class="am-courses__eyebrow"><?php echo esc_html__('Plan nauki', 'am-toolkit'); ?></span>
@@ -494,6 +502,104 @@ final class CourseHubPage
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    /** @param array<string, mixed> $course */
+    private function renderCourseMeetings(array $course): string
+    {
+        $nearest = isset($course['nearest_meeting']) && is_array($course['nearest_meeting'])
+            ? $course['nearest_meeting']
+            : null;
+        $meetings = isset($course['meetings']) && is_array($course['meetings']) ? $course['meetings'] : [];
+        $telegram = (string) ($course['telegram_reference'] ?? '');
+
+        ob_start();
+        ?>
+        <section class="am-course-meetings" aria-labelledby="am-course-meetings-title">
+            <header class="am-course-meetings__header">
+                <span class="am-courses__eyebrow"><?php esc_html_e('Bądź na bieżąco', 'am-toolkit'); ?></span>
+                <h2 id="am-course-meetings-title"><?php esc_html_e('Spotkania kursowe', 'am-toolkit'); ?></h2>
+            </header>
+
+            <?php if ($nearest !== null) : ?>
+                <article class="am-course-meeting am-course-meeting--next">
+                    <div class="am-course-meeting__icon"><?php echo CourseIcon::render(CourseIcon::CALENDAR); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                    <div class="am-course-meeting__copy">
+                        <span class="am-course-meeting__status"><?php echo esc_html($this->meetingStatusLabel((string) ($nearest['status'] ?? 'scheduled'))); ?></span>
+                        <h3><?php echo esc_html((string) ($nearest['title'] ?? '')); ?></h3>
+                        <p class="am-course-meeting__date"><?php echo esc_html($this->meetingDate($nearest)); ?></p>
+                        <?php if (!empty($nearest['description'])) : ?><p><?php echo nl2br(esc_html((string) $nearest['description'])); ?></p><?php endif; ?>
+                        <?php if (!empty($nearest['platform']) || !empty($nearest['location'])) : ?>
+                            <small><?php echo esc_html(implode(' · ', array_filter([(string) ($nearest['platform'] ?? ''), (string) ($nearest['location'] ?? '')]))); ?></small>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($nearest['join_reference'])) : ?>
+                        <a class="am-course-meeting__action" href="<?php echo esc_url((string) $nearest['join_reference']); ?>" target="_blank" rel="noopener noreferrer">
+                            <?php esc_html_e('Dołącz do spotkania', 'am-toolkit'); ?>
+                            <?php echo CourseIcon::render(CourseIcon::EXTERNAL); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        </a>
+                    <?php endif; ?>
+                </article>
+            <?php else : ?>
+                <div class="am-course-meetings__empty" role="status">
+                    <strong><?php esc_html_e('Brak zaplanowanego spotkania', 'am-toolkit'); ?></strong>
+                    <p><?php esc_html_e('Gdy pojawi się kolejny termin, zobaczysz go właśnie tutaj.', 'am-toolkit'); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($telegram !== '') : ?>
+                <a class="am-course-meetings__telegram" href="<?php echo esc_url($telegram); ?>" target="_blank" rel="noopener noreferrer">
+                    <span><strong><?php esc_html_e('Prywatna grupa kursu', 'am-toolkit'); ?></strong><small><?php esc_html_e('Otwórz grupę na Telegramie', 'am-toolkit'); ?></small></span>
+                    <?php echo CourseIcon::render(CourseIcon::EXTERNAL); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </a>
+            <?php endif; ?>
+
+            <?php $history = array_values(array_filter($meetings, static fn (array $meeting): bool => $nearest === null || (string) ($meeting['public_id'] ?? '') !== (string) ($nearest['public_id'] ?? ''))); ?>
+            <?php if ($history !== []) : ?>
+                <details class="am-course-meetings__history">
+                    <summary><?php esc_html_e('Historia i pozostałe terminy', 'am-toolkit'); ?></summary>
+                    <div>
+                        <?php foreach ($history as $meeting) : ?>
+                            <article class="am-course-meeting am-course-meeting--<?php echo esc_attr((string) ($meeting['status'] ?? 'scheduled')); ?>">
+                                <div class="am-course-meeting__copy">
+                                    <span class="am-course-meeting__status"><?php echo esc_html($this->meetingStatusLabel((string) ($meeting['status'] ?? 'scheduled'))); ?></span>
+                                    <h3><?php echo esc_html((string) ($meeting['title'] ?? '')); ?></h3>
+                                    <p class="am-course-meeting__date"><?php echo esc_html($this->meetingDate($meeting)); ?></p>
+                                </div>
+                                <?php if (!empty($meeting['recording_reference'])) : ?>
+                                    <a class="am-course-meeting__recording" href="<?php echo esc_url((string) $meeting['recording_reference']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Obejrzyj nagranie', 'am-toolkit'); ?><?php echo CourseIcon::render(CourseIcon::EXTERNAL); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></a>
+                                <?php endif; ?>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </details>
+            <?php endif; ?>
+        </section>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /** @param array<string, mixed> $meeting */
+    private function meetingDate(array $meeting): string
+    {
+        try {
+            $timezone = new \DateTimeZone((string) ($meeting['display_timezone'] ?? 'Europe/Warsaw'));
+            $date = new \DateTimeImmutable((string) ($meeting['starts_at_utc'] ?? ''), new \DateTimeZone('UTC'));
+            return wp_date('l, j F Y · H:i', $date->getTimestamp(), $timezone) . ' (' . $timezone->getName() . ')';
+        } catch (\Throwable) {
+            return '';
+        }
+    }
+
+    private function meetingStatusLabel(string $status): string
+    {
+        return [
+            'scheduled' => __('Zaplanowane', 'am-toolkit'),
+            'rescheduled' => __('Nowy termin', 'am-toolkit'),
+            'cancelled' => __('Odwołane', 'am-toolkit'),
+            'completed' => __('Zakończone', 'am-toolkit'),
+        ][$status] ?? __('Spotkanie', 'am-toolkit');
     }
 
     /** @param array<string, mixed> $section */

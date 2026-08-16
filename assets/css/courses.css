@@ -1268,6 +1268,21 @@ a.am-courses-dashboard-card:hover {
     line-height: 1.4;
 }
 
+.am-courses-dashboard-card__meeting {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    color: #9b4c6a;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.am-courses-dashboard-card__meeting .am-course-icon {
+    width: 16px;
+    flex: 0 0 auto;
+}
+
 .am-courses-dashboard-card__status {
     color: #9b4c6a;
     font-size: 10px;
@@ -1333,6 +1348,191 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
     line-height: 1.5;
 }
 
+.am-course-card__meeting {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 10px 0 2px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff3f8;
+    color: var(--am-courses-ink);
+}
+
+.am-course-card__meeting .am-course-icon {
+    flex: 0 0 auto;
+    width: 20px;
+    color: var(--am-courses-pink);
+}
+
+.am-course-card__meeting strong,
+.am-course-card__meeting small {
+    display: block;
+}
+
+.am-course-card__meeting strong {
+    font-size: 12px;
+}
+
+.am-course-card__meeting small {
+    margin-top: 2px;
+    color: var(--am-courses-muted);
+    font-size: 11px;
+}
+
+.am-course-meetings {
+    margin: 30px 0;
+    padding: 28px;
+    border: 1px solid var(--am-courses-border);
+    border-radius: 24px;
+    background: #fffafc;
+}
+
+.am-course-meetings__header {
+    margin-bottom: 18px;
+}
+
+.am-course-meetings__header h2 {
+    margin: 4px 0 0;
+}
+
+.am-course-meeting {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid #f0dce5;
+    border-radius: 18px;
+    background: #fff;
+}
+
+.am-course-meeting--next {
+    border-color: #f5bfd3;
+    box-shadow: 0 12px 30px rgba(241, 118, 164, .1);
+}
+
+.am-course-meeting__icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #fce2ec;
+    color: var(--am-courses-pink-dark);
+}
+
+.am-course-meeting__icon .am-course-icon {
+    width: 23px;
+}
+
+.am-course-meeting__status {
+    color: var(--am-courses-pink-dark);
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.am-course-meeting__copy h3 {
+    margin: 3px 0 4px;
+    font-family: Poppins, sans-serif;
+    font-size: 18px;
+}
+
+.am-course-meeting__copy p,
+.am-course-meeting__copy small {
+    margin: 4px 0 0;
+    color: var(--am-courses-muted);
+}
+
+.am-course-meeting__date {
+    color: var(--am-courses-ink) !important;
+    font-weight: 650;
+}
+
+.am-course-meeting__action,
+.am-course-meeting__recording,
+.am-course-meetings__telegram {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.am-course-meeting__action {
+    padding: 11px 15px;
+    border-radius: 999px;
+    background: var(--am-courses-pink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.am-course-meeting__action .am-course-icon,
+.am-course-meeting__recording .am-course-icon,
+.am-course-meetings__telegram .am-course-icon {
+    width: 18px;
+}
+
+.am-course-meetings__empty {
+    padding: 18px;
+    border-radius: 16px;
+    background: #f7f2f4;
+}
+
+.am-course-meetings__empty p {
+    margin: 4px 0 0;
+    color: var(--am-courses-muted);
+}
+
+.am-course-meetings__telegram {
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 14px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #30282c;
+    color: #fff;
+}
+
+.am-course-meetings__telegram span,
+.am-course-meetings__telegram small {
+    display: block;
+}
+
+.am-course-meetings__telegram small {
+    margin-top: 2px;
+    color: #eadfe4;
+}
+
+.am-course-meetings__history {
+    margin-top: 14px;
+}
+
+.am-course-meetings__history > summary {
+    cursor: pointer;
+    color: var(--am-courses-ink);
+    font-weight: 650;
+}
+
+.am-course-meetings__history > div {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.am-course-meeting--cancelled {
+    opacity: .72;
+}
+
+.am-course-meeting--cancelled .am-course-meeting__copy h3,
+.am-course-meeting--cancelled .am-course-meeting__date {
+    text-decoration: line-through;
+}
+
 @media (max-width: 880px) {
     .am-courses__grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1358,6 +1558,14 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
         position: static;
         max-height: none;
         overflow: visible;
+    }
+
+    .am-course-meeting {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .am-course-meeting__action {
+        grid-column: 1 / -1;
     }
 }
 
@@ -1408,6 +1616,27 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
 
     .am-course__program {
         padding: 20px 14px;
+    }
+
+    .am-course-meetings {
+        padding: 20px 14px;
+        border-radius: 18px;
+    }
+
+    .am-course-meeting {
+        grid-template-columns: 1fr;
+        padding: 15px;
+    }
+
+    .am-course-meeting__icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .am-course-meeting__action,
+    .am-course-meeting__recording {
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .am-course__progress {
