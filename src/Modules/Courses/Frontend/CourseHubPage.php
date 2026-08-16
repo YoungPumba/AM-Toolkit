@@ -458,7 +458,7 @@ final class CourseHubPage
 
             <?php if ($progress !== []) : ?>
                 <section class="am-course__progress" aria-label="<?php echo esc_attr__('Postęp kursu', 'am-toolkit'); ?>">
-                    <div>
+                    <div class="am-course__progress-copy">
                         <strong><?php echo esc_html(!empty($progress['course_completed']) ? __('Kurs ukończony', 'am-toolkit') : __('Twój postęp', 'am-toolkit')); ?></strong>
                         <span><?php echo esc_html(sprintf(
                             __('%1$d z %2$d wymaganych lekcji', 'am-toolkit'),

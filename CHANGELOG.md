@@ -68,8 +68,9 @@
   i możliwość odbudowy agregatu ze źródeł,
 - procent, stany lekcji i wspólna akcja „Kontynuuj” w hubie, programie i widoku
   lekcji oraz osobna flaga awaryjna `courses-progress`.
-- rozdzielenie procentu bieżącej lekcji od procentu całego kursu oraz optyczne
-  wyrównanie paska postępu kursu do nagłówka bez pogarszania układu mobilnego.
+- rozdzielenie procentu bieżącej lekcji od procentu całego kursu oraz usunięcie
+  odziedziczonego marginesu, który przesuwał różowe wypełnienie względem szarego
+  toru postępu.
 - redakcyjne Q&A kursów ze stanami szkic/opublikowane/archiwum, stabilną
   kolejnością, opcjonalnym kontekstem lekcji i widokiem uczestniczki tylko do
   odczytu po sprawdzeniu aktywnego dostępu,
