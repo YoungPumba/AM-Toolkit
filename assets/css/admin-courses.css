@@ -112,12 +112,27 @@
 
 .amt-courses-form input[type="text"],
 .amt-courses-form input[type="number"],
+.amt-courses-form input[type="file"],
 .amt-courses-form input:not([type]),
 .amt-courses-form textarea,
 .amt-courses-form select {
     box-sizing: border-box;
     max-width: none;
     width: 100%;
+}
+
+.amt-courses-form label > small {
+    display: block;
+    margin-top: 6px;
+    color: var(--amt-muted);
+    line-height: 1.45;
+}
+
+.amt-courses-form input[type="file"] {
+    padding: 9px;
+    border: 1px dashed var(--amt-line);
+    border-radius: 8px;
+    background: var(--amt-soft);
 }
 
 .amt-courses-form__row {

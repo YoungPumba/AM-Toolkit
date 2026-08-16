@@ -20,4 +20,11 @@ interface CourseViewStore
 
     /** @return array<string, mixed>|\WP_Error */
     public function publishedProgram(int $courseId, int $programVersionId): array|\WP_Error;
+
+    /** @return array<string, mixed>|null|\WP_Error */
+    public function publishedLesson(
+        int $courseId,
+        int $programVersionId,
+        Identifier $publicId
+    ): array|null|\WP_Error;
 }

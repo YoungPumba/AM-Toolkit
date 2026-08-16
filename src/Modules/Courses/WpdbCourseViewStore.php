@@ -182,6 +182,115 @@ final class WpdbCourseViewStore implements CourseViewStore
         return $program;
     }
 
+    public function publishedLesson(
+        int $courseId,
+        int $programVersionId,
+        Identifier $publicId
+    ): array|null|\WP_Error {
+        $lessons = CoursesSchema::lessonsTable();
+        $assignments = CoursesSchema::programLessonsTable();
+        $sections = CoursesSchema::sectionsTable();
+        $lesson = $this->database->get_row(
+            $this->database->prepare(
+                "SELECT l.id, l.public_id, l.title, l.description, l.video_provider,
+                    l.video_reference, l.duration_seconds, l.completion_requirements,
+                    l.content_version, pl.position, pl.is_required,
+                    s.public_id AS section_public_id, s.title AS section_title
+                FROM {$assignments} pl
+                INNER JOIN {$lessons} l
+                    ON l.id = pl.lesson_id
+                    AND l.course_id = %d
+                    AND l.status = 'published'
+                LEFT JOIN {$sections} s
+                    ON s.id = pl.section_id
+                    AND s.program_version_id = pl.program_version_id
+                    AND s.status = 'published'
+                WHERE pl.program_version_id = %d
+                    AND l.public_id = %s
+                    AND (pl.section_id IS NULL OR s.id IS NOT NULL)
+                LIMIT 1",
+                $courseId,
+                $programVersionId,
+                $publicId->value()
+            ),
+            ARRAY_A
+        );
+
+        if ($this->database->last_error !== '') {
+            return $this->databaseError();
+        }
+
+        if (!is_array($lesson)) {
+            return null;
+        }
+
+        $lessonId = (int) $lesson['id'];
+        $materials = $this->database->get_results(
+            $this->database->prepare(
+                'SELECT public_id, name, description, storage_provider, storage_reference, position'
+                . ' FROM ' . CoursesSchema::materialsTable()
+                . " WHERE lesson_id = %d AND status = 'published'"
+                . ' ORDER BY position ASC, id ASC',
+                $lessonId
+            ),
+            ARRAY_A
+        );
+        $materialRows = $this->rowsOrError($materials);
+
+        if (is_wp_error($materialRows)) {
+            return $materialRows;
+        }
+
+        $navigation = $this->database->get_results(
+            $this->database->prepare(
+                "SELECT l.public_id, l.title
+                FROM {$assignments} pl
+                INNER JOIN {$lessons} l
+                    ON l.id = pl.lesson_id
+                    AND l.course_id = %d
+                    AND l.status = 'published'
+                LEFT JOIN {$sections} s
+                    ON s.id = pl.section_id
+                    AND s.program_version_id = pl.program_version_id
+                    AND s.status = 'published'
+                WHERE pl.program_version_id = %d
+                    AND (pl.section_id IS NULL OR s.id IS NOT NULL)
+                ORDER BY COALESCE(s.position, 2147483647) ASC, pl.position ASC, l.id ASC",
+                $courseId,
+                $programVersionId
+            ),
+            ARRAY_A
+        );
+        $navigationRows = $this->rowsOrError($navigation);
+
+        if (is_wp_error($navigationRows)) {
+            return $navigationRows;
+        }
+
+        $currentIndex = null;
+
+        foreach ($navigationRows as $index => $item) {
+            if ((string) ($item['public_id'] ?? '') === $publicId->value()) {
+                $currentIndex = $index;
+                break;
+            }
+        }
+
+        $requirements = json_decode((string) ($lesson['completion_requirements'] ?? ''), true);
+        $lesson['completion_requirements'] = is_array($requirements) ? $requirements : [];
+        $lesson['materials'] = $materialRows;
+        $lesson['previous'] = $currentIndex !== null && $currentIndex > 0
+            ? $navigationRows[$currentIndex - 1]
+            : null;
+        $lesson['next'] = $currentIndex !== null && isset($navigationRows[$currentIndex + 1])
+            ? $navigationRows[$currentIndex + 1]
+            : null;
+        $lesson['program_lessons'] = $navigationRows;
+        unset($lesson['id']);
+
+        return $lesson;
+    }
+
     /** @return list<array<string, mixed>>|\WP_Error */
     private function rowsOrError(mixed $rows): array|\WP_Error
     {

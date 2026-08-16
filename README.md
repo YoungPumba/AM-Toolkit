@@ -93,6 +93,8 @@ jeśli nadal istnieje inny aktywny grant.
 - [Cykl życia dostępu AM Courses](docs/COURSES-ACCESS.md)
 - [Panel administracyjny AM Courses](docs/COURSES-ADMIN.md)
 - [Diagnostyka AM Courses](docs/COURSES-DIAGNOSTICS.md)
+- [Hub kursów AM Courses](docs/COURSES-HUB.md)
+- [Lekcje, odtwarzacz i prywatne materiały AM Courses](docs/COURSES-LESSONS.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
 

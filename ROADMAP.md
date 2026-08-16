@@ -177,7 +177,7 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [x] umożliwić dodawanie, archiwizowanie i zmianę kolejności lekcji bez edycji plików wtyczki,
 - [x] dla każdej lekcji zapisywać film, czas trwania, opis etapu oraz informację, czy jest wymagana do ukończenia kursu,
 - [x] umożliwić przypisanie do lekcji wielu plików do pobrania z własną nazwą, opisem i kolejnością,
-- [ ] wybrać i udokumentować sposób hostowania filmów oraz ochrony dostępu przed rozpoczęciem implementacji odtwarzacza,
+- [x] wybrać i udokumentować sposób hostowania filmów oraz ochrony dostępu: prywatny katalog poza webrootem, kontrolowany endpoint z HTTP Range i adapter pod przyszły CDN,
 - [x] zachować prosty model: jeden kurs, wspólna treść i wielu niezależnie przypisanych uczestników; spotkania pozostają osobnym etapem,
 - [x] określić zasadę rozbudowy programu tak, aby dodanie nowej lekcji nie odbierało statusu ukończenia osobom, które wcześniej ukończyły kurs,
 - [ ] dodać właścicielce prosty panel zarządzania kursem, lekcjami, uczestnikami, spotkaniami i stanem publikacji,
@@ -201,7 +201,7 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [x] umożliwić właścicielce ręczne przyznanie i odebranie dostępu do wybranego kursu przez API (formularz powstaje w zadaniu panelu),
 - [x] przygotować bezpieczne przypisanie dostępu osobom, które kupiły kurs przed uruchomieniem modułu,
 - [ ] zdefiniować i obsłużyć zasady odebrania dostępu po anulowaniu, zwrocie lub chargebacku,
-- [ ] zabezpieczyć wszystkie widoki lekcji tak, aby użytkownik widział wyłącznie własne aktywne dostępy.
+- [x] zabezpieczyć wszystkie widoki lekcji tak, aby użytkownik widział wyłącznie własne aktywne dostępy.
 
 ### Hub kursów i lekcje
 
@@ -211,12 +211,12 @@ Ostatnie dwa punkty przechodzą do v0.12.0, ponieważ wymagają właściwego mod
 - [x] dodać chroniony widok pojedynczego kursu z opublikowanym programem,
 - [ ] rozszerzyć widok kursu o postęp, najbliższe spotkanie i przycisk „Kontynuuj” w zadaniach VIA-43/VIA-44,
 - [ ] pokazywać w widoku kursu przycisk prowadzący do grupy Telegram wyłącznie uczestnikom z aktywnym dostępem,
-- [ ] dodać chroniony widok lekcji z odtwarzaczem, opisem etapu, plikami do pobrania, nawigacją „Poprzednia/Następna” i spisem programu,
-- [ ] udostępniać pliki lekcji przez kontrolowany mechanizm pobierania sprawdzający aktywny dostęp, zamiast ujawniać publiczny adres pliku,
+- [x] dodać chroniony widok lekcji z odtwarzaczem, opisem etapu, plikami do pobrania, nawigacją „Poprzednia/Następna” i spisem programu,
+- [x] udostępniać pliki lekcji przez kontrolowany mechanizm pobierania sprawdzający aktywny dostęp, zamiast ujawniać publiczny adres pliku,
 - [ ] zapamiętywać ostatnio otwartą lekcję oraz opcjonalnie pozycję odtwarzania filmu,
 - [x] przygotować czytelne puste widoki dla braku kursów, pustego programu, niedostępnego kursu i wygasłego dostępu,
-- [ ] przygotować w VIA-42 pusty widok niedostępnej lekcji,
-- [ ] zapewnić responsywny i dostępny odtwarzacz, napisy lub transkrypcję oraz obsługę klawiatury.
+- [x] przygotować w VIA-42 pusty widok niedostępnej lekcji,
+- [ ] zapewnić responsywny i dostępny odtwarzacz oraz obsługę klawiatury; napisy lub transkrypcję dodać po zdefiniowaniu sposobu ich redagowania i publikacji.
 
 ### Postęp kursu
 

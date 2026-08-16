@@ -2,6 +2,7 @@
 
 namespace AMToolkit\Modules\Courses\Frontend;
 
+use AMToolkit\Modules\Courses\Contracts\CourseVideoRenderer;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use WP_User;
 
@@ -12,8 +13,11 @@ final class CourseHubPage
     private const ENDPOINT = 'kursy';
     private const REWRITE_VERSION = '1';
 
-    public function __construct(private CourseCatalogService $courses)
-    {
+    public function __construct(
+        private CourseCatalogService $courses,
+        private CourseAssetController $assets,
+        private CourseVideoRenderer $videoRenderer
+    ) {
     }
 
     public function boot(): void
@@ -155,11 +159,24 @@ final class CourseHubPage
         }
 
         $this->enqueueAssets(true);
-        $publicId = $this->endpointValue();
+        $segments = $this->endpointSegments();
+        $userId = get_current_user_id();
 
-        return $publicId === ''
-            ? $this->renderHub(get_current_user_id())
-            : $this->renderCourse(get_current_user_id(), $publicId);
+        if ($segments === []) {
+            return $this->renderHub($userId);
+        }
+
+        if (count($segments) === 1) {
+            return $this->renderCourse($userId, $segments[0]);
+        }
+
+        if (count($segments) === 3 && $segments[1] === 'lekcja') {
+            return $this->renderLesson($userId, $segments[0], $segments[2]);
+        }
+
+        status_header(404);
+
+        return $this->renderError(__('Ten adres kursu jest nieprawidłowy.', 'am-toolkit'));
     }
 
     public function enqueueAssets(bool $force = false): void
@@ -187,6 +204,16 @@ final class CourseHubPage
             AM_TOOLKIT_URL . $relativePath,
             ['am-toolkit-account'],
             file_exists($absolutePath) ? (string) filemtime($absolutePath) : AM_TOOLKIT_VERSION
+        );
+
+        $scriptPath = 'assets/js/course-player.js';
+        $absoluteScriptPath = AM_TOOLKIT_PATH . $scriptPath;
+        wp_enqueue_script(
+            'am-toolkit-course-player',
+            AM_TOOLKIT_URL . $scriptPath,
+            [],
+            file_exists($absoluteScriptPath) ? (string) filemtime($absoluteScriptPath) : AM_TOOLKIT_VERSION,
+            true
         );
     }
 
@@ -220,7 +247,8 @@ final class CourseHubPage
         return false;
     }
 
-    private function endpointValue(): string
+    /** @return list<string> */
+    private function endpointSegments(): array
     {
         global $wp;
 
@@ -228,7 +256,15 @@ final class CourseHubPage
             ? (string) $wp->query_vars[self::ENDPOINT]
             : '';
 
-        return sanitize_text_field(rawurldecode($value));
+        $segments = array_map(
+            static fn (string $segment): string => sanitize_text_field(rawurldecode($segment)),
+            explode('/', trim($value, '/'))
+        );
+
+        return array_values(array_filter(
+            $segments,
+            static fn (string $segment): bool => $segment !== ''
+        ));
     }
 
     private function renderHub(int $userId): string
@@ -387,10 +423,10 @@ final class CourseHubPage
                     </div>
                 <?php else : ?>
                     <?php foreach ($sections as $section) : ?>
-                        <?php echo $this->renderSection($section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php echo $this->renderSection($section, $publicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php endforeach; ?>
                     <?php if ($lessons !== []) : ?>
-                        <?php echo $this->renderLessonList($lessons, __('Lekcje', 'am-toolkit')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php echo $this->renderLessonList($lessons, $publicId, __('Lekcje', 'am-toolkit')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php endif; ?>
                 <?php endif; ?>
             </section>
@@ -401,7 +437,7 @@ final class CourseHubPage
     }
 
     /** @param array<string, mixed> $section */
-    private function renderSection(array $section): string
+    private function renderSection(array $section, string $coursePublicId): string
     {
         $lessons = isset($section['lessons']) && is_array($section['lessons'])
             ? $section['lessons']
@@ -416,7 +452,7 @@ final class CourseHubPage
                     <p><?php echo nl2br(esc_html((string) $section['description'])); ?></p>
                 <?php endif; ?>
             </header>
-            <?php echo $this->renderLessonList($lessons); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php echo $this->renderLessonList($lessons, $coursePublicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         </section>
         <?php
 
@@ -424,7 +460,7 @@ final class CourseHubPage
     }
 
     /** @param list<array<string, mixed>> $lessons */
-    private function renderLessonList(array $lessons, string $title = ''): string
+    private function renderLessonList(array $lessons, string $coursePublicId, string $title = ''): string
     {
         ob_start();
         ?>
@@ -436,14 +472,15 @@ final class CourseHubPage
         <?php else : ?>
             <ol class="am-course-lessons">
                 <?php foreach ($lessons as $index => $lesson) : ?>
-                    <li class="am-course-lesson">
-                        <span class="am-course-lesson__number" aria-hidden="true"><?php echo esc_html((string) ($index + 1)); ?></span>
-                        <span class="am-course-lesson__copy">
-                            <strong><?php echo esc_html((string) ($lesson['title'] ?? '')); ?></strong>
-                            <span>
-                                <?php echo esc_html($this->lessonMeta($lesson)); ?>
+                    <li>
+                        <a class="am-course-lesson" href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) ($lesson['public_id'] ?? ''))); ?>">
+                            <span class="am-course-lesson__number" aria-hidden="true"><?php echo esc_html((string) ($index + 1)); ?></span>
+                            <span class="am-course-lesson__copy">
+                                <strong><?php echo esc_html((string) ($lesson['title'] ?? '')); ?></strong>
+                                <span><?php echo esc_html($this->lessonMeta($lesson)); ?></span>
                             </span>
-                        </span>
+                            <span class="am-course-lesson__arrow" aria-hidden="true">→</span>
+                        </a>
                     </li>
                 <?php endforeach; ?>
             </ol>
@@ -498,6 +535,199 @@ final class CourseHubPage
         return wc_get_endpoint_url(self::ENDPOINT, rawurlencode($publicId), wc_get_page_permalink('myaccount'));
     }
 
+    private function lessonUrl(string $coursePublicId, string $lessonPublicId): string
+    {
+        $value = rawurlencode($coursePublicId) . '/lekcja/' . rawurlencode($lessonPublicId);
+
+        return wc_get_endpoint_url(self::ENDPOINT, $value, wc_get_page_permalink('myaccount'));
+    }
+
+    private function renderLesson(int $userId, string $coursePublicId, string $lessonPublicId): string
+    {
+        $lesson = $this->courses->lessonForUser($userId, $coursePublicId, $lessonPublicId);
+
+        if (is_wp_error($lesson)) {
+            $notFoundCodes = [
+                'am_toolkit_course_not_available',
+                'am_toolkit_course_lesson_not_available',
+            ];
+            status_header(in_array($lesson->get_error_code(), $notFoundCodes, true) ? 404 : 503);
+
+            if ($lesson->get_error_code() === 'am_toolkit_course_lesson_not_available') {
+                return $this->renderLessonError($lesson->get_error_message(), $coursePublicId);
+            }
+
+            return $this->renderError($lesson->get_error_message());
+        }
+
+        $course = isset($lesson['course']) && is_array($lesson['course']) ? $lesson['course'] : [];
+        $materials = isset($lesson['materials']) && is_array($lesson['materials']) ? $lesson['materials'] : [];
+        $navigation = isset($lesson['program_lessons']) && is_array($lesson['program_lessons'])
+            ? $lesson['program_lessons']
+            : [];
+        $poster = !empty($course['image_attachment_id'])
+            ? (string) wp_get_attachment_image_url((int) $course['image_attachment_id'], 'large')
+            : '';
+
+        ob_start();
+        ?>
+        <article class="am-lesson" aria-labelledby="am-lesson-title">
+            <nav class="am-lesson__breadcrumbs" aria-label="<?php echo esc_attr__('Nawigacja kursu', 'am-toolkit'); ?>">
+                <a href="<?php echo esc_url($this->courseUrl($coursePublicId)); ?>">← <?php echo esc_html__('Wróć do programu', 'am-toolkit'); ?></a>
+            </nav>
+            <div class="am-lesson__layout">
+                <main class="am-lesson__main">
+                    <header class="am-lesson__header">
+                        <span class="am-courses__eyebrow"><?php echo esc_html((string) ($lesson['section_title'] ?? __('Lekcja kursu', 'am-toolkit'))); ?></span>
+                        <h1 id="am-lesson-title"><?php echo esc_html((string) ($lesson['title'] ?? '')); ?></h1>
+                        <p><?php echo esc_html($this->lessonMeta($lesson)); ?></p>
+                    </header>
+
+                    <?php echo $this->renderLessonVideo($lesson, $coursePublicId, $lessonPublicId, $poster); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+
+                    <?php if (!empty($lesson['description'])) : ?>
+                        <section class="am-lesson__content" aria-labelledby="am-lesson-content-title">
+                            <h2 id="am-lesson-content-title"><?php echo esc_html__('O tej lekcji', 'am-toolkit'); ?></h2>
+                            <p><?php echo nl2br(esc_html((string) $lesson['description'])); ?></p>
+                        </section>
+                    <?php endif; ?>
+
+                    <?php echo $this->renderMaterials($materials, $coursePublicId, $lessonPublicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php echo $this->renderLessonNavigation($lesson, $coursePublicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </main>
+                <aside class="am-lesson__sidebar" aria-labelledby="am-lesson-program-title">
+                    <span class="am-courses__eyebrow"><?php echo esc_html__('Twój kurs', 'am-toolkit'); ?></span>
+                    <h2 id="am-lesson-program-title"><?php echo esc_html((string) ($course['title'] ?? __('Program kursu', 'am-toolkit'))); ?></h2>
+                    <?php echo $this->renderCompactProgram($navigation, $coursePublicId, $lessonPublicId); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </aside>
+            </div>
+        </article>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /** @param array<string, mixed> $lesson */
+    private function renderLessonVideo(
+        array $lesson,
+        string $coursePublicId,
+        string $lessonPublicId,
+        string $poster
+    ): string {
+        $provider = (string) ($lesson['video_provider'] ?? '');
+        $reference = (string) ($lesson['video_reference'] ?? '');
+
+        if ($provider === '' || $reference === '') {
+            return $this->lessonState(
+                __('Ta lekcja nie ma jeszcze nagrania', 'am-toolkit'),
+                __('Możesz przejść do opisu i materiałów albo wybrać inną lekcję.', 'am-toolkit')
+            );
+        }
+
+        $sourceUrl = $this->assets->url($coursePublicId, $lessonPublicId, 'video');
+        $player = $this->videoRenderer->render($sourceUrl, ['poster' => $poster]);
+
+        if (is_wp_error($player)) {
+            return $this->lessonState(
+                __('Nie udało się uruchomić nagrania', 'am-toolkit'),
+                $player->get_error_message()
+            );
+        }
+
+        return sprintf(
+            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" aria-label="%3$s">%4$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>',
+            esc_attr($coursePublicId),
+            esc_attr($lessonPublicId),
+            esc_attr__('Nagranie lekcji', 'am-toolkit'),
+            $player
+        );
+    }
+
+    /** @param list<array<string, mixed>> $materials */
+    private function renderMaterials(array $materials, string $coursePublicId, string $lessonPublicId): string
+    {
+        if ($materials === []) {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <section class="am-lesson__materials" aria-labelledby="am-lesson-materials-title">
+            <h2 id="am-lesson-materials-title"><?php echo esc_html__('Materiały do lekcji', 'am-toolkit'); ?></h2>
+            <ul>
+                <?php foreach ($materials as $material) : ?>
+                    <li>
+                        <div>
+                            <strong><?php echo esc_html((string) ($material['name'] ?? '')); ?></strong>
+                            <?php if (!empty($material['description'])) : ?><p><?php echo esc_html((string) $material['description']); ?></p><?php endif; ?>
+                        </div>
+                        <a href="<?php echo esc_url($this->assets->url($coursePublicId, $lessonPublicId, 'material', (string) ($material['public_id'] ?? ''))); ?>">
+                            <?php echo esc_html__('Pobierz', 'am-toolkit'); ?> <span aria-hidden="true">↓</span>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /** @param array<string, mixed> $lesson */
+    private function renderLessonNavigation(array $lesson, string $coursePublicId): string
+    {
+        $previous = isset($lesson['previous']) && is_array($lesson['previous']) ? $lesson['previous'] : null;
+        $next = isset($lesson['next']) && is_array($lesson['next']) ? $lesson['next'] : null;
+
+        if ($previous === null && $next === null) {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <nav class="am-lesson__navigation" aria-label="<?php echo esc_attr__('Poprzednia i następna lekcja', 'am-toolkit'); ?>">
+            <?php if ($previous !== null) : ?>
+                <a href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $previous['public_id'])); ?>"><small><?php echo esc_html__('Poprzednia lekcja', 'am-toolkit'); ?></small><strong>← <?php echo esc_html((string) $previous['title']); ?></strong></a>
+            <?php else : ?><span></span><?php endif; ?>
+            <?php if ($next !== null) : ?>
+                <a class="am-lesson__navigation-next" href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) $next['public_id'])); ?>"><small><?php echo esc_html__('Następna lekcja', 'am-toolkit'); ?></small><strong><?php echo esc_html((string) $next['title']); ?> →</strong></a>
+            <?php endif; ?>
+        </nav>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    /** @param list<array<string, mixed>> $lessons */
+    private function renderCompactProgram(array $lessons, string $coursePublicId, string $currentLessonId): string
+    {
+        ob_start();
+        ?>
+        <ol class="am-lesson-program">
+            <?php foreach ($lessons as $index => $item) : ?>
+                <?php $isCurrent = (string) ($item['public_id'] ?? '') === $currentLessonId; ?>
+                <li>
+                    <a href="<?php echo esc_url($this->lessonUrl($coursePublicId, (string) ($item['public_id'] ?? ''))); ?>" <?php echo $isCurrent ? 'aria-current="page"' : ''; ?>>
+                        <span><?php echo esc_html((string) ($index + 1)); ?></span>
+                        <strong><?php echo esc_html((string) ($item['title'] ?? '')); ?></strong>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ol>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function lessonState(string $title, string $message): string
+    {
+        return sprintf(
+            '<div class="am-lesson__state" role="status"><span aria-hidden="true">▷</span><div><h2>%1$s</h2><p>%2$s</p></div></div>',
+            esc_html($title),
+            esc_html($message)
+        );
+    }
+
     private function hubUrl(): string
     {
         return wc_get_endpoint_url(self::ENDPOINT, '', wc_get_page_permalink('myaccount'));
@@ -511,6 +741,17 @@ final class CourseHubPage
             esc_html($message),
             esc_url($this->hubUrl()),
             esc_html__('Wróć do listy kursów', 'am-toolkit')
+        );
+    }
+
+    private function renderLessonError(string $message, string $coursePublicId): string
+    {
+        return sprintf(
+            '<div class="am-courses am-courses__error" role="alert"><h1>%1$s</h1><p>%2$s</p><a href="%3$s">%4$s</a></div>',
+            esc_html__('Nie udało się otworzyć lekcji', 'am-toolkit'),
+            esc_html($message),
+            esc_url($this->courseUrl($coursePublicId)),
+            esc_html__('Wróć do programu', 'am-toolkit')
         );
     }
 }

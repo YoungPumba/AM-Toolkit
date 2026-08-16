@@ -107,6 +107,73 @@ final class CourseCatalogServiceTest extends TestCase
         self::assertStringNotContainsString('SQL', $result->get_error_message());
     }
 
+    public function testLessonRequiresActiveAccessBeforePrivateDataIsRead(): void
+    {
+        $this->store->course = [
+            'id' => 71,
+            'public_id' => $this->uuid(1),
+            'current_program_version_id' => 18,
+        ];
+        $this->access->allowed = false;
+
+        $result = $this->service->lessonForUser(9, $this->uuid(1), $this->uuid(2));
+
+        self::assertInstanceOf(\WP_Error::class, $result);
+        self::assertSame(0, $this->store->lessonCalls);
+    }
+
+    public function testMissingLessonUsesDedicatedSafeError(): void
+    {
+        $this->store->course = [
+            'id' => 71,
+            'public_id' => $this->uuid(1),
+            'current_program_version_id' => 18,
+        ];
+        $this->access->allowed = true;
+
+        $result = $this->service->lessonForUser(9, $this->uuid(1), $this->uuid(2));
+
+        self::assertInstanceOf(\WP_Error::class, $result);
+        self::assertSame('am_toolkit_course_lesson_not_available', $result->get_error_code());
+        self::assertStringContainsString('Ta lekcja nie jest dostępna', $result->get_error_message());
+    }
+
+    public function testAuthorizedLessonReturnsOnlyPublishedViewAndMaterialAsset(): void
+    {
+        $this->store->course = [
+            'id' => 71,
+            'public_id' => $this->uuid(1),
+            'title' => 'Kurs testowy',
+            'current_program_version_id' => 18,
+        ];
+        $this->store->lesson = [
+            'public_id' => $this->uuid(2),
+            'title' => 'Lekcja testowa',
+            'video_provider' => 'am-private',
+            'video_reference' => 'videos/reference.mp4',
+            'materials' => [[
+                'public_id' => $this->uuid(3),
+                'name' => 'Ćwiczenia',
+                'storage_provider' => 'am-private',
+                'storage_reference' => 'materials/reference.pdf',
+            ]],
+        ];
+        $this->access->allowed = true;
+
+        $lesson = $this->service->lessonForUser(9, $this->uuid(1), $this->uuid(2));
+        $asset = $this->service->assetForUser(9, $this->uuid(1), $this->uuid(2), 'material', $this->uuid(3));
+
+        self::assertIsArray($lesson);
+        self::assertSame('Kurs testowy', $lesson['course']['title']);
+        self::assertSame([
+            [71, 18, $this->uuid(2)],
+            [71, 18, $this->uuid(2)],
+        ], $this->store->lessonRequests);
+        self::assertIsArray($asset);
+        self::assertSame('materials/reference.pdf', $asset['reference']);
+        self::assertSame('attachment', $asset['disposition']);
+    }
+
     private function uuid(int $suffix): string
     {
         return sprintf('12345678-1234-4123-8123-%012d', $suffix);
@@ -128,9 +195,16 @@ final class ParticipantCourseStoreSpy implements CourseViewStore
     public int $listedUserId = 0;
     public int $findCalls = 0;
     public int $programCalls = 0;
+    public int $lessonCalls = 0;
+
+    /** @var array<string, mixed>|null */
+    public ?array $lesson = null;
 
     /** @var list<array{0: int, 1: int}> */
     public array $programRequests = [];
+
+    /** @var list<array{0: int, 1: int, 2: string}> */
+    public array $lessonRequests = [];
 
     public function coursesForUser(int $userId, string $at): array|\WP_Error
     {
@@ -152,6 +226,14 @@ final class ParticipantCourseStoreSpy implements CourseViewStore
         $this->programRequests[] = [$courseId, $programVersionId];
 
         return $this->program;
+    }
+
+    public function publishedLesson(int $courseId, int $programVersionId, Identifier $publicId): array|null|\WP_Error
+    {
+        $this->lessonCalls++;
+        $this->lessonRequests[] = [$courseId, $programVersionId, $publicId->value()];
+
+        return $this->lesson;
     }
 }
 

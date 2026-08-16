@@ -4,8 +4,10 @@ namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Core\ModuleInterface;
 use AMToolkit\Modules\Courses\Admin\CourseAdminPage;
+use AMToolkit\Modules\Courses\Frontend\CourseAssetController;
 use AMToolkit\Modules\Courses\Frontend\CourseDashboardSection;
 use AMToolkit\Modules\Courses\Frontend\CourseHubPage;
+use AMToolkit\Modules\Courses\Frontend\WordPressCourseVideoRenderer;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseAccessPolicy;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 
@@ -30,12 +32,15 @@ final class CoursesModule implements ModuleInterface
 
     public function boot(): void
     {
-        (new CourseAdminPage())->boot();
+        $assetStore = new WpPrivateCourseAssetStore();
+        (new CourseAdminPage(null, $assetStore))->boot();
         $catalog = new CourseCatalogService(
             new WpdbCourseViewStore(),
             new AccessCoreCourseAccessPolicy()
         );
-        (new CourseHubPage($catalog))->boot();
+        $assets = new CourseAssetController($catalog, [$assetStore]);
+        $assets->boot();
+        (new CourseHubPage($catalog, $assets, new WordPressCourseVideoRenderer()))->boot();
         (new CourseDashboardSection($catalog))->boot();
 
         do_action('am_toolkit_courses_ready');
