@@ -1,5 +1,11 @@
 # Historia zmian AM Toolkit
 
+## Następne wydanie
+
+- usunięto poziome przewijanie podsumowania kursu na telefonach przez
+  ograniczenie szerokości kart Zoom i Telegram oraz bezpieczne zawijanie
+  długich adresów i treści zaproszeń.
+
 ## 0.12.0 — 2026-08-16
 
 - rejestracja modułu `Courses` zależnego od `Core` i `Access`, domyślnie
