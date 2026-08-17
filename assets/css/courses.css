@@ -1624,6 +1624,10 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
 }
 
 .am-course-meetings {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 30px 0;
     padding: 28px;
     border: 1px solid var(--am-courses-border);
@@ -1643,6 +1647,10 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     gap: 16px;
     padding: 18px;
     border: 1px solid #f0dce5;
@@ -1677,6 +1685,13 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
     text-transform: uppercase;
 }
 
+.am-course-meeting__copy {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 .am-course-meeting__copy h3 {
     margin: 3px 0 4px;
     font-family: Poppins, sans-serif;
@@ -1700,7 +1715,13 @@ a.am-courses-dashboard-card:hover .am-courses-dashboard-card__arrow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     gap: 8px;
+    overflow-wrap: anywhere;
+    text-align: center;
+    white-space: normal;
     text-decoration: none;
 }
 
@@ -1764,6 +1785,13 @@ a.am-course-meetings__telegram:focus-visible {
     display: block;
 }
 
+.am-course-meetings__telegram > span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 .am-course-meetings__telegram small {
     margin-top: 2px;
     color: #39788f;
@@ -1786,6 +1814,8 @@ a.am-course-meetings__telegram:focus-visible {
 }
 
 .am-course-meetings__history {
+    min-width: 0;
+    max-width: 100%;
     margin-top: 14px;
 }
 
@@ -1797,6 +1827,8 @@ a.am-course-meetings__telegram:focus-visible {
 
 .am-course-meetings__history > div {
     display: grid;
+    min-width: 0;
+    max-width: 100%;
     gap: 10px;
     margin-top: 12px;
 }
