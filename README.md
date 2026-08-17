@@ -1,6 +1,6 @@
 # AM Toolkit
 
-Aktualne wydanie 0.12.0 wprowadza moduł AM Courses.
+Aktualne wydanie 0.12.1 stabilizuje mobilny widok spotkań AM Courses.
 Zweryfikowane wydania instalacyjne są publikowane jako tag i GitHub Release
 zgodnie z [procedurą wydań](docs/RELEASES.md).
 
@@ -109,6 +109,7 @@ jeśli nadal istnieje inny aktywny grant.
 - [Lekcje, odtwarzacz i prywatne materiały AM Courses](docs/COURSES-LESSONS.md)
 - [Postęp i ukończenie AM Courses](docs/COURSES-PROGRESS.md)
 - [Wydanie, aktywacja i rollback 0.12.0](docs/RELEASE-0.12.0.md)
+- [Hotfix 0.12.1 — wydanie, wdrożenie i rollback](docs/RELEASE-0.12.1.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
 

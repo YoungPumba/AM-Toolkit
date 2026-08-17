@@ -1,6 +1,6 @@
 # Historia zmian AM Toolkit
 
-## Następne wydanie
+## 0.12.1 — 2026-08-17
 
 - usunięto poziome przewijanie podsumowania kursu na telefonach przez
   ograniczenie szerokości kart Zoom i Telegram oraz bezpieczne zawijanie

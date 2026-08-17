@@ -16,7 +16,8 @@ utworzonej od ostatniego commita tej wersji. Nie wolno w tym celu cofać
 
 Dla 0.11.5 linią bazową jest commit `e11b086`. Naprawa metadanych wersji
 powstaje na gałęzi 0.11.x i dopiero jej zweryfikowany commit może otrzymać tag
-`v0.11.5`. Bieżący `main` rozwija 0.12.0 i nie może być źródłem paczki 0.11.5.
+`v0.11.5`. Bieżący `main` rozwija linię 0.12.x i nie może być źródłem paczki
+0.11.5.
 
 ## Brakujące tagi 0.11.x
 
@@ -41,6 +42,8 @@ przed wdrożeniem 0.12.0.
 
 Szczegółowy plan wdrożenia, aktywacji flag i rollbacku AM Courses 0.12.0
 znajduje się w [runbooku wydania 0.12.0](RELEASE-0.12.0.md).
+Procedurę małego hotfixu mobilnego opisuje
+[runbook wydania 0.12.1](RELEASE-0.12.1.md).
 
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po
