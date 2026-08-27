@@ -15,6 +15,7 @@ final class CourseAssetController
 {
     private const ACTION = 'am_toolkit_course_asset';
     private const CHUNK_SIZE = 1048576;
+    private const VIDEO_OPEN_RANGE_LENGTH = 134217728;
 
     /** @var array<string, CourseAssetStore> */
     private array $stores = [];
@@ -144,7 +145,8 @@ final class CourseAssetController
         $this->serve(
             $asset,
             (string) ($assetData['disposition'] ?? 'attachment'),
-            $method
+            $method,
+            $kind === 'video' ? self::VIDEO_OPEN_RANGE_LENGTH : null
         );
     }
 
@@ -155,12 +157,21 @@ final class CourseAssetController
         exit;
     }
 
-    private function serve(ProtectedAsset $asset, string $disposition, string $method): void
+    private function serve(
+        ProtectedAsset $asset,
+        string $disposition,
+        string $method,
+        ?int $maxOpenEndedRangeLength = null
+    ): void
     {
         $rangeHeader = isset($_SERVER['HTTP_RANGE']) && is_string($_SERVER['HTTP_RANGE'])
             ? $_SERVER['HTTP_RANGE']
             : null;
-        $range = HttpByteRange::fromHeader($rangeHeader, $asset->size());
+        $range = HttpByteRange::fromHeader(
+            $rangeHeader,
+            $asset->size(),
+            $maxOpenEndedRangeLength
+        );
 
         if (is_wp_error($range)) {
             status_header(416);
@@ -173,12 +184,34 @@ final class CourseAssetController
             ob_end_clean();
         }
 
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        }
+
+        @ini_set('zlib.output_compression', '0'); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        header_remove('Content-Encoding');
+
         nocache_headers();
+        header_remove('Expires');
+        header_remove('Pragma');
         status_header($range->isPartial() ? 206 : 200);
+        $modifiedAt = filemtime($asset->path());
+        $entityTag = sprintf('"amt-%s"', hash('sha256', $asset->path() . '|' . $asset->size() . '|' . (string) $modifiedAt));
         header('Accept-Ranges: bytes');
         header('Content-Type: ' . $asset->mimeType());
         header('Content-Length: ' . $range->length());
         header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, max-age=3600, no-transform');
+        header('Vary: Cookie');
+        header('ETag: ' . $entityTag);
+
+        if ($modifiedAt !== false) {
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $modifiedAt) . ' GMT');
+        }
 
         if ($range->isPartial()) {
             header(sprintf(

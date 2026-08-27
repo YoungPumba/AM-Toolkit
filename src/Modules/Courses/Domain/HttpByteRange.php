@@ -14,9 +14,13 @@ final class HttpByteRange
     ) {
     }
 
-    public static function fromHeader(?string $header, int $resourceSize): self|\WP_Error
+    public static function fromHeader(
+        ?string $header,
+        int $resourceSize,
+        ?int $maxOpenEndedLength = null
+    ): self|\WP_Error
     {
-        if ($resourceSize < 0) {
+        if ($resourceSize < 0 || ($maxOpenEndedLength !== null && $maxOpenEndedLength <= 0)) {
             return self::invalid();
         }
 
@@ -46,13 +50,19 @@ final class HttpByteRange
             $end = $resourceSize - 1;
         } else {
             $start = (int) $startText;
-            $end = $endText === '' ? $resourceSize - 1 : (int) $endText;
+            $openEnded = $endText === '';
+            $end = $openEnded ? $resourceSize - 1 : (int) $endText;
 
             if ($start >= $resourceSize || $end < $start) {
                 return self::invalid();
             }
 
             $end = min($end, $resourceSize - 1);
+
+            if ($openEnded && $maxOpenEndedLength !== null) {
+                $maximumOffset = min($maxOpenEndedLength - 1, PHP_INT_MAX - $start);
+                $end = min($end, $start + $maximumOffset);
+            }
         }
 
         return new self($start, $end, $resourceSize, true);

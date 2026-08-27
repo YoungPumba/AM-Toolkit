@@ -5,6 +5,7 @@ namespace AMToolkit\Modules\Courses\Admin;
 use AMToolkit\Core\Authorization;
 use AMToolkit\Core\Capabilities;
 use AMToolkit\Modules\Courses\Contracts\CourseAssetStore;
+use AMToolkit\Modules\Courses\Contracts\ProgressiveCourseVideoStore;
 use AMToolkit\Modules\Courses\Domain\PublicationStatus;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseEntitlementGateway;
 use AMToolkit\Modules\Courses\Services\CourseAccessLifecycle;
@@ -174,6 +175,21 @@ final class CourseAdminPage
 
                     $videoProvider = $this->assets->provider();
                     $videoReference = $uploadedReference;
+
+                    if ($this->assets instanceof ProgressiveCourseVideoStore) {
+                        $streamability = $this->assets->videoSupportsProgressiveDownload($videoReference);
+
+                        if ($streamability !== true) {
+                            $this->assets->remove($videoReference);
+                            $result = is_wp_error($streamability)
+                                ? $streamability
+                                : new \WP_Error(
+                                    'am_toolkit_course_video_not_streamable',
+                                    __('Nagranie MP4 nie jest zoptymalizowane do odtwarzania internetowego.', 'am-toolkit')
+                                );
+                            break;
+                        }
+                    }
                 }
 
                 if ($videoProvider === $this->assets->provider() && $videoReference !== '') {
@@ -626,6 +642,8 @@ final class CourseAdminPage
         $messages = [
             'am_toolkit_course_draft_delete_blocked' => __('Nie usunięto elementu. Ma już historię, zależności albo zapisany postęp — użyj archiwizacji.', 'am-toolkit'),
             'am_toolkit_course_preview_read_failed' => __('Nie udało się przygotować podglądu. Sprawdź konfigurację kursu.', 'am-toolkit'),
+            'am_toolkit_course_video_invalid_mp4' => __('Nie udało się zweryfikować nagrania. Prześlij prawidłowy plik MP4 przygotowany do odtwarzania w internecie.', 'am-toolkit'),
+            'am_toolkit_course_video_not_streamable' => __('Nagranie ma indeks na końcu pliku i może się zacinać. Wyeksportuj MP4 z opcją „Web Optimized” lub „Fast Start” i prześlij je ponownie.', 'am-toolkit'),
         ];
         $message = $success
             ? __('Zmiany zostały zapisane.', 'am-toolkit')
@@ -756,6 +774,18 @@ final class CourseAdminPage
     {
         $id = (int) ($lesson['id'] ?? 0);
         $requirements = is_array($lesson['completion_requirements'] ?? null) ? $lesson['completion_requirements'] : [];
+        $videoStreamability = null;
+
+        if (
+            $this->assets instanceof ProgressiveCourseVideoStore
+            && (string) ($lesson['video_provider'] ?? '') === $this->assets->provider()
+            && (string) ($lesson['video_reference'] ?? '') !== ''
+        ) {
+            $inspection = $this->assets->videoSupportsProgressiveDownload(
+                (string) $lesson['video_reference']
+            );
+            $videoStreamability = is_wp_error($inspection) ? null : $inspection;
+        }
         ?>
         <details class="amt-editor" <?php echo $id === 0 ? 'open' : ''; ?>>
             <summary><span><?php echo esc_html($id > 0 ? (string) $lesson['title'] : __('Dodaj lekcję', 'am-toolkit')); ?></span><small><?php echo esc_html((string) ($lesson['section_title'] ?? __('Bez sekcji', 'am-toolkit'))); ?></small></summary>
@@ -767,9 +797,12 @@ final class CourseAdminPage
                 <input type="hidden" name="video_provider" value="<?php echo esc_attr((string) ($lesson['video_provider'] ?? '')); ?>">
                 <input type="hidden" name="video_reference" value="<?php echo esc_attr((string) ($lesson['video_reference'] ?? '')); ?>">
                 <div class="amt-courses-form__row">
-                    <label><span><?php esc_html_e('Nagranie MP4', 'am-toolkit'); ?></span><input type="file" name="video_file" accept="video/mp4,.mp4"><small><?php echo esc_html(!empty($lesson['video_reference']) ? __('Nagranie jest zapisane. Nowy plik zastąpi przypisanie.', 'am-toolkit') : sprintf(__('Maksymalny rozmiar wysyłania: %s.', 'am-toolkit'), size_format(wp_max_upload_size()))); ?></small></label>
+                    <label><span><?php esc_html_e('Nagranie MP4', 'am-toolkit'); ?></span><input type="file" name="video_file" accept="video/mp4,.mp4"><small><?php echo esc_html(!empty($lesson['video_reference']) ? __('Nagranie jest zapisane. Nowy plik zastąpi przypisanie.', 'am-toolkit') : sprintf(__('Maksymalny rozmiar wysyłania: %s.', 'am-toolkit'), size_format(wp_max_upload_size()))); ?> <?php esc_html_e('Plik musi być wyeksportowany z opcją Web Optimized / Fast Start.', 'am-toolkit'); ?></small></label>
                     <label><span><?php esc_html_e('Czas nagrania w sekundach', 'am-toolkit'); ?></span><input type="number" min="0" name="duration_seconds" value="<?php echo esc_attr((string) ($lesson['duration_seconds'] ?? '')); ?>"><small><?php esc_html_e('Dla prywatnego MP4 czas zostanie odczytany automatycznie przy zapisie.', 'am-toolkit'); ?></small></label>
                 </div>
+                <?php if ($videoStreamability === false) : ?>
+                    <div class="notice notice-warning inline"><p><strong><?php esc_html_e('Nagranie wymaga optymalizacji.', 'am-toolkit'); ?></strong> <?php esc_html_e('Indeks MP4 znajduje się za danymi filmu, co powoduje dodatkowe pobieranie i zacinanie przy wznowieniu. Wyeksportuj plik z opcją Web Optimized / Fast Start i zastąp nagranie.', 'am-toolkit'); ?></p></div>
+                <?php endif; ?>
                 <div class="amt-courses-form__row"><label><span><?php esc_html_e('Wymagany procent filmu', 'am-toolkit'); ?></span><input type="number" min="0" max="100" name="video_percent" value="<?php echo esc_attr((string) ($requirements['video_percent'] ?? 0)); ?>"><small><?php esc_html_e('Ustaw 0, jeśli lekcja nie ma nagrania — inaczej nie będzie można jej ukończyć.', 'am-toolkit'); ?></small></label><label class="amt-check"><input type="checkbox" name="task_required" value="1" <?php checked(!empty($requirements['task_required'])); ?>><span><?php esc_html_e('Pojedyncze potwierdzenie zadania (tryb zgodności)', 'am-toolkit'); ?></span><small><?php esc_html_e('Nowe zadania dodawaj w checkliście poniżej. To ustawienie zachowuje starsze lekcje.', 'am-toolkit'); ?></small></label><label class="amt-check"><input type="checkbox" name="is_required" value="1" <?php checked(!isset($lesson['is_required']) || (int) $lesson['is_required'] === 1); ?>><span><?php esc_html_e('Lekcja wymagana w programie', 'am-toolkit'); ?></span></label></div>
                 <button class="button button-primary" type="submit"><?php esc_html_e('Zapisz lekcję', 'am-toolkit'); ?></button>
             </form>
