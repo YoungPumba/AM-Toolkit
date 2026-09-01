@@ -34,6 +34,40 @@ final class HttpByteRangeTest extends TestCase
         self::assertSame([950, 999, 50], [$suffix->start(), $suffix->end(), $suffix->length()]);
     }
 
+    public function testOpenEndedVideoRangeCanBeLimitedWithoutChangingRequestedStart(): void
+    {
+        $range = HttpByteRange::fromHeader('bytes=1048576-', 500000000, 134217728);
+
+        self::assertInstanceOf(HttpByteRange::class, $range);
+        self::assertTrue($range->isPartial());
+        self::assertSame(1048576, $range->start());
+        self::assertSame(135266303, $range->end());
+        self::assertSame(134217728, $range->length());
+        self::assertSame(500000000, $range->resourceSize());
+    }
+
+    public function testRangeLimitDoesNotTruncateExplicitOrSuffixMetadataProbes(): void
+    {
+        $explicit = HttpByteRange::fromHeader('bytes=0-1', 100000000, 1);
+        $suffix = HttpByteRange::fromHeader('bytes=-4096', 100000000, 1024);
+
+        self::assertInstanceOf(HttpByteRange::class, $explicit);
+        self::assertSame([0, 1, 2], [$explicit->start(), $explicit->end(), $explicit->length()]);
+        self::assertInstanceOf(HttpByteRange::class, $suffix);
+        self::assertSame(
+            [99995904, 99999999, 4096],
+            [$suffix->start(), $suffix->end(), $suffix->length()]
+        );
+    }
+
+    public function testInvalidOpenEndedRangeLimitIsRejected(): void
+    {
+        $range = HttpByteRange::fromHeader('bytes=0-', 1000, 0);
+
+        self::assertInstanceOf(\WP_Error::class, $range);
+        self::assertSame('am_toolkit_invalid_http_range', $range->get_error_code());
+    }
+
     /** @dataProvider invalidRanges */
     public function testInvalidOrMultipleRangesAreRejected(string $header): void
     {

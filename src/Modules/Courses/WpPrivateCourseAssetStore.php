@@ -3,11 +3,13 @@
 namespace AMToolkit\Modules\Courses;
 
 use AMToolkit\Modules\Courses\Contracts\CourseAssetStore;
+use AMToolkit\Modules\Courses\Contracts\ProgressiveCourseVideoStore;
+use AMToolkit\Modules\Courses\Domain\Mp4StreamabilityInspector;
 use AMToolkit\Modules\Courses\Domain\ProtectedAsset;
 
 defined('ABSPATH') || exit;
 
-final class WpPrivateCourseAssetStore implements CourseAssetStore
+final class WpPrivateCourseAssetStore implements CourseAssetStore, ProgressiveCourseVideoStore
 {
     public const PROVIDER = 'am-private';
 
@@ -179,6 +181,17 @@ final class WpPrivateCourseAssetStore implements CourseAssetStore
             : 0;
 
         return $duration > 0 ? $duration : $this->metadataError();
+    }
+
+    public function videoSupportsProgressiveDownload(string $reference): bool|\WP_Error
+    {
+        $asset = $this->locate($reference, 'video.mp4');
+
+        if (is_wp_error($asset)) {
+            return $asset;
+        }
+
+        return (new Mp4StreamabilityInspector())->inspect($asset->path());
     }
 
     public function remove(string $reference): bool

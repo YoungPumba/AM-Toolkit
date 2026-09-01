@@ -94,7 +94,47 @@ Plik jest dostarczany przez akcję `admin-post.php`, która:
 5. obsługuje pojedynczy nagłówek HTTP Range (`206`) oraz poprawną odpowiedź
    `416` dla błędnego zakresu,
 6. przesyła plik porcjami i ustawia `Accept-Ranges`, `Content-Length`,
-   `Content-Range`, brak cache oraz `X-Content-Type-Options: nosniff`.
+   `Content-Range`, prywatny cache przeglądarki oraz
+   `X-Content-Type-Options: nosniff`.
+
+Dla wideo otwarty zakres, np. `bytes=0-`, jest ograniczany do 128 MiB na jedną
+odpowiedź. Ten rozmiar utrzymuje liczbę pełnych uruchomień WordPressa na niskim
+poziomie, a jednocześnie ogranicza czas życia pojedynczego procesu PHP przy
+bardzo dużym pliku. Jawne małe zakresy i zapytania o końcówkę pliku nie są
+skracane, ponieważ przeglądarki wykorzystują je do odczytu metadanych MP4.
+Przed wysłaniem danych kontroler zamyka ewentualną sesję PHP i wyłącza kompresję
+wyjścia. Żądany zakres jest wysyłany porcjami z regularnym opróżnianiem bufora,
+aby równoległe żądania nie blokowały się wzajemnie, a pierwsze dane trafiały do
+przeglądarki bez oczekiwania na zgromadzenie całego zakresu. Odpowiedź może być
+przechowana przez godzinę wyłącznie w prywatnym cache przeglądarki. `Vary:
+Cookie` oddziela sesje logowania, a `ETag` i `Last-Modified` opisują wersję
+pliku. Pobrane fragmenty nie trafiają do współdzielonych cache'ów, ale pozostają
+dostępne przy ponownym przewijaniu w ramach tej samej sesji.
+
+## Zalecany format nagrania
+
+Instrukcja redakcyjna krok po kroku, obejmująca HandBrake, Fast Start,
+bezpieczną podmianę i kontrolę istniejących plików, znajduje się w dokumencie
+[Przygotowanie nagrań do AM Courses](COURSES-VIDEO-PREPARATION.md).
+
+Materiał przeznaczony do odtwarzania w przeglądarce powinien być eksportowany
+jako MP4 z obrazem H.264/AVC i dźwiękiem AAC, w rozdzielczości do 1920×1080,
+25 lub 30 kl./s. Atom `moov` musi znajdować się przed danymi `mdat` (opcja
+`faststart` / „web optimized”), aby przeglądarka nie pobierała końca dużego
+pliku tylko po to, by poznać czas i indeks nagrania. Dla 1080p punktem wyjścia
+jest bitrate obrazu ok. 4–6 Mb/s; należy go obniżyć, jeśli materiał pozostaje
+czytelny, zamiast publikować źródło 4K bez korzyści dla kursantki.
+
+Nowy upload jest sprawdzany przed przypisaniem do lekcji. Plik z atomem `moov`
+za `mdat` zostaje odrzucony z instrukcją ponownego eksportu. Istniejące pliki w
+tym układzie pozostają przypisane, ale panel lekcji pokazuje ostrzeżenie i prosi
+o ich zastąpienie. Samo rozszerzenie `.mp4` nie jest dowodem, że nagranie nadaje
+się do progresywnego odtwarzania — kontener też potrafi sabotować własny film.
+
+Odtwarzacz używa `preload="auto"`. Na stronie pojedynczej lekcji przeglądarka
+może dzięki temu zbudować bufor przy zapisanym punkcie wznowienia jeszcze przed
+kliknięciem „Odtwórz”; ostateczny zakres pobierania nadal zależy od przeglądarki
+i warunków sieciowych.
 
 Żądanie osoby niezalogowanej, użytkownika bez dostępu lub nieistniejącego
 zasobu kończy się odpowiedzią 404 bez potwierdzania, czy plik istnieje.
