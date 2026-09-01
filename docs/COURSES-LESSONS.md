@@ -113,6 +113,10 @@ dostępne przy ponownym przewijaniu w ramach tej samej sesji.
 
 ## Zalecany format nagrania
 
+Instrukcja redakcyjna krok po kroku, obejmująca HandBrake, Fast Start,
+bezpieczną podmianę i kontrolę istniejących plików, znajduje się w dokumencie
+[Przygotowanie nagrań do AM Courses](COURSES-VIDEO-PREPARATION.md).
+
 Materiał przeznaczony do odtwarzania w przeglądarce powinien być eksportowany
 jako MP4 z obrazem H.264/AVC i dźwiękiem AAC, w rozdzielczości do 1920×1080,
 25 lub 30 kl./s. Atom `moov` musi znajdować się przed danymi `mdat` (opcja
