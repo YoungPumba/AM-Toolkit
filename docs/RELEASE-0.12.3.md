@@ -65,8 +65,10 @@ Weryfikacja lokalnego release candidate z 1 września 2026:
 
 Lokalny `composer audit --locked` nie mógł połączyć się z Packagist z powodu
 błędu lokalnego wystawcy certyfikatu TLS. Nie wyłączono weryfikacji TLS.
-Audyt musi zakończyć się powodzeniem w GitHub Actions na PHP 8.0 i PHP 8.3
-przed oznaczeniem PR jako gotowego do przeglądu.
+GitHub Actions dla PR #28 wykonało pełny workflow Quality, w tym audyt, z
+wynikiem pozytywnym na PHP 8.0 i PHP 8.3:
+
+`https://github.com/YoungPumba/AM-Toolkit/actions/runs/33560685305`
 
 Paczka `am-toolkit-v0.12.3.zip` ma SHA-256:
 
