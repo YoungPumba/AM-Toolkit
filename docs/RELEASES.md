@@ -44,6 +44,9 @@ Szczegółowy plan wdrożenia, aktywacji flag i rollbacku AM Courses 0.12.0
 znajduje się w [runbooku wydania 0.12.0](RELEASE-0.12.0.md).
 Procedurę małego hotfixu mobilnego opisuje
 [runbook wydania 0.12.1](RELEASE-0.12.1.md).
+Stabilizację chronionego odtwarzania oraz kontrolowane przejście produkcji
+bezpośrednio z 0.12.0 do 0.12.2 opisuje
+[runbook wydania 0.12.2](RELEASE-0.12.2.md).
 
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po
