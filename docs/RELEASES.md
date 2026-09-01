@@ -47,6 +47,8 @@ Procedurę małego hotfixu mobilnego opisuje
 Stabilizację chronionego odtwarzania oraz kontrolowane przejście produkcji
 bezpośrednio z 0.12.0 do 0.12.2 opisuje
 [runbook wydania 0.12.2](RELEASE-0.12.2.md).
+Kontrolowane udostępnienie diagnostyki problemów odtwarzacza na iOS i Safari
+opisuje [runbook wydania 0.12.3](RELEASE-0.12.3.md).
 
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po

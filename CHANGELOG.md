@@ -1,6 +1,6 @@
 # Historia zmian AM Toolkit
 
-## Unreleased
+## 0.12.3 — 2026-09-01
 
 - dodano uruchamianą parametrem diagnostykę odtwarzacza na telefonie,
   rejestrującą bezpieczny stan elementu video i chronione żądania HTTP Range,
