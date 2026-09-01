@@ -1,5 +1,20 @@
 # Historia zmian AM Toolkit
 
+## 0.12.2 — 2026-09-01
+
+- ograniczono koszt otwartych żądań HTTP Range dla chronionych MP4 bez
+  pogarszania obsługi małych zakresów i odczytu metadanych,
+- dodano prywatne buforowanie fragmentów zależne od sesji, walidatory `ETag`
+  i `Last-Modified` oraz wcześniejsze zwalnianie sesji PHP,
+- odtwarzacz używa `preload="auto"`, aby przygotować bufor również przy
+  wznowieniu filmu od zapisanego miejsca,
+- nowe nagrania bez Fast Start są odrzucane z czytelną instrukcją, a panel
+  ostrzega o istniejących plikach wymagających optymalizacji,
+- dodano testy regresji Range, renderowania odtwarzacza i inspekcji układu
+  atomów MP4,
+- dodano instrukcję przygotowania nagrań H.264/AAC 1080p z Fast Start,
+  procedurę HandBrake oraz wariant bezstratnego przepakowania FFmpeg.
+
 ## 0.12.1 — 2026-08-17
 
 - usunięto poziome przewijanie podsumowania kursu na telefonach przez
