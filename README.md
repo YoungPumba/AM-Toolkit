@@ -1,8 +1,8 @@
 # AM Toolkit
 
-Aktualne wydanie 0.12.3 dodaje bezpieczną diagnostykę odtwarzacza AM Courses
-na iOS i Safari. Obejmuje też stabilizację chronionego odtwarzania z 0.12.2
-oraz poprawkę mobilnego widoku spotkań z linii 0.12.1.
+Aktualne wydanie 0.12.4 naprawia odzyskiwanie nagłówka HTTP Range na iOS i
+LiteSpeed oraz ogranicza wstępne pobieranie nagrania do metadanych. Obejmuje
+też bezpieczną diagnostykę odtwarzacza wprowadzoną w 0.12.3.
 Zweryfikowane wydania instalacyjne są publikowane jako tag i GitHub Release
 zgodnie z [procedurą wydań](docs/RELEASES.md).
 
@@ -115,6 +115,7 @@ jeśli nadal istnieje inny aktywny grant.
 - [Hotfix 0.12.1 — wydanie, wdrożenie i rollback](docs/RELEASE-0.12.1.md)
 - [Wydanie 0.12.2 — stabilizacja odtwarzacza i rollback](docs/RELEASE-0.12.2.md)
 - [Wydanie 0.12.3 — diagnostyka iOS/Safari i rollback](docs/RELEASE-0.12.3.md)
+- [Wydanie 0.12.4 — naprawa Range na iOS/LiteSpeed i rollback](docs/RELEASE-0.12.4.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
 

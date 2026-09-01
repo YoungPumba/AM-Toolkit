@@ -1,6 +1,6 @@
 # Historia zmian AM Toolkit
 
-## Unreleased
+## 0.12.4 — 2026-09-02
 
 - odtwarzacz odzyskuje nagłówek HTTP Range również z wariantów CGI i listy
   nagłówków serwera, aby LiteSpeed mógł zwracać częściowe odpowiedzi 206,
