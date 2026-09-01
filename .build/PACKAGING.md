@@ -38,6 +38,8 @@ am-toolkit-vX.Y.Z.zip
 9. Nie wolno pakować plików bezpośrednio w katalogu głównym ZIP.
 10. Nie wolno tworzyć podwójnego zagnieżdżenia
     `am-toolkit/am-toolkit/am-toolkit.php`.
+11. Wszystkie wpisy ZIP otrzymują stały znacznik czasu, dlatego dwie budowy
+    tego samego drzewa źródłowego muszą mieć identyczny SHA-256.
 
 Kod, zasoby i nowe moduły mogą być dodawane albo zastępowane. Powyższy
 schemat instalacyjny pozostaje niezmienny.
@@ -64,6 +66,16 @@ powershell -ExecutionPolicy Bypass `
 Numer wersji jest pobierany automatycznie z `am-toolkit.php`. Generator
 tworzy paczkę, sprawdza jej strukturę, a dopiero po udanym teście zapisuje
 plik docelowy.
+
+## Sprawdzanie odtwarzalności
+
+Test wykonuje dwie niezależne budowy w katalogach tymczasowych i odrzuca
+wynik, jeśli sumy SHA-256 są różne:
+
+```powershell
+powershell -ExecutionPolicy Bypass `
+    -File .build/test-reproducible-release.ps1
+```
 
 ## Sprawdzanie istniejącej paczki
 

@@ -118,7 +118,19 @@ function Add-ZipFile {
         [System.IO.Compression.CompressionLevel]::Optimal
     )
 
-    $entry.LastWriteTime = $File.LastWriteTime
+    # ZIP stores timestamps in every entry. Using checkout mtimes made two
+    # builds of the same tree produce different archives and SHA-256 values.
+    # A fixed value within the ZIP-supported range keeps the package
+    # reproducible without changing any installed file contents.
+    $entry.LastWriteTime = [DateTimeOffset]::new(
+        2000,
+        1,
+        1,
+        0,
+        0,
+        0,
+        [TimeSpan]::Zero
+    )
 
     $inputStream = $File.OpenRead()
     $outputStream = $entry.Open()

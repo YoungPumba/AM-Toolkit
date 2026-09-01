@@ -49,6 +49,7 @@ Weryfikacja lokalnego release candidate z 1 września 2026:
   plików,
 - walidacja ZIP: 204 pliki, jeden katalog główny `am-toolkit/` i zgodna
   wersja 0.12.2,
+- dwie niezależne budowy deterministyczne mają identyczny SHA-256,
 - rozmiar paczki: 315501 B,
 - lokalny WordPress połączony junctionem odczytuje wersję 0.12.2 oraz
   niezmienione schematy Access 2, Courses 7 i capabilities 2,
@@ -65,7 +66,7 @@ GitHub Actions dla PR #25 wykonało pełny workflow Quality, w tym
 Paczka `am-toolkit-v0.12.2.zip` ma SHA-256:
 
 ```text
-610E89A4E53478FFB7A7AC99FFC9F51674EAA30ADBE29BEC0EC0835F1FBA5711
+4133C349765A09892BD1ACEDF1B94D885509165CE9F23DB05102CAA35107BC27
 ```
 
 ## Wdrożenie produkcyjne
