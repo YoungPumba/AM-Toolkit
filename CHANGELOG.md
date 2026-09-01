@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## Unreleased
+
+- dodano uruchamianą parametrem diagnostykę odtwarzacza na telefonie,
+  rejestrującą bezpieczny stan elementu video i chronione żądania HTTP Range,
+- raport JSON łączy zdarzenia Safari z początkiem i końcem odpowiedzi serwera,
+  bez zapisywania cookies, nonce, adresu nagrania, IP ani surowych
+  identyfikatorów użytkownika i treści kursu.
+
 ## 0.12.2 — 2026-09-01
 
 - ograniczono koszt otwartych żądań HTTP Range dla chronionych MP4 bez

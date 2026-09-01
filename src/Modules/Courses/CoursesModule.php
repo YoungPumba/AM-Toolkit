@@ -11,6 +11,7 @@ use AMToolkit\Modules\Courses\Frontend\CourseAssetController;
 use AMToolkit\Modules\Courses\Frontend\CourseAttentionTasks;
 use AMToolkit\Modules\Courses\Frontend\CourseDashboardSection;
 use AMToolkit\Modules\Courses\Frontend\CourseHubPage;
+use AMToolkit\Modules\Courses\Frontend\CourseMediaDiagnosticsController;
 use AMToolkit\Modules\Courses\Frontend\CourseProgressController;
 use AMToolkit\Modules\Courses\Frontend\WordPressCourseVideoRenderer;
 use AMToolkit\Modules\Courses\Services\AccessCoreCourseAccessPolicy;
@@ -23,6 +24,7 @@ use AMToolkit\Modules\Courses\Services\CourseNextActionService;
 use AMToolkit\Modules\Courses\Services\CourseProgressService;
 use AMToolkit\Modules\Courses\Services\CoursePreviewService;
 use AMToolkit\Modules\Courses\Services\CourseMeetingService;
+use AMToolkit\Modules\Courses\Services\CourseMediaDiagnosticsService;
 use AMToolkit\Modules\Courses\Services\CourseLessonTaskService;
 use AMToolkit\Modules\Courses\Services\CourseQaService;
 
@@ -87,7 +89,10 @@ final class CoursesModule implements ModuleInterface
             $meetingStore,
             $qaStore
         );
-        $assets = new CourseAssetController($catalog, [$assetStore], $preview);
+        $mediaDiagnostics = new CourseMediaDiagnosticsService();
+        $mediaDiagnosticsController = new CourseMediaDiagnosticsController($catalog, $mediaDiagnostics);
+        $mediaDiagnosticsController->boot();
+        $assets = new CourseAssetController($catalog, [$assetStore], $preview, $mediaDiagnostics);
         $assets->boot();
         $progress = null;
         $progressController = null;
@@ -121,7 +126,8 @@ final class CoursesModule implements ModuleInterface
             new WordPressCourseVideoRenderer(),
             $progress,
             $progressController,
-            $preview
+            $preview,
+            $mediaDiagnosticsController
         ))->boot();
         (new CourseDashboardSection($catalog))->boot();
         (new CourseAttentionTasks($catalog))->boot();

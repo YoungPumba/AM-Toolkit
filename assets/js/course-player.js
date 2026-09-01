@@ -61,6 +61,212 @@
         }
     }
 
+    function mediaDiagnosticsConfig() {
+        return window.amToolkitCourseMediaDiagnostics || null;
+    }
+
+    function mediaRangesSnapshot(ranges) {
+        var result = [];
+
+        if (!ranges) {
+            return result;
+        }
+
+        for (var index = 0; index < Math.min(ranges.length, 20); index += 1) {
+            try {
+                result.push([
+                    Number(ranges.start(index).toFixed(3)),
+                    Number(ranges.end(index).toFixed(3))
+                ]);
+            } catch (error) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    function setupMediaDiagnostics(wrapper, video) {
+        var config = mediaDiagnosticsConfig();
+        var session = wrapper.dataset.amCourseDiagnosticSession || '';
+        var panel = wrapper.nextElementSibling;
+
+        if (
+            !config
+            || !session
+            || !panel
+            || !panel.matches('[data-am-course-diagnostics-panel]')
+        ) {
+            return;
+        }
+
+        var startedAt = window.performance && typeof window.performance.now === 'function'
+            ? window.performance.now()
+            : Date.now();
+        var events = [];
+        var lastTimeUpdateAt = -5000;
+        var button = panel.querySelector('[data-am-course-diagnostics-download]');
+        var status = panel.querySelector('[data-am-course-diagnostics-status]');
+
+        function elapsedMilliseconds() {
+            var now = window.performance && typeof window.performance.now === 'function'
+                ? window.performance.now()
+                : Date.now();
+
+            return Math.max(0, Math.round(now - startedAt));
+        }
+
+        function record(eventName) {
+            events.push({
+                event: eventName,
+                recorded_at_utc: new Date().toISOString(),
+                at_ms: elapsedMilliseconds(),
+                current_time: Number.isFinite(video.currentTime) ? Number(video.currentTime.toFixed(3)) : 0,
+                duration: Number.isFinite(video.duration) ? Number(video.duration.toFixed(3)) : 0,
+                paused: video.paused,
+                ended: video.ended,
+                ready_state: video.readyState,
+                network_state: video.networkState,
+                playback_rate: Number.isFinite(video.playbackRate) ? video.playbackRate : 1,
+                buffered: mediaRangesSnapshot(video.buffered),
+                seekable: mediaRangesSnapshot(video.seekable),
+                error_code: video.error ? video.error.code : 0,
+                visibility: document.visibilityState || '',
+                online: window.navigator.onLine !== false
+            });
+            events = events.slice(-250);
+            panel.dataset.amCourseDiagnosticsEvents = String(events.length);
+        }
+
+        [
+            'loadstart',
+            'loadedmetadata',
+            'loadeddata',
+            'durationchange',
+            'canplay',
+            'canplaythrough',
+            'progress',
+            'play',
+            'playing',
+            'pause',
+            'waiting',
+            'stalled',
+            'seeking',
+            'seeked',
+            'suspend',
+            'abort',
+            'emptied',
+            'ended',
+            'ratechange',
+            'volumechange',
+            'webkitbeginfullscreen',
+            'webkitendfullscreen',
+            'webkitpresentationmodechanged',
+            'error'
+        ].forEach(function (eventName) {
+            video.addEventListener(eventName, function () {
+                record(eventName);
+            });
+        });
+
+        video.addEventListener('timeupdate', function () {
+            var elapsed = elapsedMilliseconds();
+
+            if (elapsed - lastTimeUpdateAt >= 5000) {
+                lastTimeUpdateAt = elapsed;
+                record('timeupdate');
+            }
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            record('visibilitychange');
+        });
+        window.addEventListener('online', function () {
+            record('online');
+        });
+        window.addEventListener('offline', function () {
+            record('offline');
+        });
+
+        record('diagnostics-started');
+
+        if (!button) {
+            return;
+        }
+
+        button.addEventListener('click', function () {
+            var connection = window.navigator.connection
+                || window.navigator.mozConnection
+                || window.navigator.webkitConnection
+                || null;
+            var environment = {
+                user_agent: window.navigator.userAgent || '',
+                platform: window.navigator.platform || '',
+                language: window.navigator.language || '',
+                viewport_width: window.innerWidth || 0,
+                viewport_height: window.innerHeight || 0,
+                device_pixel_ratio: window.devicePixelRatio || 1,
+                connection_effective_type: connection && connection.effectiveType
+                    ? connection.effectiveType
+                    : ''
+            };
+            var body = new URLSearchParams({
+                action: config.action,
+                nonce: config.nonce,
+                course: wrapper.dataset.course || '',
+                lesson: wrapper.dataset.lesson || '',
+                diagnostic_session: session,
+                events: JSON.stringify(events),
+                environment: JSON.stringify(environment)
+            });
+
+            button.disabled = true;
+            if (status) {
+                status.textContent = config.messages.preparing;
+            }
+
+            window.fetch(config.ajaxUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                body: body.toString()
+            }).then(function (response) {
+                return response.json();
+            }).then(function (response) {
+                if (!response || !response.success || !response.data || !response.data.report) {
+                    throw new Error('Invalid diagnostic response.');
+                }
+
+                var blob = new Blob(
+                    [JSON.stringify(response.data.report, null, 2)],
+                    {type: 'application/json;charset=utf-8'}
+                );
+                var url = window.URL.createObjectURL(blob);
+                var anchor = document.createElement('a');
+
+                anchor.href = url;
+                anchor.download = 'am-toolkit-media-' + session + '.json';
+                anchor.target = '_blank';
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                window.setTimeout(function () {
+                    window.URL.revokeObjectURL(url);
+                }, 30000);
+
+                if (status) {
+                    status.textContent = config.messages.ready;
+                }
+            }).catch(function () {
+                if (status) {
+                    status.textContent = config.messages.error;
+                }
+            }).then(function () {
+                button.disabled = false;
+            });
+        });
+    }
+
     function createIcon(name) {
         var definition = icons[name];
         var svg = document.createElementNS(svgNamespace, 'svg');
@@ -249,6 +455,7 @@
 
         setLoading(wrapper, video.readyState < 2);
         observeControls(wrapper, video);
+        setupMediaDiagnostics(wrapper, video);
 
         video.addEventListener('loadstart', function () {
             setLoading(wrapper, true);
