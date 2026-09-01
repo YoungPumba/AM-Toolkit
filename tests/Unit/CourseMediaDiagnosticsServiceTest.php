@@ -39,6 +39,8 @@ final class CourseMediaDiagnosticsServiceTest extends TestCase
                 'method' => 'GET',
                 'status' => 206,
                 'partial' => true,
+                'range_header_present' => true,
+                'range_header_source' => 'redirect_http_range',
                 'range_start' => $index,
                 'range_end' => $index + 99,
                 'range_length' => 100,
@@ -49,6 +51,7 @@ final class CourseMediaDiagnosticsServiceTest extends TestCase
                 'completed' => true,
                 'source_url' => 'https://example.test/video.mp4?nonce=secret',
                 'cookie' => 'wordpress_logged_in=secret',
+                'range_header_value' => 'bytes=secret-',
             ]);
         }
 
@@ -57,8 +60,11 @@ final class CourseMediaDiagnosticsServiceTest extends TestCase
 
         self::assertCount(120, $report['server_range_requests']);
         self::assertSame('AMR-5', $report['server_range_requests'][0]['request_id']);
+        self::assertTrue($report['server_range_requests'][0]['range_header_present']);
+        self::assertSame('redirect_http_range', $report['server_range_requests'][0]['range_header_source']);
         self::assertStringNotContainsString('example.test', $encoded);
         self::assertStringNotContainsString('wordpress_logged_in', $encoded);
+        self::assertStringNotContainsString('range_header_value', $encoded);
         self::assertStringNotContainsString('secret', $encoded);
     }
 

@@ -92,7 +92,9 @@ Plik jest dostarczany przez akcję `admin-post.php`, która:
 3. ponownie sprawdza aktywny grant do kursu,
 4. rozwiązuje identyfikator wyłącznie wewnątrz skonfigurowanego magazynu,
 5. obsługuje pojedynczy nagłówek HTTP Range (`206`) oraz poprawną odpowiedź
-   `416` dla błędnego zakresu,
+   `416` dla błędnego zakresu; nagłówek jest odczytywany ze standardowej
+   zmiennej CGI, wariantu po wewnętrznym przekierowaniu albo listy nagłówków
+   udostępnianej przez serwer,
 6. przesyła plik porcjami i ustawia `Accept-Ranges`, `Content-Length`,
    `Content-Range`, prywatny cache przeglądarki oraz
    `X-Content-Type-Options: nosniff`.
@@ -131,10 +133,10 @@ tym układzie pozostają przypisane, ale panel lekcji pokazuje ostrzeżenie i pr
 o ich zastąpienie. Samo rozszerzenie `.mp4` nie jest dowodem, że nagranie nadaje
 się do progresywnego odtwarzania — kontener też potrafi sabotować własny film.
 
-Odtwarzacz używa `preload="auto"`. Na stronie pojedynczej lekcji przeglądarka
-może dzięki temu zbudować bufor przy zapisanym punkcie wznowienia jeszcze przed
-kliknięciem „Odtwórz”; ostateczny zakres pobierania nadal zależy od przeglądarki
-i warunków sieciowych.
+Odtwarzacz używa `preload="metadata"`. Przeglądarka pobiera przed startem dane
+potrzebne do ustalenia czasu i ścieżek, ale nie otrzymuje zachęty do pobrania
+całego dużego pliku. Zapisany punkt wznowienia jest ustawiany po odczytaniu
+metadanych, a dalsze dane są pobierane żądaniami Range zgodnie z bieżącą pozycją.
 
 Żądanie osoby niezalogowanej, użytkownika bez dostępu lub nieistniejącego
 zasobu kończy się odpowiedzią 404 bez potwierdzania, czy plik istnieje.

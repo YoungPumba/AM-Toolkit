@@ -1,5 +1,14 @@
 # Historia zmian AM Toolkit
 
+## Unreleased
+
+- odtwarzacz odzyskuje nagłówek HTTP Range również z wariantów CGI i listy
+  nagłówków serwera, aby LiteSpeed mógł zwracać częściowe odpowiedzi 206,
+- diagnostyka zapisuje wyłącznie informację o obecności i bezpiecznym źródle
+  nagłówka Range, bez utrwalania jego wartości,
+- preload nagrania ograniczono do metadanych, aby brak Range nie powodował
+  natychmiastowego pobierania całego dużego pliku.
+
 ## 0.12.3 — 2026-09-01
 
 - dodano uruchamianą parametrem diagnostykę odtwarzacza na telefonie,

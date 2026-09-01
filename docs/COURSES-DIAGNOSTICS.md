@@ -193,12 +193,19 @@ Raport łączy chronologicznie dwa źródła:
   `stalled`, `seeking`, `seeked`, `suspend`, `abort`, `error`) wraz ze stanem
   `readyState`, `networkState`, czasem UTC i zakresami bufora,
 - początek i koniec żądań HTTP Range wraz ze statusem, zakresem, liczbą
-  przesłanych bajtów, czasem odpowiedzi i informacją o przerwaniu połączenia.
+  przesłanych bajtów, czasem odpowiedzi i informacją o przerwaniu połączenia;
+  raport wskazuje też samą obecność oraz bezpieczną kategorię źródła nagłówka
+  (`http_range`, `redirect_http_range`, `headers` albo `missing`), ale nigdy
+  nie zapisuje jego surowej wartości.
 
 Raport nie zawiera adresu pliku, nonce, cookies, hasła, adresu IP ani surowych
 identyfikatorów użytkownika, kursu i lekcji. Identyfikatory są zastępowane
 skrótami HMAC. User-Agent jest zachowany, ponieważ wersja iOS/Safari jest
 niezbędna do odtworzenia błędu.
+
+Jeżeli raport dużego pliku pokazuje powtarzające się pełne odpowiedzi `200`
+zamiast odpowiedzi częściowych `206`, test należy przerwać: kolejne próby
+zużywają transfer, ale nie dostarczają nowej informacji diagnostycznej.
 
 ## Testy diagnostyki
 

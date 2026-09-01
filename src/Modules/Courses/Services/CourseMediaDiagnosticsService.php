@@ -104,6 +104,11 @@ final class CourseMediaDiagnosticsService
             'method' => $this->allowedText($event['method'] ?? '', ['GET', 'HEAD']),
             'status' => $this->boundedInt($event['status'] ?? 0, 0, 599),
             'partial' => !empty($event['partial']),
+            'range_header_present' => !empty($event['range_header_present']),
+            'range_header_source' => $this->allowedText(
+                $event['range_header_source'] ?? '',
+                ['http_range', 'redirect_http_range', 'headers', 'missing']
+            ),
             'range_start' => $this->nonNegativeInt($event['range_start'] ?? 0),
             'range_end' => $this->nonNegativeInt($event['range_end'] ?? 0),
             'range_length' => $this->nonNegativeInt($event['range_length'] ?? 0),
