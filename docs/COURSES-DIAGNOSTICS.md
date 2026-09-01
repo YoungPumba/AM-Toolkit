@@ -159,6 +159,47 @@ przed i po operacji.
 Nigdy nie „naprawiamy procentu” bez ustalenia, które ukończenia doprowadziły
 do rozbieżności. To tylko zamalowałoby kontrolkę na desce rozdzielczej.
 
+## Diagnostyka odtwarzacza na telefonie
+
+Tryb jest wbudowany w AM Toolkit i nie wymaga instalowania aplikacji na
+telefonie. Działa wyłącznie dla zalogowanej uczestniczki, która ma dostęp do
+danej lekcji, oraz tylko po jawnym dodaniu parametru do adresu:
+
+```text
+?am_course_diagnostics=1
+```
+
+Przykład:
+
+```text
+https://example.test/moje-konto/kursy/COURSE/lekcja/LESSON/?am_course_diagnostics=1
+```
+
+Pod odtwarzaczem pojawia się panel **Diagnostyka odtwarzacza**. Procedura:
+
+1. Otwórz lekcję z parametrem diagnostycznym na telefonie.
+2. Powtórz problem, np. odtwórz, zatrzymaj i ponownie wznów film.
+3. Odczekaj kilka sekund po wystąpieniu zacięcia.
+4. Wybierz **Pobierz raport diagnostyczny**.
+5. Przekaż pobrany plik JSON do analizy.
+
+Każde przeładowanie strony tworzy nową, losową sesję diagnostyczną. Dane
+serwerowe są automatycznie usuwane po 30 minutach. Zapis Range działa tylko w
+tym trybie, więc zwykłe odtwarzanie nie wykonuje dodatkowych zapisów do bazy.
+
+Raport łączy chronologicznie dwa źródła:
+
+- zdarzenia elementu `<video>` (`play`, `pause`, `playing`, `waiting`,
+  `stalled`, `seeking`, `seeked`, `suspend`, `abort`, `error`) wraz ze stanem
+  `readyState`, `networkState`, czasem UTC i zakresami bufora,
+- początek i koniec żądań HTTP Range wraz ze statusem, zakresem, liczbą
+  przesłanych bajtów, czasem odpowiedzi i informacją o przerwaniu połączenia.
+
+Raport nie zawiera adresu pliku, nonce, cookies, hasła, adresu IP ani surowych
+identyfikatorów użytkownika, kursu i lekcji. Identyfikatory są zastępowane
+skrótami HMAC. User-Agent jest zachowany, ponieważ wersja iOS/Safari jest
+niezbędna do odtworzenia błędu.
+
 ## Testy diagnostyki
 
 - powtórzone żądanie zachowuje jeden efekt i rozpoznawalny klucz zdarzenia,

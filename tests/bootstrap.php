@@ -71,6 +71,19 @@ function wp_salt(string $scheme = 'auth'): string
     return 'am-toolkit-tests-' . $scheme;
 }
 
+function get_transient(string $key): mixed
+{
+    return $GLOBALS['amt_test_transients'][$key] ?? false;
+}
+
+function set_transient(string $key, mixed $value, int $expiration = 0): bool
+{
+    $GLOBALS['amt_test_transients'][$key] = $value;
+    $GLOBALS['amt_test_transient_expirations'][$key] = $expiration;
+
+    return true;
+}
+
 function get_current_user_id(): int
 {
     return 1;

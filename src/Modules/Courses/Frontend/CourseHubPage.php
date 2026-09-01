@@ -24,7 +24,8 @@ final class CourseHubPage
         private CourseVideoRenderer $videoRenderer,
         private ?CourseProgressService $progress = null,
         private ?CourseProgressController $progressController = null,
-        private ?CoursePreviewService $preview = null
+        private ?CoursePreviewService $preview = null,
+        private ?CourseMediaDiagnosticsController $mediaDiagnosticsController = null
     ) {
     }
 
@@ -243,6 +244,23 @@ final class CourseHubPage
                     'saved' => __('Postęp zapisany.', 'am-toolkit'),
                     'error' => __('Nie udało się zapisać postępu. Spróbujemy ponownie.', 'am-toolkit'),
                     'completed' => __('Lekcja ukończona!', 'am-toolkit'),
+                ],
+            ]);
+        }
+
+        if (
+            $this->mediaDiagnosticsController !== null
+            && !$this->previewMode
+            && $this->mediaDiagnosticsController->isRequested()
+        ) {
+            wp_localize_script('am-toolkit-course-player', 'amToolkitCourseMediaDiagnostics', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'action' => CourseMediaDiagnosticsController::ACTION,
+                'nonce' => $this->mediaDiagnosticsController->nonce(),
+                'messages' => [
+                    'preparing' => __('Przygotowywanie raportu…', 'am-toolkit'),
+                    'ready' => __('Raport jest gotowy. Przekaż pobrany plik do analizy.', 'am-toolkit'),
+                    'error' => __('Nie udało się przygotować raportu. Odśwież stronę i spróbuj ponownie.', 'am-toolkit'),
                 ],
             ]);
         }
@@ -896,7 +914,21 @@ final class CourseHubPage
             );
         }
 
-        $sourceUrl = $this->assets->url($coursePublicId, $lessonPublicId, 'video', '', $this->previewCourseId);
+        $diagnosticSessionId = (
+            !$this->previewMode
+            && $this->mediaDiagnosticsController !== null
+            && $this->mediaDiagnosticsController->isRequested()
+        )
+            ? $this->mediaDiagnosticsController->createSessionId()
+            : '';
+        $sourceUrl = $this->assets->url(
+            $coursePublicId,
+            $lessonPublicId,
+            'video',
+            '',
+            $this->previewCourseId,
+            $diagnosticSessionId
+        );
         $player = $this->videoRenderer->render($sourceUrl, ['poster' => $poster]);
 
         if (is_wp_error($player)) {
@@ -906,14 +938,26 @@ final class CourseHubPage
             );
         }
 
+        $diagnosticsPanel = $diagnosticSessionId !== ''
+            ? sprintf(
+                '<aside class="am-course-player-diagnostics" data-am-course-diagnostics-panel><span>%1$s</span><strong>%2$s</strong><p>%3$s</p><button type="button" data-am-course-diagnostics-download>%4$s</button><small data-am-course-diagnostics-status role="status" aria-live="polite"></small></aside>',
+                esc_html__('Diagnostyka odtwarzacza', 'am-toolkit'),
+                esc_html($diagnosticSessionId),
+                esc_html__('Odtwórz problem, a następnie pobierz raport JSON. Raport nie zawiera hasła, cookies ani adresu nagrania.', 'am-toolkit'),
+                esc_html__('Pobierz raport diagnostyczny', 'am-toolkit')
+            )
+            : '';
+
         return sprintf(
-            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" aria-label="%3$s"><div class="am-course-player__loader" data-am-course-player-loader role="status" aria-label="%4$s">%5$s</div>%6$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>',
+            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" data-am-course-diagnostic-session="%3$s" aria-label="%4$s"><div class="am-course-player__loader" data-am-course-player-loader role="status" aria-label="%5$s">%6$s</div>%7$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>%8$s',
             esc_attr($coursePublicId),
             esc_attr($lessonPublicId),
+            esc_attr($diagnosticSessionId),
             esc_attr__('Nagranie lekcji', 'am-toolkit'),
             esc_attr__('Ładowanie nagrania', 'am-toolkit'),
             str_repeat('<span class="am-course-player__loader-dot" aria-hidden="true"></span>', 8),
-            $player
+            $player,
+            $diagnosticsPanel
         );
     }
 

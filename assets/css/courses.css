@@ -705,6 +705,58 @@
     display: none;
 }
 
+.am-course-player-diagnostics {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 18px 20px;
+    border: 1px solid #f0bfd1;
+    border-radius: 16px;
+    background: #fff8fb;
+    color: #34231b;
+}
+
+.am-course-player-diagnostics > span {
+    color: #ec6e9e;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.am-course-player-diagnostics > strong {
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+}
+
+.am-course-player-diagnostics > p,
+.am-course-player-diagnostics > small {
+    margin: 0;
+}
+
+.am-course-player-diagnostics > button {
+    justify-self: start;
+    padding: 11px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #ef6f9f;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.am-course-player-diagnostics > button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.am-course-player-diagnostics > small {
+    min-height: 1.4em;
+    color: #65564f;
+}
+
 .am-course-player__loader-dot {
     position: absolute;
     inset: 0;

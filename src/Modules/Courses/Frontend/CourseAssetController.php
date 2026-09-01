@@ -7,6 +7,7 @@ use AMToolkit\Modules\Courses\Contracts\CourseAssetStore;
 use AMToolkit\Modules\Courses\Domain\HttpByteRange;
 use AMToolkit\Modules\Courses\Domain\ProtectedAsset;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
+use AMToolkit\Modules\Courses\Services\CourseMediaDiagnosticsService;
 use AMToolkit\Modules\Courses\Services\CoursePreviewService;
 
 defined('ABSPATH') || exit;
@@ -24,7 +25,8 @@ final class CourseAssetController
     public function __construct(
         private CourseCatalogService $courses,
         array $stores,
-        private ?CoursePreviewService $preview = null
+        private ?CoursePreviewService $preview = null,
+        private ?CourseMediaDiagnosticsService $mediaDiagnostics = null
     )
     {
         foreach ($stores as $store) {
@@ -43,7 +45,8 @@ final class CourseAssetController
         string $lessonPublicId,
         string $kind,
         string $assetPublicId = '',
-        int $previewCourseId = 0
+        int $previewCourseId = 0,
+        string $diagnosticSessionId = ''
     ): string {
         $arguments = [
             'action' => self::ACTION,
@@ -55,13 +58,21 @@ final class CourseAssetController
         if ($previewCourseId > 0) {
             $arguments['preview'] = $previewCourseId;
         }
+        if (
+            $kind === 'video'
+            && $this->mediaDiagnostics !== null
+            && $this->mediaDiagnostics->isValidSessionId($diagnosticSessionId)
+        ) {
+            $arguments['diagnostic'] = $diagnosticSessionId;
+        }
         $arguments['_wpnonce'] = wp_create_nonce($this->nonceAction(
             get_current_user_id(),
             $coursePublicId,
             $lessonPublicId,
             $kind,
             $assetPublicId,
-            $previewCourseId
+            $previewCourseId,
+            isset($arguments['diagnostic']) ? (string) $arguments['diagnostic'] : ''
         ));
 
         return add_query_arg($arguments, admin_url('admin-post.php'));
@@ -82,6 +93,7 @@ final class CourseAssetController
         $kind = sanitize_key($this->requestValue('kind'));
         $assetPublicId = $this->requestValue('asset');
         $previewCourseId = absint($this->requestValue('preview'));
+        $diagnosticSessionId = $this->requestValue('diagnostic');
         $nonce = $this->requestValue('_wpnonce');
         $userId = get_current_user_id();
 
@@ -89,7 +101,15 @@ final class CourseAssetController
             !in_array($kind, ['video', 'material'], true)
             || !wp_verify_nonce(
                 $nonce,
-                $this->nonceAction($userId, $coursePublicId, $lessonPublicId, $kind, $assetPublicId, $previewCourseId)
+                $this->nonceAction(
+                    $userId,
+                    $coursePublicId,
+                    $lessonPublicId,
+                    $kind,
+                    $assetPublicId,
+                    $previewCourseId,
+                    $diagnosticSessionId
+                )
             )
         ) {
             $this->notFound();
@@ -146,7 +166,9 @@ final class CourseAssetController
             $asset,
             (string) ($assetData['disposition'] ?? 'attachment'),
             $method,
-            $kind === 'video' ? self::VIDEO_OPEN_RANGE_LENGTH : null
+            $kind === 'video' ? self::VIDEO_OPEN_RANGE_LENGTH : null,
+            $kind === 'video' ? $userId : 0,
+            $kind === 'video' ? $diagnosticSessionId : ''
         );
     }
 
@@ -161,7 +183,9 @@ final class CourseAssetController
         ProtectedAsset $asset,
         string $disposition,
         string $method,
-        ?int $maxOpenEndedRangeLength = null
+        ?int $maxOpenEndedRangeLength = null,
+        int $diagnosticUserId = 0,
+        string $diagnosticSessionId = ''
     ): void
     {
         $rangeHeader = isset($_SERVER['HTTP_RANGE']) && is_string($_SERVER['HTTP_RANGE'])
@@ -178,6 +202,59 @@ final class CourseAssetController
             header('Content-Range: bytes */' . $asset->size());
             header('Content-Length: 0');
             exit;
+        }
+
+        $diagnosticEvent = null;
+        $diagnosticStartedAt = microtime(true);
+
+        if (
+            $this->mediaDiagnostics !== null
+            && $diagnosticUserId > 0
+            && $this->mediaDiagnostics->isValidSessionId($diagnosticSessionId)
+        ) {
+            $diagnosticEvent = [
+                'request_id' => $this->mediaDiagnostics->createRequestId(),
+                'recorded_at_utc' => gmdate('c'),
+                'phase' => 'start',
+                'method' => $method,
+                'status' => $range->isPartial() ? 206 : 200,
+                'partial' => $range->isPartial(),
+                'range_start' => $range->start(),
+                'range_end' => $range->end(),
+                'range_length' => $range->length(),
+                'resource_size' => $range->resourceSize(),
+                'bytes_sent' => 0,
+                'duration_ms' => 0,
+                'connection_status' => CONNECTION_NORMAL,
+                'completed' => false,
+                'aborted' => false,
+            ];
+            $diagnostics = $this->mediaDiagnostics;
+            $diagnostics->recordRange($diagnosticUserId, $diagnosticSessionId, $diagnosticEvent);
+
+            register_shutdown_function(static function () use (
+                $diagnostics,
+                $diagnosticUserId,
+                $diagnosticSessionId,
+                &$diagnosticEvent,
+                $diagnosticStartedAt
+            ): void {
+                $connectionStatus = connection_status();
+                $diagnosticEvent['phase'] = 'end';
+                $diagnosticEvent['recorded_at_utc'] = gmdate('c');
+                $diagnosticEvent['duration_ms'] = max(
+                    0,
+                    (int) round((microtime(true) - $diagnosticStartedAt) * 1000)
+                );
+                $diagnosticEvent['connection_status'] = $connectionStatus;
+                $diagnosticEvent['aborted'] = ($connectionStatus & CONNECTION_ABORTED) === CONNECTION_ABORTED;
+                $diagnosticEvent['completed'] = $diagnosticEvent['method'] === 'HEAD'
+                    || (
+                        (int) $diagnosticEvent['bytes_sent'] >= (int) $diagnosticEvent['range_length']
+                        && !$diagnosticEvent['aborted']
+                    );
+                $diagnostics->recordRange($diagnosticUserId, $diagnosticSessionId, $diagnosticEvent);
+            });
         }
 
         while (ob_get_level() > 0) {
@@ -232,6 +309,9 @@ final class CourseAssetController
         ));
 
         if ($method === 'HEAD' || $range->length() === 0) {
+            if (is_array($diagnosticEvent)) {
+                $diagnosticEvent['completed'] = true;
+            }
             exit;
         }
 
@@ -239,6 +319,9 @@ final class CourseAssetController
 
         if ($stream === false || fseek($stream, $range->start()) !== 0) {
             status_header(500);
+            if (is_array($diagnosticEvent)) {
+                $diagnosticEvent['status'] = 500;
+            }
             exit;
         }
 
@@ -253,6 +336,9 @@ final class CourseAssetController
 
             echo $buffer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             $remaining -= strlen($buffer);
+            if (is_array($diagnosticEvent)) {
+                $diagnosticEvent['bytes_sent'] = (int) $diagnosticEvent['bytes_sent'] + strlen($buffer);
+            }
             flush();
         }
 
@@ -275,7 +361,8 @@ final class CourseAssetController
         string $lessonPublicId,
         string $kind,
         string $assetPublicId,
-        int $previewCourseId = 0
+        int $previewCourseId = 0,
+        string $diagnosticSessionId = ''
     ): string {
         return implode(':', [
             self::ACTION,
@@ -285,6 +372,7 @@ final class CourseAssetController
             $kind,
             $assetPublicId,
             $previewCourseId,
+            $diagnosticSessionId,
         ]);
     }
 }
