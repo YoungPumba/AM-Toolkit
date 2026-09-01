@@ -5,6 +5,7 @@ namespace AMToolkit\Modules\Courses\Frontend;
 use AMToolkit\Core\Authorization;
 use AMToolkit\Modules\Courses\Contracts\CourseAssetStore;
 use AMToolkit\Modules\Courses\Domain\HttpByteRange;
+use AMToolkit\Modules\Courses\Domain\HttpRangeRequestHeader;
 use AMToolkit\Modules\Courses\Domain\ProtectedAsset;
 use AMToolkit\Modules\Courses\Services\CourseCatalogService;
 use AMToolkit\Modules\Courses\Services\CourseMediaDiagnosticsService;
@@ -188,11 +189,9 @@ final class CourseAssetController
         string $diagnosticSessionId = ''
     ): void
     {
-        $rangeHeader = isset($_SERVER['HTTP_RANGE']) && is_string($_SERVER['HTTP_RANGE'])
-            ? $_SERVER['HTTP_RANGE']
-            : null;
+        $rangeRequest = HttpRangeRequestHeader::fromRequest($_SERVER, $this->requestHeaders());
         $range = HttpByteRange::fromHeader(
-            $rangeHeader,
+            $rangeRequest->value(),
             $asset->size(),
             $maxOpenEndedRangeLength
         );
@@ -219,6 +218,8 @@ final class CourseAssetController
                 'method' => $method,
                 'status' => $range->isPartial() ? 206 : 200,
                 'partial' => $range->isPartial(),
+                'range_header_present' => $rangeRequest->isPresent(),
+                'range_header_source' => $rangeRequest->source(),
                 'range_start' => $range->start(),
                 'range_end' => $range->end(),
                 'range_length' => $range->length(),
@@ -353,6 +354,28 @@ final class CourseAssetController
         }
 
         return sanitize_text_field((string) wp_unslash($_GET[$key])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    }
+
+    /** @return array<string, mixed> */
+    private function requestHeaders(): array
+    {
+        $headers = [];
+
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
+        if (function_exists('apache_request_headers')) {
+            $provided = apache_request_headers();
+
+            foreach ($provided as $name => $value) {
+                if (!array_key_exists($name, $headers)) {
+                    $headers[$name] = $value;
+                }
+            }
+        }
+
+        return $headers;
     }
 
     private function nonceAction(

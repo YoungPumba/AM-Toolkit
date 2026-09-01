@@ -33,7 +33,7 @@ final class WordPressCourseVideoRenderer implements CourseVideoRenderer
          * accessible player without guessing the file type from the URL.
          */
         return sprintf(
-            '<div class="wp-video"><video class="wp-video-shortcode" width="1280" height="720" controls="controls" preload="auto" playsinline="playsinline"%s><source type="video/mp4" src="%s" /></video></div>',
+            '<div class="wp-video"><video class="wp-video-shortcode" width="1280" height="720" controls="controls" preload="metadata" playsinline="playsinline"%s><source type="video/mp4" src="%s" /></video></div>',
             $posterAttribute,
             esc_url($sourceUrl)
         );
