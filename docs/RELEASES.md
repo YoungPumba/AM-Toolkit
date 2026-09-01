@@ -49,6 +49,9 @@ bezpośrednio z 0.12.0 do 0.12.2 opisuje
 [runbook wydania 0.12.2](RELEASE-0.12.2.md).
 Kontrolowane udostępnienie diagnostyki problemów odtwarzacza na iOS i Safari
 opisuje [runbook wydania 0.12.3](RELEASE-0.12.3.md).
+Naprawę przekazywania nagłówka Range między LiteSpeed i WordPressem oraz
+kontrolowany test produkcyjny opisuje
+[runbook wydania 0.12.4](RELEASE-0.12.4.md).
 
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po
