@@ -72,7 +72,10 @@ pozytywnego wyniku QA.
 
 Lokalny `composer audit --locked` nie mógł połączyć się z Packagist z powodu
 błędu lokalnego wystawcy certyfikatu TLS. Nie wyłączono weryfikacji TLS. Audyt
-oraz pełny workflow Quality muszą zostać potwierdzone przez GitHub Actions.
+oraz pełny workflow Quality potwierdziło GitHub Actions dla PR #30 na PHP 8.0
+i PHP 8.3:
+
+`https://github.com/YoungPumba/AM-Toolkit/actions/runs/33566315806`
 
 Paczka `am-toolkit-v0.12.4.zip` ma SHA-256:
 
