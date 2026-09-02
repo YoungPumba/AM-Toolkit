@@ -209,9 +209,10 @@ zużywają transfer, ale nie dostarczają nowej informacji diagnostycznej.
 
 ### Porównanie standardowego i natywnego odtwarzacza
 
-Funkcja jest przygotowywana po 0.12.4; same poniższe parametry **nie włączą
+Funkcja jest dostępna od 0.12.5; same poniższe parametry **nie włączą
 nowego odtwarzacza na niezmienionej instalacji 0.12.4**. Wdrożenie wymaga
-osobnej akceptacji. Nie jest to jeszcze potwierdzona naprawa Safari.
+osobnej akceptacji zgodnie z [runbookiem 0.12.5](RELEASE-0.12.5.md).
+Nie jest to jeszcze potwierdzona naprawa Safari.
 
 - Wariant A, standardowy: `?am_course_diagnostics=1&am_course_player=mediaelement`.
 - Wariant B, natywny: `?am_course_diagnostics=1&am_course_player=native`.

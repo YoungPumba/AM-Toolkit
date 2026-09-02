@@ -52,6 +52,8 @@ opisuje [runbook wydania 0.12.3](RELEASE-0.12.3.md).
 Naprawę przekazywania nagłówka Range między LiteSpeed i WordPressem oraz
 kontrolowany test produkcyjny opisuje
 [runbook wydania 0.12.4](RELEASE-0.12.4.md).
+Diagnostyczne porównanie odtwarzaczy MediaElement i native na Safari opisuje
+[runbook wydania 0.12.5](RELEASE-0.12.5.md).
 
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po

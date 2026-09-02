@@ -1,6 +1,6 @@
 # Historia zmian AM Toolkit
 
-## Niewydane
+## 0.12.5 — 2026-09-02
 
 - dodano opcjonalny natywny odtwarzacz wyłącznie do jawnego testu
   diagnostycznego A/B, bez zmiany domyślnego widoku, ochrony nagrań i postępu,
