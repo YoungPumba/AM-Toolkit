@@ -107,4 +107,35 @@ final class CourseMediaDiagnosticsServiceTest extends TestCase
         self::assertStringNotContainsString('example.test', $encoded);
         self::assertStringNotContainsString('cookie', $encoded);
     }
+
+    public function testReportIdentifiesComparisonModeWithoutAcceptingArbitraryLabels(): void
+    {
+        $service = new CourseMediaDiagnosticsService();
+        $session = $service->createSessionId();
+        $report = $service->report(9, $session, 'course', 'lesson', [
+            ['event' => 'seeking', 'is_trusted' => true, 'seeking' => true],
+            ['event' => 'playing', 'is_trusted' => false],
+            ['event' => 'diagnostics-export'],
+            ['event' => 'playing', 'is_trusted' => 'private-url'],
+        ], [
+            'player_mode' => 'native',
+            'mediaelement_present' => false,
+            'client_events_dropped' => 54,
+        ], 'test');
+        self::assertSame('native', $report['environment']['player_mode']);
+        self::assertFalse($report['environment']['mediaelement_present']);
+        self::assertSame(54, $report['environment']['client_events_dropped']);
+        self::assertSame([true, false, null, null], array_column($report['client_events'], 'is_trusted'));
+        self::assertTrue($report['client_events'][0]['seeking']);
+
+        $invalid = $service->report(9, $session, 'course', 'lesson', [], [
+            'player_mode' => 'https://example.test/private?nonce=secret',
+            'mediaelement_present' => 'secret',
+            'client_events_dropped' => -12,
+        ], 'test');
+        self::assertSame('', $invalid['environment']['player_mode']);
+        self::assertNull($invalid['environment']['mediaelement_present']);
+        self::assertSame(0, $invalid['environment']['client_events_dropped']);
+        self::assertStringNotContainsString('secret', json_encode($invalid, JSON_THROW_ON_ERROR));
+    }
 }

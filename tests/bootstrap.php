@@ -34,6 +34,11 @@ function sanitize_key(string $value): string
     return preg_replace('/[^a-z0-9_\-]/', '', strtolower($value)) ?? '';
 }
 
+function wp_unslash(string $value): string
+{
+    return stripslashes($value);
+}
+
 function sanitize_text_field(string $value): string
 {
     return trim(strip_tags($value));

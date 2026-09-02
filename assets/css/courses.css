@@ -687,6 +687,11 @@
     max-width: 100%;
 }
 
+.am-lesson-player .am-course-native-video {
+    display: block;
+    height: auto;
+}
+
 .am-course-player__loader {
     --am-course-loader-size: 40px;
     --am-course-loader-speed: .9s;

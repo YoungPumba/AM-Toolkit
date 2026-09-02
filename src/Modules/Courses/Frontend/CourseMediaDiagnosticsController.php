@@ -46,6 +46,15 @@ final class CourseMediaDiagnosticsController
         return sanitize_key((string) wp_unslash($_GET[CourseMediaDiagnosticsService::QUERY_FLAG])) === '1'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
+    public function playerMode(): string
+    {
+        // Presentation-only opt-in; course and asset authorization are unchanged.
+        return $this->isRequested()
+            && ($_GET['am_course_player'] ?? null) === 'native' // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            ? 'native'
+            : 'mediaelement';
+    }
+
     public function handle(): void
     {
         if (!is_user_logged_in() || !wp_verify_nonce($this->postValue('nonce'), self::NONCE_ACTION)) {
