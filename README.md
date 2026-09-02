@@ -1,8 +1,9 @@
 # AM Toolkit
 
-Aktualne wydanie 0.12.4 naprawia odzyskiwanie nagłówka HTTP Range na iOS i
-LiteSpeed oraz ogranicza wstępne pobieranie nagrania do metadanych. Obejmuje
-też bezpieczną diagnostykę odtwarzacza wprowadzoną w 0.12.3.
+Wersja 0.12.5 udostępnia diagnostyczne porównanie standardowego odtwarzacza
+MediaElement z natywnym odtwarzaczem przeglądarki i rozszerza raporty Safari.
+Domyślny odtwarzacz pozostaje bez zmian. Nie jest to jeszcze potwierdzona
+naprawa zatrzymywania nagrań na iPhonie.
 Zweryfikowane wydania instalacyjne są publikowane jako tag i GitHub Release
 zgodnie z [procedurą wydań](docs/RELEASES.md).
 
@@ -116,6 +117,7 @@ jeśli nadal istnieje inny aktywny grant.
 - [Wydanie 0.12.2 — stabilizacja odtwarzacza i rollback](docs/RELEASE-0.12.2.md)
 - [Wydanie 0.12.3 — diagnostyka iOS/Safari i rollback](docs/RELEASE-0.12.3.md)
 - [Wydanie 0.12.4 — naprawa Range na iOS/LiteSpeed i rollback](docs/RELEASE-0.12.4.md)
+- [Wydanie 0.12.5 — porównanie odtwarzaczy na Safari i rollback](docs/RELEASE-0.12.5.md)
 - [Konfiguracja środowiska Windows](docs/DEVELOPMENT-SETUP-WINDOWS.md)
 - [Codzienny workflow lokalny](docs/DAILY-DEVELOPMENT-WORKFLOW-WINDOWS.md)
 
