@@ -17,14 +17,25 @@ final class WordPressCourseVideoRenderer implements CourseVideoRenderer
             );
         }
 
-        wp_enqueue_style('wp-mediaelement');
-        wp_enqueue_script('wp-mediaelement');
         $poster = isset($context['poster']) && is_string($context['poster'])
             ? $context['poster']
             : '';
         $posterAttribute = $poster !== ''
             ? sprintf(' poster="%s"', esc_url($poster))
             : '';
+
+        if (($context['player_mode'] ?? '') === 'native') {
+            // No shortcode class: WordPress must not initialize MediaElement here,
+            // even if another component has already enqueued its scripts.
+            return sprintf(
+                '<video class="am-course-native-video" width="1280" height="720" controls="controls" preload="metadata" playsinline="playsinline"%s><source type="video/mp4" src="%s" /></video>',
+                $posterAttribute,
+                esc_url($sourceUrl)
+            );
+        }
+
+        wp_enqueue_style('wp-mediaelement');
+        wp_enqueue_script('wp-mediaelement');
 
         /*
          * wp_video_shortcode() rejects protected query-string URLs because

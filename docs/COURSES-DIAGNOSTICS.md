@@ -207,6 +207,69 @@ Jeżeli raport dużego pliku pokazuje powtarzające się pełne odpowiedzi `200`
 zamiast odpowiedzi częściowych `206`, test należy przerwać: kolejne próby
 zużywają transfer, ale nie dostarczają nowej informacji diagnostycznej.
 
+### Porównanie standardowego i natywnego odtwarzacza
+
+Funkcja jest przygotowywana po 0.12.4; same poniższe parametry **nie włączą
+nowego odtwarzacza na niezmienionej instalacji 0.12.4**. Wdrożenie wymaga
+osobnej akceptacji. Nie jest to jeszcze potwierdzona naprawa Safari.
+
+- Wariant A, standardowy: `?am_course_diagnostics=1&am_course_player=mediaelement`.
+- Wariant B, natywny: `?am_course_diagnostics=1&am_course_player=native`.
+
+Sam `am_course_player=native`, bez diagnostyki, niczego nie przełącza.
+Nieznana wartość wraca do MediaElement. Tryb nie jest dostępny w podglądzie
+administratora; test wykonujemy jako zalogowany uczestnik z dostępem do
+opublikowanej lekcji. Nie zmienia flag, programu, przypisania pliku ani
+konfiguracji serwera. Zamknięcie karty i wejście przez zwykły adres przywraca
+standardowy player; wybór nie jest zapisywany jako preferencja użytkownika.
+
+Wariant B używa `<video controls playsinline preload="metadata">`, bez
+inicjalizacji MediaElement, naszej nakładki ładowania i obsługi fullscreen.
+**W obu wariantach pozostaje ten sam chroniony endpoint, sprawdzanie sesji,
+dostępu i nonce, a także zwykły zapis postępu i przywracanie pozycji.** Testy
+wykonuj na koncie testowym: oglądanie może zwiększać jego prawdziwy postęp.
+Nie wystawiaj pliku MP4 publicznie i nie przesyłaj jego podpisanego adresu.
+
+Procedura na fizycznym iPhonie:
+
+1. Wybierz dokładnie tę samą lekcję, telefon, sieć i ustawienia CDN dla obu
+   wariantów. Nie zmieniaj cache/CDN między A i B. Nie odtwarzaj jednocześnie
+   w dwóch kartach. Zapisz stan CDN osobno — raport go nie potwierdza.
+2. Otwórz świeżą kartę A i sprawdź etykietę „Wariant: standardowy”. Jeśli
+   widzisz przywróconą pozycję, ręcznie wróć do początku. Nie czyść całego
+   konta ani postępu. Obejrzyj 30 s, pauza 5 s, wznów na 15 s; przewiń w
+   okolice 1:30 i odtwórz jeszcze 15–30 s. Fullscreen sprawdź na końcu.
+3. Przy pierwszym zacięciu odczekaj najwyżej 10–15 s i pobierz raport.
+   Nie powtarzaj kliknięć przez kilka minut: starsze zdarzenia wypadną z limitu.
+   Zapisz też, czy obraz/dźwięk rzeczywiście poruszały się.
+4. Zamknij A, otwórz świeżą kartę B. Sprawdź etykietę „Wariant: natywny”
+   i wykonaj identyczne czynności, znów zaczynając od początku. Pobierz JSON.
+5. Porównaj raporty i rzeczywisty obraz. Jeżeli wyniki się różnią, powtórz
+   krótko w odwrotnej kolejności (B/A), aby ograniczyć wpływ rozgrzanego cache.
+   Przerwij przy ponownych pełnych odpowiedziach lub wyraźnym obciążeniu.
+
+Dodatkowe pola diagnostyczne (dane deklarowane przez klienta, nie dowód z serwera):
+
+- `environment.player_mode`: `native` lub `mediaelement`; brak/nieznana
+  wartość jest pustym tekstem, a nie domyślnie potwierdzonym wariantem.
+- `environment.mediaelement_present`: obecność `.mejs-container` przy
+  eksporcie. `true` w wariancie B oznacza, że izolacja playera nie zadziałała.
+  `false` w A wymaga sprawdzenia, czy MediaElement w ogóle się zainicjalizował.
+- `environment.client_events_dropped`: liczba zdarzeń usuniętych przez limit
+  ostatnich 250 wpisów. Starsze raporty nie zawierają tego licznika.
+- `client_events[].is_trusted`: `true`/`false` z właściwości zdarzenia lub
+  `null` dla próbek stanu/braku danych. Nie ustala, czy użytkownik kliknął:
+  zdarzenie przeglądarki może być następstwem wywołania API przez skrypt.
+- `client_events[].seeking`: stan przewijania w momencie próbki.
+- `diagnostics-export`: dodatkowa próbka stanu tuż przed pobraniem JSON.
+
+Interpretacja: sukces B i awaria A wskazują na różnicę warstwy MediaElement/
+naszych kontrolek, ale nie identyfikują automatycznie jednej wadliwej funkcji.
+Awaria obu wariantów nie dowodzi winy hostingu: współdzielą MP4, transport
+oraz zapis/wznawianie postępu. Wtedy sprawdzamy strukturę pliku, kompletność
+odpowiedzi i wspólne zachowanie odtwarzania. `206`, `playing` ani brak
+`error_code` osobno nie potwierdzają płynnego odtwarzania.
+
 ## Testy diagnostyki
 
 - powtórzone żądanie zachowuje jeden efekt i rozpoznawalny klucz zdarzenia,

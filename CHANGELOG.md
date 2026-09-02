@@ -1,5 +1,13 @@
 # Historia zmian AM Toolkit
 
+## Niewydane
+
+- dodano opcjonalny natywny odtwarzacz wyłącznie do jawnego testu
+  diagnostycznego A/B, bez zmiany domyślnego widoku, ochrony nagrań i postępu,
+- raport odtwarzacza wskazuje wariant, obecność MediaElement, utracone
+  starsze zdarzenia, stan przewijania i pochodzenie zdarzeń przeglądarki,
+- dodano procedurę porównania Safari i testy zachowania JavaScript.
+
 ## 0.12.4 — 2026-09-02
 
 - odtwarzacz odzyskuje nagłówek HTTP Range również z wariantów CGI i listy

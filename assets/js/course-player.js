@@ -104,6 +104,7 @@
             ? window.performance.now()
             : Date.now();
         var events = [];
+        var droppedEvents = 0;
         var lastTimeUpdateAt = -5000;
         var button = panel.querySelector('[data-am-course-diagnostics-download]');
         var status = panel.querySelector('[data-am-course-diagnostics-status]');
@@ -116,15 +117,19 @@
             return Math.max(0, Math.round(now - startedAt));
         }
 
-        function record(eventName) {
+        function record(eventName, browserEvent) {
             events.push({
                 event: eventName,
+                is_trusted: browserEvent && typeof browserEvent.isTrusted === 'boolean'
+                    ? browserEvent.isTrusted
+                    : null,
                 recorded_at_utc: new Date().toISOString(),
                 at_ms: elapsedMilliseconds(),
                 current_time: Number.isFinite(video.currentTime) ? Number(video.currentTime.toFixed(3)) : 0,
                 duration: Number.isFinite(video.duration) ? Number(video.duration.toFixed(3)) : 0,
                 paused: video.paused,
                 ended: video.ended,
+                seeking: video.seeking,
                 ready_state: video.readyState,
                 network_state: video.networkState,
                 playback_rate: Number.isFinite(video.playbackRate) ? video.playbackRate : 1,
@@ -134,6 +139,7 @@
                 visibility: document.visibilityState || '',
                 online: window.navigator.onLine !== false
             });
+            droppedEvents += Math.max(0, events.length - 250);
             events = events.slice(-250);
             panel.dataset.amCourseDiagnosticsEvents = String(events.length);
         }
@@ -164,17 +170,17 @@
             'webkitpresentationmodechanged',
             'error'
         ].forEach(function (eventName) {
-            video.addEventListener(eventName, function () {
-                record(eventName);
+            video.addEventListener(eventName, function (event) {
+                record(eventName, event);
             });
         });
 
-        video.addEventListener('timeupdate', function () {
+        video.addEventListener('timeupdate', function (event) {
             var elapsed = elapsedMilliseconds();
 
             if (elapsed - lastTimeUpdateAt >= 5000) {
                 lastTimeUpdateAt = elapsed;
-                record('timeupdate');
+                record('timeupdate', event);
             }
         });
 
@@ -195,11 +201,15 @@
         }
 
         button.addEventListener('click', function () {
+            record('diagnostics-export');
             var connection = window.navigator.connection
                 || window.navigator.mozConnection
                 || window.navigator.webkitConnection
                 || null;
             var environment = {
+                player_mode: wrapper.dataset.amCoursePlayerMode || 'mediaelement',
+                mediaelement_present: Boolean(wrapper.querySelector('.mejs-container')),
+                client_events_dropped: droppedEvents,
                 user_agent: window.navigator.userAgent || '',
                 platform: window.navigator.platform || '',
                 language: window.navigator.language || '',
@@ -453,9 +463,18 @@
             return;
         }
 
+        setupMediaDiagnostics(wrapper, video);
+
+        if (wrapper.dataset.amCoursePlayerMode === 'native') {
+            // Isolate the browser's controls from our UI/loader/fullscreen hooks.
+            // Keep the same progress/resume behavior in both comparison arms.
+            setLoading(wrapper, false);
+            setupProgressTracking(wrapper, video);
+            return;
+        }
+
         setLoading(wrapper, video.readyState < 2);
         observeControls(wrapper, video);
-        setupMediaDiagnostics(wrapper, video);
 
         video.addEventListener('loadstart', function () {
             setLoading(wrapper, true);

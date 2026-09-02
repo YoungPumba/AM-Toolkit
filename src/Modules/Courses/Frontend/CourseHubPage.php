@@ -929,7 +929,10 @@ final class CourseHubPage
             $this->previewCourseId,
             $diagnosticSessionId
         );
-        $player = $this->videoRenderer->render($sourceUrl, ['poster' => $poster]);
+        $playerMode = $diagnosticSessionId !== '' && $this->mediaDiagnosticsController !== null
+            ? $this->mediaDiagnosticsController->playerMode()
+            : 'mediaelement';
+        $player = $this->videoRenderer->render($sourceUrl, ['poster' => $poster, 'player_mode' => $playerMode]);
 
         if (is_wp_error($player)) {
             return $this->lessonState(
@@ -940,22 +943,31 @@ final class CourseHubPage
 
         $diagnosticsPanel = $diagnosticSessionId !== ''
             ? sprintf(
-                '<aside class="am-course-player-diagnostics" data-am-course-diagnostics-panel><span>%1$s</span><strong>%2$s</strong><p>%3$s</p><button type="button" data-am-course-diagnostics-download>%4$s</button><small data-am-course-diagnostics-status role="status" aria-live="polite"></small></aside>',
+                '<aside class="am-course-player-diagnostics" data-am-course-diagnostics-panel><span>%1$s</span><strong>%2$s</strong><p>%5$s</p><p>%3$s</p><button type="button" data-am-course-diagnostics-download>%4$s</button><small data-am-course-diagnostics-status role="status" aria-live="polite"></small></aside>',
                 esc_html__('Diagnostyka odtwarzacza', 'am-toolkit'),
                 esc_html($diagnosticSessionId),
                 esc_html__('Odtwórz problem, a następnie pobierz raport JSON. Raport nie zawiera hasła, cookies ani adresu nagrania.', 'am-toolkit'),
-                esc_html__('Pobierz raport diagnostyczny', 'am-toolkit')
+                esc_html__('Pobierz raport diagnostyczny', 'am-toolkit'),
+                $playerMode === 'native'
+                    ? esc_html__('Wariant: natywny (HTML5). Dostęp i zapis postępu działają jak zwykle.', 'am-toolkit')
+                    : esc_html__('Wariant: standardowy (MediaElement). Dostęp i zapis postępu działają jak zwykle.', 'am-toolkit')
             )
             : '';
 
+        $loader = $playerMode === 'native' ? '' : sprintf(
+            '<div class="am-course-player__loader" data-am-course-player-loader role="status" aria-label="%s">%s</div>',
+            esc_attr__('Ładowanie nagrania', 'am-toolkit'),
+            str_repeat('<span class="am-course-player__loader-dot" aria-hidden="true"></span>', 8)
+        );
+
         return sprintf(
-            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" data-am-course-diagnostic-session="%3$s" aria-label="%4$s"><div class="am-course-player__loader" data-am-course-player-loader role="status" aria-label="%5$s">%6$s</div>%7$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>%8$s',
+            '<section class="am-lesson-player" data-am-course-player data-course="%1$s" data-lesson="%2$s" data-am-course-diagnostic-session="%3$s" data-am-course-player-mode="%5$s" aria-label="%4$s">%6$s%7$s<p class="am-lesson-player__status" data-am-course-player-status role="status" aria-live="polite"></p></section>%8$s',
             esc_attr($coursePublicId),
             esc_attr($lessonPublicId),
             esc_attr($diagnosticSessionId),
             esc_attr__('Nagranie lekcji', 'am-toolkit'),
-            esc_attr__('Ładowanie nagrania', 'am-toolkit'),
-            str_repeat('<span class="am-course-player__loader-dot" aria-hidden="true"></span>', 8),
+            esc_attr($playerMode),
+            $loader,
             $player,
             $diagnosticsPanel
         );

@@ -126,12 +126,16 @@ final class CourseMediaDiagnosticsService
     {
         return [
             'event' => $this->shortText($event['event'] ?? '', 40),
+            'is_trusted' => isset($event['is_trusted']) && is_bool($event['is_trusted'])
+                ? $event['is_trusted']
+                : null,
             'recorded_at_utc' => $this->shortText($event['recorded_at_utc'] ?? '', 40),
             'at_ms' => $this->boundedInt($event['at_ms'] ?? 0, 0, 86400000),
             'current_time' => $this->boundedFloat($event['current_time'] ?? 0, 0, 86400),
             'duration' => $this->boundedFloat($event['duration'] ?? 0, 0, 86400),
             'paused' => !empty($event['paused']),
             'ended' => !empty($event['ended']),
+            'seeking' => !empty($event['seeking']),
             'ready_state' => $this->boundedInt($event['ready_state'] ?? 0, 0, 4),
             'network_state' => $this->boundedInt($event['network_state'] ?? 0, 0, 3),
             'playback_rate' => $this->boundedFloat($event['playback_rate'] ?? 1, 0, 16),
@@ -150,6 +154,11 @@ final class CourseMediaDiagnosticsService
     private function normalizeEnvironment(array $environment): array
     {
         return [
+            'player_mode' => $this->allowedText($environment['player_mode'] ?? '', ['native', 'mediaelement']),
+            'mediaelement_present' => isset($environment['mediaelement_present']) && is_bool($environment['mediaelement_present'])
+                ? $environment['mediaelement_present']
+                : null,
+            'client_events_dropped' => $this->boundedInt($environment['client_events_dropped'] ?? 0, 0, 1000000),
             'user_agent' => $this->shortText($environment['user_agent'] ?? '', 512),
             'platform' => $this->shortText($environment['platform'] ?? '', 80),
             'language' => $this->shortText($environment['language'] ?? '', 20),
