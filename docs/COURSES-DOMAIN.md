@@ -59,6 +59,15 @@ w obrębie kursu, hash zawartości, datę publikacji oraz zbiór wymaganych lekc
 Zmiana opublikowanego programu tworzy nową wersję; nie poprawia starego rekordu
 w miejscu.
 
+> **Ograniczenie aktualnej implementacji:** powyższy akapit opisuje docelowy
+> kontrakt. Obecnie przypisanie programu przechowuje mutowalne `lesson_id`, a
+> nie identyfikator niemutowalnej rewizji lekcji. Read model opublikowanej
+> wersji dołącza więc bieżący rekord lekcji; zapis treści lub nagrania może
+> zmienić także widok już opublikowanych wersji. Udana podmiana uploadu usuwa
+> ponadto poprzedni prywatny plik bez globalnego dowodu braku użycia przez
+> historię. Do czasu wersjonowanych assetów i rewizji obowiązuje blokada opisana
+> w [procedurze przygotowania nagrań](COURSES-VIDEO-PREPARATION.md#podmiana-w-kursie-jest-obecnie-zablokowana).
+
 ### CourseSection
 
 Opcjonalna grupa lekcji w konkretnej wersji programu. Nazwa `CourseSection`

@@ -40,6 +40,29 @@ przed wdrożeniem 0.12.0.
 7. Status wdrożenia zapisuj wyłącznie na podstawie dowodu z właściwego
    środowiska; nie wyprowadzaj go z istnienia tagu ani Release.
 
+## Macierz zgodności i aktualizacje środowiska
+
+Odczyt z 6 listopada 2026 jest punktem odniesienia, a nie potwierdzeniem
+zgodności bieżących wersji produkcyjnych:
+
+- produkcja: WordPress 7.1.4, PHP 8.3.36 i WooCommerce 11.2.1; rdzeń
+  WordPressa jest aktualny, natomiast panel wskazuje 23 aktualizacje wtyczek
+  oraz aktualizację motywu;
+- środowisko lokalne: WordPress 7.0.2, PHP web 8.3.29, WooCommerce 11.0.0,
+  Elementor i Elementor Pro 4.2.1, LiteSpeed Cache 7.8.1 oraz ShopEngine
+  4.9.2 i ShopEngine Pro 2.7.5.
+
+Lokalna macierz jest starsza od produkcyjnej, więc jej wynik nie certyfikuje
+zgodności z WordPressem 7.1.4, PHP 8.3.36 ani WooCommerce 11.2.1. Zmianę
+odtwarzacza należy zweryfikować i wdrażać osobno. Kolejne aktualizacje
+prowadzimy etapami: najpierw WooCommerce wraz z płatnościami, następnie
+Elementor, Elementor Pro i ShopEngine, a później osobne partie cache,
+obsługi zgód i analityki. Motyw oraz pozostałe wtyczki wymagają własnej
+inwentaryzacji i kontrolowanego etapu. Każdy etap wymaga testów regresji oraz
+z góry określonego rollbacku. Przed jakąkolwiek zmianą produkcji obowiązują
+trzy bramki: potwierdzona kopia, sprawdzona procedura odtworzenia i jawna zgoda
+na wdrożenie.
+
 Szczegółowy plan wdrożenia, aktywacji flag i rollbacku AM Courses 0.12.0
 znajduje się w [runbooku wydania 0.12.0](RELEASE-0.12.0.md).
 Procedurę małego hotfixu mobilnego opisuje
@@ -54,6 +77,8 @@ kontrolowany test produkcyjny opisuje
 [runbook wydania 0.12.4](RELEASE-0.12.4.md).
 Diagnostyczne porównanie odtwarzaczy MediaElement i native na Safari opisuje
 [runbook wydania 0.12.5](RELEASE-0.12.5.md).
+Niewydany kandydat z natywnym domyślnym odtwarzaczem i rozszerzoną
+diagnostyką ma osobny [runbook 0.12.6](RELEASE-0.12.6.md).
 
 Tagów opublikowanych na GitHub nie przesuwamy. Jeśli błąd zostanie wykryty
 przed publikacją, poprawiamy commit i ponawiamy weryfikację. Jeśli po

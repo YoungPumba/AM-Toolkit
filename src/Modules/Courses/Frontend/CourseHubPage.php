@@ -931,7 +931,7 @@ final class CourseHubPage
         );
         $playerMode = $diagnosticSessionId !== '' && $this->mediaDiagnosticsController !== null
             ? $this->mediaDiagnosticsController->playerMode()
-            : 'mediaelement';
+            : CoursePlayerMode::defaultMode();
         $player = $this->videoRenderer->render($sourceUrl, ['poster' => $poster, 'player_mode' => $playerMode]);
 
         if (is_wp_error($player)) {
@@ -948,13 +948,13 @@ final class CourseHubPage
                 esc_html($diagnosticSessionId),
                 esc_html__('Odtwórz problem, a następnie pobierz raport JSON. Raport nie zawiera hasła, cookies ani adresu nagrania.', 'am-toolkit'),
                 esc_html__('Pobierz raport diagnostyczny', 'am-toolkit'),
-                $playerMode === 'native'
+                $playerMode === CoursePlayerMode::NATIVE
                     ? esc_html__('Wariant: natywny (HTML5). Dostęp i zapis postępu działają jak zwykle.', 'am-toolkit')
-                    : esc_html__('Wariant: standardowy (MediaElement). Dostęp i zapis postępu działają jak zwykle.', 'am-toolkit')
+                    : esc_html__('Wariant: porównawczy (MediaElement). Dostęp i zapis postępu działają jak zwykle.', 'am-toolkit')
             )
             : '';
 
-        $loader = $playerMode === 'native' ? '' : sprintf(
+        $loader = $playerMode === CoursePlayerMode::NATIVE ? '' : sprintf(
             '<div class="am-course-player__loader" data-am-course-player-loader role="status" aria-label="%s">%s</div>',
             esc_attr__('Ładowanie nagrania', 'am-toolkit'),
             str_repeat('<span class="am-course-player__loader-dot" aria-hidden="true"></span>', 8)

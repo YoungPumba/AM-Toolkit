@@ -209,20 +209,28 @@ zużywają transfer, ale nie dostarczają nowej informacji diagnostycznej.
 
 ### Porównanie standardowego i natywnego odtwarzacza
 
-Funkcja jest dostępna od 0.12.5; same poniższe parametry **nie włączą
-nowego odtwarzacza na niezmienionej instalacji 0.12.4**. Wdrożenie wymaga
-osobnej akceptacji zgodnie z [runbookiem 0.12.5](RELEASE-0.12.5.md).
-Nie jest to jeszcze potwierdzona naprawa Safari.
+Porównanie jest dostępne od 0.12.5; same poniższe parametry **nie włączą
+nowego odtwarzacza na niezmienionej instalacji 0.12.4**. Wdrożenie 0.12.5
+opisuje [runbook wydania](RELEASE-0.12.5.md). Zmiana domyślnego odtwarzacza
+w bieżącym kodzie jest niewydana i wymaga osobnej akceptacji wdrożenia.
+Nie jest to potwierdzona naprawa Safari.
 
-- Wariant A, standardowy: `?am_course_diagnostics=1&am_course_player=mediaelement`.
+- Wariant A, MediaElement: `?am_course_diagnostics=1&am_course_player=mediaelement`.
 - Wariant B, natywny: `?am_course_diagnostics=1&am_course_player=native`.
 
-Sam `am_course_player=native`, bez diagnostyki, niczego nie przełącza.
-Nieznana wartość wraca do MediaElement. Tryb nie jest dostępny w podglądzie
-administratora; test wykonujemy jako zalogowany uczestnik z dostępem do
-opublikowanej lekcji. Nie zmienia flag, programu, przypisania pliku ani
-konfiguracji serwera. Zamknięcie karty i wejście przez zwykły adres przywraca
-standardowy player; wybór nie jest zapisywany jako preferencja użytkownika.
+W opublikowanej 0.12.5 domyślny jest MediaElement, a natywny wymaga obu
+parametrów. W niewydanej zmianie domyślny jest natywny. MediaElement wybiera
+jawne `am_course_diagnostics=1&am_course_player=mediaelement` lub awaryjna
+stała operatora opisana w [kontrakcie odtwarzacza](COURSES-LESSONS.md).
+Nieznana lub brakująca wartość wraca do domyślnego wariantu danej wersji.
+Sam parametr `am_course_player` nie przełącza odtwarzacza bez diagnostyki.
+
+Diagnostyka i wybór wariantu nie działają w podglądzie administratora,
+który używa domyślnego wariantu. Test wykonujemy jako zalogowany uczestnik
+z dostępem do opublikowanej lekcji. Nie zmienia flag, programu,
+przypisania pliku ani konfiguracji serwera. Zamknięcie karty i wejście przez
+zwykły adres przywraca domyślny player; wybór nie jest zapisywany jako
+preferencja użytkownika.
 
 Wariant B używa `<video controls playsinline preload="metadata">`, bez
 inicjalizacji MediaElement, naszej nakładki ładowania i obsługi fullscreen.
@@ -236,7 +244,8 @@ Procedura na fizycznym iPhonie:
 1. Wybierz dokładnie tę samą lekcję, telefon, sieć i ustawienia CDN dla obu
    wariantów. Nie zmieniaj cache/CDN między A i B. Nie odtwarzaj jednocześnie
    w dwóch kartach. Zapisz stan CDN osobno — raport go nie potwierdza.
-2. Otwórz świeżą kartę A i sprawdź etykietę „Wariant: standardowy”. Jeśli
+2. Otwórz świeżą kartę A i sprawdź etykietę MediaElement (w 0.12.5:
+   „Wariant: standardowy”). Jeśli
    widzisz przywróconą pozycję, ręcznie wróć do początku. Nie czyść całego
    konta ani postępu. Obejrzyj 30 s, pauza 5 s, wznów na 15 s; przewiń w
    okolice 1:30 i odtwórz jeszcze 15–30 s. Fullscreen sprawdź na końcu.
@@ -263,6 +272,47 @@ Dodatkowe pola diagnostyczne (dane deklarowane przez klienta, nie dowód z serwe
   zdarzenie przeglądarki może być następstwem wywołania API przez skrypt.
 - `client_events[].seeking`: stan przewijania w momencie próbki.
 - `diagnostics-export`: dodatkowa próbka stanu tuż przed pobraniem JSON.
+
+Niewydane rozszerzenie raportu mierzy również brak postępu `currentTime`:
+
+- po zdarzeniu `playing`, na widocznej stronie, gdy film nie jest zatrzymany,
+  zakończony ani przewijany, próbka co 500 ms szuka co najmniej 3 s bez
+  przesunięcia pozycji o 0,05 s;
+- `playback-stall-start` otwiera pomiar, a `playback-stall-end` go zamyka;
+  `playback_stall_duration_ms` obejmuje czas od ostatniego zmierzonego ruchu,
+  nie dopiero od przekroczenia progu;
+- `playback_stall_end_reason` rozróżnia wznowienie ruchu, pauzę, przewijanie,
+  koniec, błąd, ukrycie i opuszczenie strony oraz stan nieaktywny;
+- eksport zawiera stan otwartego pomiaru; zwykła lekcja bez diagnostyki nie
+  uruchamia tego timera. Timer nie przeładowuje filmu ani nie zmienia jego
+  źródła, pozycji i zapisu postępu.
+
+To pomiar zegara medium, nie analizy obrazu ani dźwięku. Zacięcie dekodera
+przy nadal rosnącym `currentTime` może pozostać niewykryte. Opóźnione timery
+i usypianie urządzenia również ograniczają dokładność; obserwacja użytkownika
+pozostaje częścią testu.
+
+`environment.media_resource_timings` zawiera do 50 wpisów Resource Timing
+dla bieżącego źródła z tej samej domeny: czasy rozpoczęcia i odpowiedzi,
+status oraz rozmiary. Raport nie zapisuje nazwy zasobu, adresu ani nonce.
+Safari, pamięć podręczna i obsługa Range mogą nie udostępnić wpisów, statusu
+lub rozmiarów: pusta lista i zera nie dowodzą braku żądań ani transferu.
+Te liczby nie potwierdzają dostarczenia bajtów do telefonu.
+
+`start_time`, `response_start` i `response_end` są w milisekundach od
+początku nawigacji. `client_events.at_ms` jest od inicjalizacji diagnostyki.
+Liczbowe `environment.diagnostics_performance_origin_ms` pozwala przeliczyć
+czas zdarzenia na oś Resource Timing jako `origin + at_ms`; odwrotnie
+`start_time - origin` daje czas żądania na osi diagnostyki. Ujemny wynik
+oznacza żądanie rozpoczęte przed diagnostyką. Kotwica wymaga dostępnego
+`performance.now()`; starszy raport bez pola nie pozwala na tę korelację.
+Po powrocie strony z BFCache pomiar wznawia się z nową pozycją odniesienia;
+czas nieaktywności w cache nie jest liczony jako zacięcie.
+
+Lista zdarzeń HTTP po stronie PHP jest zapisem best effort: ma limit,
+a równoległe aktualizacje transienta mogą zgubić wpisy. `bytes_sent` opisuje
+bajty przekazane przez PHP, nie rozliczenie CDN i nie potwierdzenie odbioru
+przez przeglądarkę. Brak końca żądania sam w sobie nie dowodzi przerwania.
 
 Interpretacja: sukces B i awaria A wskazują na różnicę warstwy MediaElement/
 naszych kontrolek, ale nie identyfikują automatycznie jednej wadliwej funkcji.

@@ -24,7 +24,9 @@ final class WordPressCourseVideoRenderer implements CourseVideoRenderer
             ? sprintf(' poster="%s"', esc_url($poster))
             : '';
 
-        if (($context['player_mode'] ?? '') === 'native') {
+        $playerMode = CoursePlayerMode::resolve($context['player_mode'] ?? null);
+
+        if ($playerMode !== CoursePlayerMode::MEDIAELEMENT) {
             // No shortcode class: WordPress must not initialize MediaElement here,
             // even if another component has already enqueued its scripts.
             return sprintf(

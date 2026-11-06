@@ -48,11 +48,11 @@ final class CourseMediaDiagnosticsController
 
     public function playerMode(): string
     {
-        // Presentation-only opt-in; course and asset authorization are unchanged.
-        return $this->isRequested()
-            && ($_GET['am_course_player'] ?? null) === 'native' // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-            ? 'native'
-            : 'mediaelement';
+        // Diagnostics can select either player without changing asset access.
+        return CoursePlayerMode::forDiagnosticRequest(
+            $this->isRequested(),
+            $_GET['am_course_player'] ?? null // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        );
     }
 
     public function handle(): void

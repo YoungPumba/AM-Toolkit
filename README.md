@@ -1,9 +1,16 @@
 # AM Toolkit
 
-Wersja 0.12.5 udostępnia diagnostyczne porównanie standardowego odtwarzacza
-MediaElement z natywnym odtwarzaczem przeglądarki i rozszerza raporty Safari.
-Domyślny odtwarzacz pozostaje bez zmian. Nie jest to jeszcze potwierdzona
-naprawa zatrzymywania nagrań na iPhonie.
+Bieżący, niewydany kandydat 0.12.6 ustawia natywny odtwarzacz przeglądarki jako
+domyślny widok lekcji i zachowuje MediaElement do jawnego porównania
+diagnostycznego oraz awaryjnego powrotu przez stałą operatora
+`AM_TOOLKIT_COURSE_PLAYER_MODE` (szczegóły w
+[kontrakcie odtwarzacza](docs/COURSES-LESSONS.md)). Oba warianty korzystają z tej samej ochrony nagrań,
+postępu, wznawiania i wspólnej obsługi błędów.
+
+Opublikowana wersja 0.12.5 nadal domyślnie używa MediaElement; wariant natywny
+wymaga w niej parametrów diagnostycznych. Zmiana domyślnego interfejsu nie
+jest potwierdzoną naprawą zatrzymywania nagrań na iPhonie: zacięcia wystąpiły
+również podczas natywnego odtwarzania w teście 0.12.5.
 Zweryfikowane wydania instalacyjne są publikowane jako tag i GitHub Release
 zgodnie z [procedurą wydań](docs/RELEASES.md).
 

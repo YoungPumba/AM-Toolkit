@@ -13,7 +13,7 @@ final class WordPressCourseVideoRendererTest extends TestCase
         $GLOBALS['amt_test_enqueued_scripts'] = [];
     }
 
-    public function testItRendersProtectedQueryStringUrlAsMp4Source(): void
+    public function testItRendersProtectedQueryStringUrlAsNativeMp4ByDefault(): void
     {
         $renderer = new WordPressCourseVideoRenderer();
         $url = 'https://example.test/admin-post.php?action=asset&_wpnonce=test';
@@ -21,13 +21,15 @@ final class WordPressCourseVideoRendererTest extends TestCase
         $html = $renderer->render($url);
 
         self::assertIsString($html);
-        self::assertStringContainsString('<video class="wp-video-shortcode"', $html);
+        self::assertStringContainsString('<video class="am-course-native-video"', $html);
+        self::assertStringNotContainsString('wp-video-shortcode', $html);
+        self::assertStringContainsString('controls="controls"', $html);
         self::assertStringContainsString('preload="metadata"', $html);
         self::assertStringContainsString('playsinline="playsinline"', $html);
         self::assertStringContainsString('type="video/mp4"', $html);
         self::assertStringContainsString('action=asset&amp;_wpnonce=test', $html);
-        self::assertSame(['wp-mediaelement'], $GLOBALS['amt_test_enqueued_styles']);
-        self::assertSame(['wp-mediaelement'], $GLOBALS['amt_test_enqueued_scripts']);
+        self::assertSame([], $GLOBALS['amt_test_enqueued_styles']);
+        self::assertSame([], $GLOBALS['amt_test_enqueued_scripts']);
     }
 
     public function testItRejectsEmptySource(): void
@@ -60,10 +62,42 @@ final class WordPressCourseVideoRendererTest extends TestCase
         self::assertSame([], $GLOBALS['amt_test_enqueued_scripts']);
     }
 
-    public function testUnknownModeFallsBackToStandardPlayer(): void
+    public function testExplicitMediaElementVariantKeepsProtectedSourceAndPlayerAssets(): void
     {
-        $html = (new WordPressCourseVideoRenderer())->render('https://example.test/video', ['player_mode' => ['native']]);
+        $html = (new WordPressCourseVideoRenderer())->render(
+            'https://example.test/admin-post.php?action=asset&_wpnonce=test',
+            ['player_mode' => 'mediaelement', 'poster' => 'https://example.test/poster.jpg']
+        );
+
         self::assertStringContainsString('wp-video-shortcode', $html);
+        self::assertStringNotContainsString('am-course-native-video', $html);
+        self::assertStringContainsString('controls="controls"', $html);
+        self::assertStringContainsString('preload="metadata"', $html);
+        self::assertStringContainsString('playsinline="playsinline"', $html);
+        self::assertStringContainsString('type="video/mp4"', $html);
+        self::assertStringContainsString('action=asset&amp;_wpnonce=test', $html);
+        self::assertStringContainsString('poster="https://example.test/poster.jpg"', $html);
+        self::assertSame(['wp-mediaelement'], $GLOBALS['amt_test_enqueued_styles']);
         self::assertSame(['wp-mediaelement'], $GLOBALS['amt_test_enqueued_scripts']);
+    }
+
+    /** @dataProvider invalidModes */
+    public function testUnknownModeFallsBackToNativePlayer(mixed $mode): void
+    {
+        $html = (new WordPressCourseVideoRenderer())->render('https://example.test/video', ['player_mode' => $mode]);
+
+        self::assertStringContainsString('am-course-native-video', $html);
+        self::assertStringNotContainsString('wp-video-shortcode', $html);
+        self::assertSame([], $GLOBALS['amt_test_enqueued_styles']);
+        self::assertSame([], $GLOBALS['amt_test_enqueued_scripts']);
+    }
+
+    public function invalidModes(): array
+    {
+        return [
+            'unknown' => ['unknown'],
+            'array' => [['mediaelement']],
+            'null' => [null],
+        ];
     }
 }

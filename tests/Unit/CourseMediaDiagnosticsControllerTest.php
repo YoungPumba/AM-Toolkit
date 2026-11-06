@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 final class CourseMediaDiagnosticsControllerTest extends TestCase
 {
     /** @dataProvider playerRequests */
-    public function testNativePlayerRequiresExplicitDiagnosticOptIn(array $query, string $expected): void
+    public function testMediaElementRequiresExplicitDiagnosticOptIn(array $query, string $expected): void
     {
         $previous = $_GET;
         $_GET = $query;
@@ -33,15 +33,16 @@ final class CourseMediaDiagnosticsControllerTest extends TestCase
     public function playerRequests(): array
     {
         return [
-            'ordinary page' => [[], 'mediaelement'],
-            'native alone' => [['am_course_player' => 'native'], 'mediaelement'],
-            'diagnostics alone' => [['am_course_diagnostics' => '1'], 'mediaelement'],
-            'diagnostics off' => [['am_course_diagnostics' => '0', 'am_course_player' => 'native'], 'mediaelement'],
+            'ordinary page' => [[], 'native'],
+            'native alone' => [['am_course_player' => 'native'], 'native'],
+            'mediaelement alone' => [['am_course_player' => 'mediaelement'], 'native'],
+            'diagnostics alone' => [['am_course_diagnostics' => '1'], 'native'],
+            'diagnostics off' => [['am_course_diagnostics' => '0', 'am_course_player' => 'mediaelement'], 'native'],
             'native enabled' => [['am_course_diagnostics' => '1', 'am_course_player' => 'native'], 'native'],
-            'explicit standard' => [['am_course_diagnostics' => '1', 'am_course_player' => 'mediaelement'], 'mediaelement'],
-            'unknown mode' => [['am_course_diagnostics' => '1', 'am_course_player' => 'unknown'], 'mediaelement'],
-            'array mode' => [['am_course_diagnostics' => '1', 'am_course_player' => ['native']], 'mediaelement'],
-            'array diagnostics' => [['am_course_diagnostics' => ['1'], 'am_course_player' => 'native'], 'mediaelement'],
+            'explicit comparison' => [['am_course_diagnostics' => '1', 'am_course_player' => 'mediaelement'], 'mediaelement'],
+            'unknown mode' => [['am_course_diagnostics' => '1', 'am_course_player' => 'unknown'], 'native'],
+            'array mode' => [['am_course_diagnostics' => '1', 'am_course_player' => ['mediaelement']], 'native'],
+            'array diagnostics' => [['am_course_diagnostics' => ['1'], 'am_course_player' => 'mediaelement'], 'native'],
         ];
     }
 }

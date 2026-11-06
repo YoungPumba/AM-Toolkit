@@ -1,5 +1,20 @@
 # Historia zmian AM Toolkit
 
+## 0.12.6 — niewydany kandydat
+
+- natywny odtwarzacz przeglądarki jest domyślny w lekcji oraz podglądzie;
+  MediaElement pozostaje dostępny w jawnym wariancie diagnostycznym oraz
+  jako awaryjny wariant ustawiany stałą operatora,
+- oba warianty zachowują chroniony endpoint, postęp i wznawianie, a także
+  wspólne zdarzenia `amtoolkit:course-player` i dostępny komunikat błędu,
+- zwykłe wejście nie włącza diagnostyki; wybór interfejsu nie jest
+  potwierdzoną naprawą zacinania odtwarzania na Safari.
+- diagnostyka mierzy brak postępu zegara medium i eksportuje ograniczone
+  dane Resource Timing bez adresów nagrania,
+- lokalny audyt nagrań odczytuje powiązania, rozmiary, Fast Start i opcjonalnie
+  SHA-256 bez zmian w bazie i plikach; dokumentacja wyjaśnia ograniczenia
+  obecnej podmiany nagrań oraz warunki przyszłej automatycznej konwersji.
+
 ## 0.12.5 — 2026-09-02
 
 - dodano opcjonalny natywny odtwarzacz wyłącznie do jawnego testu
