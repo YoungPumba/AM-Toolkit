@@ -1,8 +1,12 @@
 # Wydanie AM Toolkit 0.12.5
 
-Status: release candidate. Merge PR, publikacja tagu/GitHub Release i
-wdrożenie produkcyjne są osobnymi krokami. Ten dokument nie potwierdza
-wdrożenia ani naprawy Safari.
+Status historyczny, zweryfikowany 6 listopada 2026: PR wydaniowy został
+scalony, tag i GitHub Release 0.12.5 opublikowane, a produkcja nadal używa
+0.12.5. Wdrożenie we wrześniu odbyło się po potwierdzeniu kopii i osobnej
+zgodzie właściciela. Poniższe wyniki opisują przygotowanie tego wydania,
+nie nowego kandydata. Natywny test na iPhonie również wykazał zacięcie;
+VIA-105 pozostaje otwarte. Bieżący niewydany kandydat jest opisany w
+[runbooku 0.12.6](RELEASE-0.12.6.md).
 
 ## Cel i zakres
 

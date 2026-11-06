@@ -86,6 +86,56 @@
         return result;
     }
 
+    function boundedDiagnosticNumber(value, maximum) {
+        var number = Number(value);
+
+        if (!Number.isFinite(number)) {
+            return 0;
+        }
+
+        return Number(Math.max(0, Math.min(maximum, number)).toFixed(3));
+    }
+
+    function mediaResourceTimingSnapshot(video) {
+        var performanceApi = window.performance;
+        var source = video.currentSrc || video.src || '';
+
+        if (
+            !source
+            || !performanceApi
+            || typeof performanceApi.getEntriesByName !== 'function'
+            || typeof window.URL !== 'function'
+            || !window.location
+        ) {
+            return [];
+        }
+
+        try {
+            var sourceUrl = new window.URL(source, window.location.href);
+
+            if (sourceUrl.origin !== window.location.origin) {
+                return [];
+            }
+
+            return performanceApi.getEntriesByName(sourceUrl.href).filter(function (entry) {
+                return entry && entry.entryType === 'resource';
+            }).slice(-50).map(function (entry) {
+                return {
+                    start_time: boundedDiagnosticNumber(entry.startTime, 86400000),
+                    duration: boundedDiagnosticNumber(entry.duration, 86400000),
+                    response_start: boundedDiagnosticNumber(entry.responseStart, 86400000),
+                    response_end: boundedDiagnosticNumber(entry.responseEnd, 86400000),
+                    response_status: boundedDiagnosticNumber(entry.responseStatus, 599),
+                    transfer_size: boundedDiagnosticNumber(entry.transferSize, 2147483647),
+                    encoded_body_size: boundedDiagnosticNumber(entry.encodedBodySize, 2147483647),
+                    decoded_body_size: boundedDiagnosticNumber(entry.decodedBodySize, 2147483647)
+                };
+            });
+        } catch (error) {
+            return [];
+        }
+    }
+
     function setupMediaDiagnostics(wrapper, video) {
         var config = mediaDiagnosticsConfig();
         var session = wrapper.dataset.amCourseDiagnosticSession || '';
@@ -100,12 +150,22 @@
             return;
         }
 
-        var startedAt = window.performance && typeof window.performance.now === 'function'
-            ? window.performance.now()
-            : Date.now();
+        var hasPerformanceClock = window.performance && typeof window.performance.now === 'function';
+        var startedAt = hasPerformanceClock ? window.performance.now() : Date.now();
+        var diagnosticsPerformanceOriginMs = hasPerformanceClock
+            ? boundedDiagnosticNumber(startedAt, 86400000)
+            : 0;
         var events = [];
         var droppedEvents = 0;
         var lastTimeUpdateAt = -5000;
+        var playbackStallThresholdMs = 3000;
+        var playbackProgressEpsilon = 0.05;
+        var playbackExpected = false;
+        var playbackAnchorAt = null;
+        var playbackAnchorPosition = null;
+        var playbackStallStartedAt = null;
+        var playbackWatchdogTimer = null;
+        var playbackWatchdogBfcacheSuspended = false;
         var button = panel.querySelector('[data-am-course-diagnostics-download]');
         var status = panel.querySelector('[data-am-course-diagnostics-status]');
 
@@ -117,7 +177,7 @@
             return Math.max(0, Math.round(now - startedAt));
         }
 
-        function record(eventName, browserEvent) {
+        function record(eventName, browserEvent, playbackStall) {
             events.push({
                 event: eventName,
                 is_trusted: browserEvent && typeof browserEvent.isTrusted === 'boolean'
@@ -137,12 +197,183 @@
                 seekable: mediaRangesSnapshot(video.seekable),
                 error_code: video.error ? video.error.code : 0,
                 visibility: document.visibilityState || '',
-                online: window.navigator.onLine !== false
+                online: window.navigator.onLine !== false,
+                playback_stall_open: Boolean(playbackStall && playbackStall.open),
+                playback_stall_duration_ms: playbackStall
+                    ? boundedDiagnosticNumber(playbackStall.durationMs, 86400000)
+                    : 0,
+                playback_stall_end_reason: playbackStall && playbackStall.endReason
+                    ? playbackStall.endReason
+                    : ''
             });
             droppedEvents += Math.max(0, events.length - 250);
             events = events.slice(-250);
             panel.dataset.amCourseDiagnosticsEvents = String(events.length);
         }
+
+        function beginPlaybackObservation() {
+            playbackAnchorAt = elapsedMilliseconds();
+            playbackAnchorPosition = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+        }
+
+        function endOpenPlaybackStall(reason) {
+            if (playbackStallStartedAt === null) {
+                return;
+            }
+
+            record('playback-stall-end', null, {
+                open: false,
+                durationMs: elapsedMilliseconds() - playbackStallStartedAt,
+                endReason: reason
+            });
+            playbackStallStartedAt = null;
+        }
+
+        function resetPlaybackObservation(reason) {
+            endOpenPlaybackStall(reason);
+            playbackAnchorAt = null;
+            playbackAnchorPosition = null;
+        }
+
+        function playbackIsObservable() {
+            return playbackExpected
+                && document.visibilityState === 'visible'
+                && !video.paused
+                && !video.ended
+                && !video.seeking
+                && Number(video.playbackRate) > 0;
+        }
+
+        function checkPlaybackAdvancement() {
+            if (!playbackIsObservable()) {
+                resetPlaybackObservation('inactive');
+                return;
+            }
+
+            var now = elapsedMilliseconds();
+            var position = Number(video.currentTime);
+
+            if (!Number.isFinite(position)) {
+                resetPlaybackObservation('inactive');
+                return;
+            }
+
+            if (playbackAnchorAt === null || playbackAnchorPosition === null) {
+                beginPlaybackObservation();
+                return;
+            }
+
+            if (Math.abs(position - playbackAnchorPosition) >= playbackProgressEpsilon) {
+                endOpenPlaybackStall('advance');
+                playbackAnchorAt = now;
+                playbackAnchorPosition = position;
+                return;
+            }
+
+            if (
+                playbackStallStartedAt === null
+                && now - playbackAnchorAt >= playbackStallThresholdMs
+            ) {
+                playbackStallStartedAt = playbackAnchorAt;
+                record('playback-stall-start', null, {
+                    open: true,
+                    durationMs: now - playbackStallStartedAt,
+                    endReason: ''
+                });
+            }
+        }
+
+        function openPlaybackStallSnapshot() {
+            if (playbackStallStartedAt === null) {
+                return null;
+            }
+
+            return {
+                open: true,
+                durationMs: elapsedMilliseconds() - playbackStallStartedAt,
+                endReason: ''
+            };
+        }
+
+        function startPlaybackWatchdog() {
+            if (playbackWatchdogTimer !== null || typeof window.setInterval !== 'function') {
+                return;
+            }
+
+            playbackWatchdogTimer = window.setInterval(checkPlaybackAdvancement, 500);
+        }
+
+        function stopPlaybackWatchdog() {
+            if (playbackWatchdogTimer === null || typeof window.clearInterval !== 'function') {
+                return;
+            }
+
+            window.clearInterval(playbackWatchdogTimer);
+            playbackWatchdogTimer = null;
+        }
+
+        video.addEventListener('play', function () {
+            resetPlaybackObservation('inactive');
+        });
+        video.addEventListener('playing', function () {
+            playbackExpected = true;
+            beginPlaybackObservation();
+        });
+        video.addEventListener('pause', function () {
+            playbackExpected = false;
+            resetPlaybackObservation('pause');
+        });
+        video.addEventListener('ended', function () {
+            playbackExpected = false;
+            resetPlaybackObservation('ended');
+        });
+        video.addEventListener('error', function () {
+            playbackExpected = false;
+            resetPlaybackObservation('error');
+        });
+        video.addEventListener('seeking', function () {
+            resetPlaybackObservation('seek');
+        });
+        video.addEventListener('seeked', function () {
+            if (playbackIsObservable()) {
+                beginPlaybackObservation();
+            }
+        });
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState !== 'visible') {
+                resetPlaybackObservation('hidden');
+            } else if (playbackIsObservable()) {
+                beginPlaybackObservation();
+            }
+        });
+
+        startPlaybackWatchdog();
+        window.addEventListener('pagehide', function (event) {
+            playbackWatchdogBfcacheSuspended = Boolean(event && event.persisted === true);
+            playbackExpected = false;
+            resetPlaybackObservation('pagehide');
+
+            stopPlaybackWatchdog();
+        });
+        window.addEventListener('pageshow', function (event) {
+            if (
+                !playbackWatchdogBfcacheSuspended
+                || !event
+                || event.persisted !== true
+            ) {
+                return;
+            }
+
+            playbackWatchdogBfcacheSuspended = false;
+            resetPlaybackObservation('inactive');
+            playbackExpected = !video.paused && !video.ended && !video.error;
+
+            if (playbackIsObservable()) {
+                beginPlaybackObservation();
+            }
+
+            startPlaybackWatchdog();
+        });
 
         [
             'loadstart',
@@ -201,15 +432,19 @@
         }
 
         button.addEventListener('click', function () {
-            record('diagnostics-export');
+            checkPlaybackAdvancement();
+            record('diagnostics-export', null, openPlaybackStallSnapshot());
             var connection = window.navigator.connection
                 || window.navigator.mozConnection
                 || window.navigator.webkitConnection
                 || null;
             var environment = {
-                player_mode: wrapper.dataset.amCoursePlayerMode || 'mediaelement',
+                player_mode: wrapper.dataset.amCoursePlayerMode || 'native',
                 mediaelement_present: Boolean(wrapper.querySelector('.mejs-container')),
                 client_events_dropped: droppedEvents,
+                playback_stall_threshold_ms: playbackStallThresholdMs,
+                diagnostics_performance_origin_ms: diagnosticsPerformanceOriginMs,
+                media_resource_timings: mediaResourceTimingSnapshot(video),
                 user_agent: window.navigator.userAgent || '',
                 platform: window.navigator.platform || '',
                 language: window.navigator.language || '',
@@ -450,6 +685,7 @@
 
     function init(wrapper) {
         var video = wrapper.querySelector('video');
+        var playerMode = wrapper.dataset.amCoursePlayerMode || 'native';
 
         if (wrapper.dataset.amCoursePlayerReady === 'true') {
             return;
@@ -465,7 +701,25 @@
 
         setupMediaDiagnostics(wrapper, video);
 
-        if (wrapper.dataset.amCoursePlayerMode === 'native') {
+        ['play', 'pause', 'ended'].forEach(function (eventName) {
+            video.addEventListener(eventName, function () {
+                setLoading(wrapper, false);
+
+                if (playerMode !== 'native') {
+                    updateControlStates(wrapper, video);
+                }
+
+                emit(wrapper, eventName);
+            });
+        });
+
+        video.addEventListener('error', function () {
+            setLoading(wrapper, false);
+            announce(wrapper, 'Nie udało się odtworzyć nagrania. Odśwież stronę lub spróbuj ponownie później.');
+            emit(wrapper, 'error');
+        });
+
+        if (playerMode === 'native') {
             // Isolate the browser's controls from our UI/loader/fullscreen hooks.
             // Keep the same progress/resume behavior in both comparison arms.
             setLoading(wrapper, false);
@@ -498,22 +752,8 @@
             });
         });
 
-        ['play', 'pause', 'ended'].forEach(function (eventName) {
-            video.addEventListener(eventName, function () {
-                setLoading(wrapper, false);
-                updateControlStates(wrapper, video);
-                emit(wrapper, eventName);
-            });
-        });
-
         video.addEventListener('volumechange', function () {
             updateControlStates(wrapper, video);
-        });
-
-        video.addEventListener('error', function () {
-            setLoading(wrapper, false);
-            announce(wrapper, 'Nie udało się odtworzyć nagrania. Odśwież stronę lub spróbuj ponownie później.');
-            emit(wrapper, 'error');
         });
 
         setupProgressTracking(wrapper, video);

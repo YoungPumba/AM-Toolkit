@@ -54,6 +54,14 @@ Zwykły zapis zmienia dane wersji roboczej. Wybranie operacji **Opublikuj**:
 2. ustawia ją jako bieżący opublikowany program kursu,
 3. tworzy z niej kolejną wersję roboczą do przyszłych zmian.
 
+To jest docelowy kontrakt publikacji, ale obecna implementacja nie tworzy
+pełnego snapshotu treści lekcji ani referencji nagrania. Wersja programu
+przypina mutowalne `lesson_id`, dlatego późniejszy zapis lekcji może zmienić
+widok istniejącej opublikowanej wersji. Przy udanej podmianie uploadu poprzedni
+prywatny plik jest też usuwany bez globalnego potwierdzenia, że nie korzysta z
+niego historia. Produkcyjna podmiana nagrania pozostaje zablokowana zgodnie z
+[procedurą przygotowania nagrań](COURSES-VIDEO-PREPARATION.md#podmiana-w-kursie-jest-obecnie-zablokowana).
+
 Ponowny zwykły zapis opublikowanego kursu nie publikuje wersji jeszcze raz.
 Archiwizacja zmienia stan rekordu i datę archiwizacji; nie usuwa kursu, lekcji,
 materiałów, grantów ani historii zdarzeń.

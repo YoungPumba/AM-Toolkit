@@ -147,6 +147,18 @@ final class CourseMediaDiagnosticsService
                 ['visible', 'hidden', 'prerender', 'unloaded']
             ),
             'online' => !isset($event['online']) || !empty($event['online']),
+            'playback_stall_open' => isset($event['playback_stall_open'])
+                && is_bool($event['playback_stall_open'])
+                && $event['playback_stall_open'],
+            'playback_stall_duration_ms' => $this->boundedInt(
+                $event['playback_stall_duration_ms'] ?? 0,
+                0,
+                86400000
+            ),
+            'playback_stall_end_reason' => $this->allowedText(
+                $event['playback_stall_end_reason'] ?? '',
+                ['', 'advance', 'pause', 'seek', 'ended', 'error', 'hidden', 'pagehide', 'inactive']
+            ),
         ];
     }
 
@@ -159,6 +171,19 @@ final class CourseMediaDiagnosticsService
                 ? $environment['mediaelement_present']
                 : null,
             'client_events_dropped' => $this->boundedInt($environment['client_events_dropped'] ?? 0, 0, 1000000),
+            'playback_stall_threshold_ms' => $this->boundedInt(
+                $environment['playback_stall_threshold_ms'] ?? 0,
+                0,
+                60000
+            ),
+            'diagnostics_performance_origin_ms' => $this->boundedFloat(
+                $environment['diagnostics_performance_origin_ms'] ?? 0,
+                0,
+                86400000
+            ),
+            'media_resource_timings' => $this->normalizeResourceTimings(
+                $environment['media_resource_timings'] ?? []
+            ),
             'user_agent' => $this->shortText($environment['user_agent'] ?? '', 512),
             'platform' => $this->shortText($environment['platform'] ?? '', 80),
             'language' => $this->shortText($environment['language'] ?? '', 20),
@@ -189,6 +214,43 @@ final class CourseMediaDiagnosticsService
             $start = $this->boundedFloat($range[0] ?? 0, 0, 86400);
             $end = $this->boundedFloat($range[1] ?? 0, $start, 86400);
             $normalized[] = [$start, $end];
+        }
+
+        return $normalized;
+    }
+
+    /** @param mixed $timings @return list<array<string, float|int>> */
+    private function normalizeResourceTimings(mixed $timings): array
+    {
+        if (!is_array($timings)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach (array_slice($timings, -50) as $timing) {
+            if (!is_array($timing)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'start_time' => $this->boundedFloat($timing['start_time'] ?? 0, 0, 86400000),
+                'duration' => $this->boundedFloat($timing['duration'] ?? 0, 0, 86400000),
+                'response_start' => $this->boundedFloat($timing['response_start'] ?? 0, 0, 86400000),
+                'response_end' => $this->boundedFloat($timing['response_end'] ?? 0, 0, 86400000),
+                'response_status' => $this->boundedInt($timing['response_status'] ?? 0, 0, 599),
+                'transfer_size' => $this->boundedInt($timing['transfer_size'] ?? 0, 0, 2147483647),
+                'encoded_body_size' => $this->boundedInt(
+                    $timing['encoded_body_size'] ?? 0,
+                    0,
+                    2147483647
+                ),
+                'decoded_body_size' => $this->boundedInt(
+                    $timing['decoded_body_size'] ?? 0,
+                    0,
+                    2147483647
+                ),
+            ];
         }
 
         return $normalized;

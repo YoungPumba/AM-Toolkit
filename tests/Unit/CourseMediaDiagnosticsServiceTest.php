@@ -132,10 +132,92 @@ final class CourseMediaDiagnosticsServiceTest extends TestCase
             'player_mode' => 'https://example.test/private?nonce=secret',
             'mediaelement_present' => 'secret',
             'client_events_dropped' => -12,
+            'diagnostics_performance_origin_ms' => 'secret',
         ], 'test');
         self::assertSame('', $invalid['environment']['player_mode']);
         self::assertNull($invalid['environment']['mediaelement_present']);
         self::assertSame(0, $invalid['environment']['client_events_dropped']);
+        self::assertSame(0.0, $invalid['environment']['diagnostics_performance_origin_ms']);
         self::assertStringNotContainsString('secret', json_encode($invalid, JSON_THROW_ON_ERROR));
+    }
+
+    public function testPlaybackStallsAndResourceTimingsAreBoundedWithoutLeakingResourceNames(): void
+    {
+        $service = new CourseMediaDiagnosticsService();
+        $session = $service->createSessionId();
+        $timings = [];
+
+        for ($index = 0; $index < 55; $index++) {
+            $timings[] = [
+                'start_time' => $index + 0.125,
+                'duration' => $index === 54 ? INF : 25.5,
+                'response_start' => 10.25,
+                'response_end' => 35.75,
+                'response_status' => 206,
+                'transfer_size' => 1024,
+                'encoded_body_size' => 900,
+                'decoded_body_size' => 900,
+                'name' => 'https://example.test/private.mp4?nonce=secret',
+                'initiator_type' => 'video-secret',
+            ];
+        }
+
+        $report = $service->report(9, $session, 'course', 'lesson', [
+            [
+                'event' => 'playback-stall-start',
+                'playback_stall_open' => true,
+                'playback_stall_duration_ms' => 3000,
+            ],
+            [
+                'event' => 'playback-stall-end',
+                'playback_stall_duration_ms' => 4500,
+                'playback_stall_end_reason' => 'pause',
+            ],
+            [
+                'event' => 'diagnostics-export',
+                'playback_stall_open' => 'secret',
+                'playback_stall_duration_ms' => 999999999,
+                'playback_stall_end_reason' => 'https://example.test/private',
+            ],
+            [
+                'event' => 'playback-stall-end',
+                'playback_stall_duration_ms' => 5000,
+                'playback_stall_end_reason' => 'error',
+            ],
+        ], [
+            'playback_stall_threshold_ms' => 3000,
+            'diagnostics_performance_origin_ms' => 1234.567,
+            'media_resource_timings' => $timings,
+        ], 'test');
+        $encoded = json_encode($report, JSON_THROW_ON_ERROR);
+
+        self::assertTrue($report['client_events'][0]['playback_stall_open']);
+        self::assertSame(3000, $report['client_events'][0]['playback_stall_duration_ms']);
+        self::assertSame('pause', $report['client_events'][1]['playback_stall_end_reason']);
+        self::assertFalse($report['client_events'][2]['playback_stall_open']);
+        self::assertSame(86400000, $report['client_events'][2]['playback_stall_duration_ms']);
+        self::assertSame('', $report['client_events'][2]['playback_stall_end_reason']);
+        self::assertSame('error', $report['client_events'][3]['playback_stall_end_reason']);
+        self::assertSame(3000, $report['environment']['playback_stall_threshold_ms']);
+        self::assertSame(1234.567, $report['environment']['diagnostics_performance_origin_ms']);
+        self::assertCount(50, $report['environment']['media_resource_timings']);
+        self::assertSame(5.125, $report['environment']['media_resource_timings'][0]['start_time']);
+        self::assertSame(0.0, $report['environment']['media_resource_timings'][49]['duration']);
+        self::assertSame(
+            [
+                'start_time',
+                'duration',
+                'response_start',
+                'response_end',
+                'response_status',
+                'transfer_size',
+                'encoded_body_size',
+                'decoded_body_size',
+            ],
+            array_keys($report['environment']['media_resource_timings'][0])
+        );
+        self::assertStringNotContainsString('example.test', $encoded);
+        self::assertStringNotContainsString('nonce', $encoded);
+        self::assertStringNotContainsString('secret', $encoded);
     }
 }

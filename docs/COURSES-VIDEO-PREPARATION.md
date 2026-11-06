@@ -65,21 +65,47 @@ Ta operacja nie koduje ponownie obrazu ani dźwięku. Nadal trzeba obejrzeć pli
 wynikowy i sprawdzić przewijanie, ponieważ poprawna komenda nie naprawi
 uszkodzonego źródła.
 
-## Bezpieczna podmiana w kursie
+## Podmiana w kursie jest obecnie zablokowana
 
-1. Nie usuwaj oryginalnego pliku przed sprawdzeniem nowej wersji.
-2. Otwórz wynik lokalnie i sprawdź początek, kilka miejsc w środku oraz koniec.
-3. Wgraj zoptymalizowaną wersję i przypisz ją do właściwej lekcji.
-4. Zapisz szkic i sprawdź podgląd właścicielki.
-5. Na koncie testowym sprawdź start, przewijanie, pauzę, wznowienie i zapis
-   postępu.
-6. Dopiero po potwierdzeniu opublikuj zmianę.
-7. Oryginał usuń wyłącznie wtedy, gdy panel potwierdza brak użycia przez inne
-   szkice, opublikowane wersje lub historię kursu.
+Aktualny model danych **nie izoluje nagrania w szkicu**. Wersja programu
+przypina identyfikator mutowalnej lekcji, a nie historyczną referencję filmu.
+Zapis lekcji może więc zmienić nagranie widoczne również w opublikowanych
+wersjach. Po udanym wgraniu kod natychmiast usuwa poprzedni prywatny plik, bez
+globalnego sprawdzenia użycia przez wszystkie wersje. Podgląd szkicu nie jest
+tu siatką bezpieczeństwa — tylko wygląda, jakby nią był.
 
-Do czasu wdrożenia prywatnej biblioteki i bezpiecznego usuwania plików ostatni
-krok wykonuje administrator techniczny. Nie należy usuwać rekordów ani plików
-bezpośrednio w bazie danych na podstawie samej nazwy.
+Do czasu wdrożenia wersjonowanych assetów, przypiętych rewizji i retencji:
+
+1. Nie podmieniaj nagrania w kursie produkcyjnym według samej procedury z tego
+   dokumentu i nie poprawiaj referencji bezpośrednio w bazie.
+2. Pracuj wyłącznie na lokalnej lub stagingowej kopii strony oraz kopiach
+   plików. Zachowaj oryginał i wynik konwersji pod osobnymi referencjami.
+3. Lokalnie sprawdź początek, kilka miejsc w środku, koniec, przewijanie,
+   pauzę, wznowienie oraz zapis postępu.
+4. Wynik traktuj jako materiał do późniejszej migracji, nie jako zgodę na
+   ręczną podmianę produkcyjną.
+5. Nie usuwaj ani nie przenoś istniejącego pliku. Obecny panel nie potwierdza
+   bezpiecznie braku użycia historycznego.
+
+### Planowany model bezpiecznej publikacji — jeszcze niewdrożony
+
+- Każdy oryginał będzie niemutowalnym prywatnym assetem. Remux lub transkodowanie
+  utworzy nowy derivative; nigdy nie nadpisze źródła.
+- Szkic przypnie konkretny asset i oczekiwaną rewizję. Zapis typu
+  compare-and-swap zostanie odrzucony, jeśli ktoś wcześniej zmienił szkic.
+- Publikacja utworzy niemutowalną rewizję lekcji i przypnie jej dokładny asset
+  do wersji programu. Dotychczas opublikowana wersja pozostanie aktywna, dopóki
+  komplet nowej wersji nie będzie gotowy.
+- Trwałe, idempotentne zadanie zapisze wejście, profil, wynik, próby i stan.
+  `ffprobe` zweryfikuje metadane, a wynik `.part` zostanie atomowo przeniesiony
+  dopiero po kontroli MP4, Fast Start, czasu i sumy pliku.
+- Ciężka konwersja wykona się w kontrolowanym procesie CLI albo zewnętrznym
+  workerze po sprawdzeniu dostępności `ffmpeg`/`ffprobe`, limitów dysku i
+  funkcji procesowych. Nie będzie wykonywana w żądaniu HTTP ani polegała
+  wyłącznie na WP-Cronie.
+- Archiwizacja jedynie ukryje asset przed nowym wyborem. Fizyczne usunięcie
+  będzie możliwe dopiero po zerowym użyciu w szkicach, wszystkich opublikowanych
+  i historycznych rewizjach oraz aktywnych zadaniach, z kopią lub kwarantanną.
 
 ## Kontrola istniejącej biblioteki
 
@@ -96,3 +122,44 @@ pliku zapisujemy co najmniej:
 Najpierw poprawiamy filmy używane w aktywnych kursach i faktycznie zgłaszane
 przez uczestniczki. Oryginały zachowujemy do zakończenia testów oraz
 potwierdzenia kopii zapasowej.
+
+### Lokalny audyt techniczny
+
+Przed planowaniem podmian można uruchomić bezpieczny raport na kopii strony w
+Local:
+
+```powershell
+php .build/inspect-course-videos-local.php `
+  "C:\Users\<użytkownik>\Local Sites\<strona>\app\public\wp-load.php" `
+  "127.0.0.1:<port-bazy>"
+```
+
+Opcjonalne `--hash` oblicza strumieniowo sumy SHA-256 i wskazuje pliki o tej
+samej zawartości:
+
+```powershell
+php .build/inspect-course-videos-local.php `
+  "C:\Users\<użytkownik>\Local Sites\<strona>\app\public\wp-load.php" `
+  "127.0.0.1:<port-bazy>" `
+  --hash
+```
+
+Skrypt dopuszcza wyłącznie ścieżkę `Local Sites/.../app/public/wp-load.php`,
+adres strony z końcówką `.local` lub loopback oraz bazę na loopbacku z jawnym
+portem. Prywatny magazyn również musi znajdować się wewnątrz katalogu tej
+lokalnej strony. Wynik JSON nie zawiera nazw kursów i lekcji, identyfikatorów
+użytkowników, surowych referencji plików, ścieżek ani publicznych adresów URL.
+Pokazuje zagregowane użycia w lekcjach i wersjach programu, brakujące,
+nieczytelne lub niepoprawne referencje, powtórzone referencje, nieprzypisane
+pliki, rozmiary i wynik Fast Start.
+
+Raport używa `SHORTINIT`: nie uruchamia wtyczek, migracji ani haków aplikacji.
+Sam wykonuje wyłącznie zapytania `SELECT` i odczyty systemu plików. Bootstrap
+WordPressa nadal otwiera lokalne połączenie z bazą i może załadować standardowe
+drop-iny bazy lub cache, więc audyt uruchamiamy na kopii lokalnej, nigdy na
+produkcji. Niczego nie naprawia, nie przenosi i nie usuwa.
+
+Użycie przez opublikowane wersje jest obecnie wyliczane przez połączenie
+przypisania programu z bieżącym, mutowalnym rekordem lekcji. Schemat nie
+przechowuje historycznej referencji nagrania w wersji programu, dlatego raport
+nie odtworzy wcześniej zastąpionych ani usuniętych referencji.

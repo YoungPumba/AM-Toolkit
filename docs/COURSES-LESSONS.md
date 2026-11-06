@@ -14,7 +14,8 @@ publicznym adresie URL.
 
 Widok zawiera:
 
-- responsywny odtwarzacz MediaElement dostarczany przez WordPress,
+- responsywny natywny odtwarzacz przeglądarki (zmiana niewydana; w 0.12.5
+  domyślnym wariantem pozostaje MediaElement dostarczany przez WordPress),
 - tytuł i opis lekcji oraz czytelny stan braku nagrania lub błędu,
 - prywatne materiały do pobrania,
 - nawigację do poprzedniej i następnej dostępnej lekcji,
@@ -31,13 +32,38 @@ idempotentny checkpoint co około 15 sekund oraz po pauzie, zakończeniu lub
 opuszczeniu strony. Skok po osi czasu nie jest zaliczany. Szczegółowy kontrakt
 opisuje [Postęp i ukończenie AM Courses](COURSES-PROGRESS.md).
 
-## UX odtwarzacza i nawigacji — VIA-71
+## Domyślny odtwarzacz — zmiana niewydana
 
-MediaElement pozostaje silnikiem i źródłem semantyki kontrolek. AM Toolkit
-nakłada własny skin oraz dodaje dekoracyjne SVG do istniejących przycisków;
-nie zastępuje ich checkboxami ani własnym, równoległym odtwarzaczem.
+Przy domyślnej konfiguracji zwykła lekcja i podgląd administratora używają
+`<video controls playsinline preload="metadata">`. Przeglądarka odpowiada
+za kontrolki, ich dostępność i fullscreen; wygląd i dostępne polecenia
+mogą różnić się między urządzeniami. AM Toolkit nie nakłada własnego loadera
+ani nie wymusza orientacji w tym wariancie.
 
-Skrypt odtwarzacza:
+Oba warianty zachowują ten sam chroniony MP4, kontrolę dostępu, zapis
+postępu i wznawianie. Skrypt publikuje `amtoolkit:course-player` dla
+`play`, `pause`, `ended` i `error` oraz wyświetla polski komunikat błędu
+w regionie `aria-live`. Zwykły adres nie włącza raportowania diagnostycznego.
+
+Wybór natywnego interfejsu odpowiada preferencji użytkownika po próbach na
+iPhonie. Raporty 0.12.5 zawierają zacięcia również bez MediaElement; sama
+zmiana kontrolek nie rozwiązuje VIA-105.
+
+Operator może przywrócić MediaElement dla zwykłych lekcji i podglądu przez
+`define('AM_TOOLKIT_COURSE_PLAYER_MODE', 'mediaelement');` w konfiguracji
+WordPressa. Usunięcie stałej lub wartość `native` przywraca natywny wariant;
+nieprawidłowa wartość również wybiera `native`. To awaryjny wybór interfejsu,
+bez migracji danych i zmiany ochrony nagrań. Jawny parametr diagnostyczny
+może nadpisać oba domyślne warianty. Zmiana konfiguracji produkcyjnej nadal
+wymaga uzgodnionej kopii i zgody właściciela.
+
+## Porównawczy wariant MediaElement i nawigacja — VIA-71
+
+MediaElement pozostaje dostępny po jawnym włączeniu diagnostyki i parametru
+`am_course_player=mediaelement`. AM Toolkit nakłada w tym wariancie własny
+skin i dodaje dekoracyjne SVG do istniejących przycisków.
+
+Skrypt wyłącznie dla wariantu MediaElement:
 
 - pokazuje ośmiopunktowy loader wyłącznie dla rzeczywistych stanów ładowania,
   buforowania i przewijania,
@@ -116,7 +142,7 @@ dostępne przy ponownym przewijaniu w ramach tej samej sesji.
 ## Zalecany format nagrania
 
 Instrukcja redakcyjna krok po kroku, obejmująca HandBrake, Fast Start,
-bezpieczną podmianę i kontrolę istniejących plików, znajduje się w dokumencie
+ograniczenia podmiany i kontrolę istniejących plików, znajduje się w dokumencie
 [Przygotowanie nagrań do AM Courses](COURSES-VIDEO-PREPARATION.md).
 
 Materiał przeznaczony do odtwarzania w przeglądarce powinien być eksportowany
